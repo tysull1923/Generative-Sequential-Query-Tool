@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Settings, Plus, History, MessageSquare } from 'lucide-react';
@@ -18,6 +19,8 @@ interface ChatHistory {
 }
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  
   // Sample chat histories
   const chatHistories: ChatHistory[] = [
     {
@@ -45,6 +48,14 @@ const HomePage = () => {
     { value: 'openai', label: 'OpenAI' },
     { value: 'claude', label: 'Claude' },
   ];
+
+  const handleNewChat = () => {
+    navigate('/chat');
+  };
+
+  const handleChatSelect = (id: string) => {
+    navigate(`/chat?id=${id}`);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,7 +92,7 @@ const HomePage = () => {
               </Select>
               {/* Navigation */}
               <nav className="flex items-center space-x-4">
-                <Button variant="ghost" className="flex items-center gap-2">
+                <Button variant="ghost" className="flex items-center gap-2" onClick={handleNewChat}>
                   <Plus className="h-5 w-5" />
                   New Chat
                 </Button>
@@ -105,7 +116,10 @@ const HomePage = () => {
           {/* Chat Histories */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {/* New Chat Card */}
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+            <Card 
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={handleNewChat}
+            >
               <CardContent className="flex items-center justify-center p-6">
                 <Button variant="ghost" className="flex flex-col items-center gap-2 h-auto py-8">
                   <Plus className="h-10 w-10" />
@@ -116,7 +130,11 @@ const HomePage = () => {
 
             {/* Existing Chat History Cards */}
             {chatHistories.map((chat) => (
-              <Card key={chat.id} className="cursor-pointer hover:shadow-lg transition-shadow">
+              <Card 
+                key={chat.id} 
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => handleChatSelect(chat.id)}
+              >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div>
