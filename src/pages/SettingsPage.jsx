@@ -2,6 +2,9 @@ import Header from '@/components/layout/Header';
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle2, EyeOff, Eye } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { openAIService } from '../services/openai';
+import { anthropicService } from '../services/anthropic';
+import { API_CONFIG } from '../services/api-config';
 
 const SettingsPage = () => {
   const [keys, setKeys] = useState({
@@ -24,27 +27,19 @@ const SettingsPage = () => {
       ...prev,
       [type]: { ...prev[type], checking: true, error: null }
     }));
-
+  
     try {
-      // Example validation endpoints
-      const endpoint = type === 'openai' 
-        ? 'https://api.openai.com/v1/models'
-        : 'https://api.anthropic.com/v1/messages';
-
-      const headers = type === 'openai'
-        ? { 'Authorization': `Bearer ${key}` }
-        : { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
-
-      const response = await fetch(endpoint, { headers });
-      
-      if (!response.ok) throw new Error('Invalid API key');
-
+      const service = type === 'openai' ? openAIService : anthropicService;
+      const isValid = await service.checkConnection(key);
+  
+      if (!isValid) throw new Error('Invalid API key');
+  
       setStatus(prev => ({
         ...prev,
         [type]: { isValid: true, checking: false, error: null }
       }));
-
-      localStorage.setItem(`${type}_api_key`, key);
+  
+      localStorage.setItem(API_CONFIG[type.toUpperCase()].keyName, key);
     } catch (error) {
       setStatus(prev => ({
         ...prev,
