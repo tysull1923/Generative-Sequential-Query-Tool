@@ -13,18 +13,14 @@ interface ChatControlBannerProps {
     onPause: () => void;
     onPlay: (delay: number) => void;
     isPlaying: boolean;
-    requests: Array<{
-      id: string;
-      content: string;
-      status: string;
-    }>;
   }
 
 
-const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying, requests }: ChatControlBannerProps) => {
+const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }: ChatControlBannerProps) => {
   const [delay, setDelay] = useState(15);
   const handlePlay = () => {
     onPlay(delay);
+    isPlaying = true;
   };
   return (
     <div className="bg-gray-100 border-b py-2 px-6">

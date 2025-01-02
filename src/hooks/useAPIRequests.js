@@ -8,10 +8,10 @@ export const useApiRequests = () => {
   const processRequests = async (requests, selectedAPI, delay = 0) => {
     setIsProcessing(true);
     const service = selectedAPI === 'OpenAI' ? openAIService : anthropicService;
-    const apiKey = localStorage.getItem(
-      selectedAPI === 'OpenAI' ? 'OPENAI_API_KEY' : 'CLAUDE_API_KEY'
-    );
-
+    // const apiKey = localStorage.getItem(
+    //   selectedAPI === 'OpenAI' ? 'OPENAI_API_KEY' : 'CLAUDE_API_KEY'
+    // ) || import.meta.env.VITE_OPENAI_API_KEY;
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
     for (const request of requests) {
       if (!isProcessing) break;
       

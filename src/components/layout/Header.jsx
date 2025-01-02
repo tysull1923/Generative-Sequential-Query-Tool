@@ -11,7 +11,7 @@ import { useApiConnection } from '@/hooks/useAPIConnection';
 const Header = () => {
   const [selectedAPI, setSelectedAPI] = useState('OpenAI');
   //const [apiStatus, setApiStatus] = useState('Connected');
-  const apiStatus = useApiConnection(selectedAPI);
+ // const apiStatus = useApiConnection(selectedAPI);
   const location = useLocation();
   const isHomePage = location.pathname === '/';
   const isSettingPage = location.pathname === "/settings";
@@ -77,20 +77,7 @@ const Header = () => {
           )}
           {isNewChatPage && (
             <div className="flex items-center space-x-4">
-              <select 
-                value={selectedAPI}
-                onChange={(e) => setSelectedAPI(e.target.value)}
-                className="bg-gray-700 rounded px-3 py-1 text-sm"
-              >
-                <option value="OpenAI">OpenAI</option>
-                <option value="Claude">Claude</option>
-              </select>
-              <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  apiStatus === 'Connected' ? 'bg-green-500' : 'bg-red-500'
-                }`}></div>
-                <span className="text-sm">{apiStatus}</span>
-              </div>
+              <APIStatus />
             </div>
           )}
         </div>

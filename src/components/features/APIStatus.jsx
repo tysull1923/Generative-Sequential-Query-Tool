@@ -14,11 +14,15 @@ import {
 
 const APIStatus = () => {
   const { apiStatus, updateAPIKey } = useAPIStatus();
+  const [selectedAPI, setSelectedAPI] = React.useState('OpenAI');
+  
   const [openaiKey, setOpenaiKey] = React.useState('');
   const [claudeKey, setClaudeKey] = React.useState('');
   const [isUpdating, setIsUpdating] = React.useState(false);
   const isSettingPage = location.pathname === "/settings";
   const isHomePage = location.pathname === '/';
+  const isNewChatPage = location.pathname === "/new-chat";
+
 
 
   const handleUpdateKeys = async () => {
@@ -98,6 +102,27 @@ const APIStatus = () => {
         </DialogContent>
       </Dialog>
       )}
+
+
+      {isNewChatPage && (
+            <div className="flex items-center space-x-4">
+              <select 
+                value={selectedAPI}
+                onChange={(e) => setSelectedAPI(e.target.value)}
+                className="bg-gray-700 rounded px-3 py-1 text-sm"
+              >
+                <option value="OpenAI">OpenAI</option>
+                <option value="Claude">Claude</option>
+              </select>
+              {/* <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${
+                  apiStatus.claude === 'Operational' ? 'bg-green-500' : 'bg-red-500'
+                }`}></div>
+                <span className="text-sm">{apiStatus.claude}</span>
+              </div> */}
+              
+            </div>
+        )}
     </div>
   );
 };
