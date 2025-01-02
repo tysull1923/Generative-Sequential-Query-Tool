@@ -1,7 +1,8 @@
 import React from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardContent } from '../components/ui/card';
+import { Button } from '../components/ui/button';
 import { Settings, Plus, History, MessageSquare } from 'lucide-react';
+import '../styles/globals.css';
 
 interface ChatHistory {
   id: string;
@@ -11,7 +12,7 @@ interface ChatHistory {
 }
 
 const HomePage = () => {
-  // Sample chat histories - in real app, this would come from your data store
+  // Sample chat histories
   const chatHistories: ChatHistory[] = [
     {
       id: '1',
