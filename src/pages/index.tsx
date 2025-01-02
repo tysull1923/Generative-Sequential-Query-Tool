@@ -1,8 +1,7 @@
 import React from 'react';
-import { Card, CardHeader, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Settings, Plus, History, MessageSquare } from 'lucide-react';
-import '../styles/globals.css';
 
 interface ChatHistory {
   id: string;
@@ -42,15 +41,15 @@ const HomePage = () => {
             <h1 className="text-2xl font-bold">GSQT</h1>
             <nav className="flex items-center space-x-4">
               <Button variant="ghost" className="flex items-center gap-2">
-                <Plus size={20} />
+                <Plus className="h-5 w-5" />
                 New Chat
               </Button>
               <Button variant="ghost" className="flex items-center gap-2">
-                <History size={20} />
+                <History className="h-5 w-5" />
                 Recent Chats
               </Button>
               <Button variant="ghost" className="flex items-center gap-2">
-                <Settings size={20} />
+                <Settings className="h-5 w-5" />
                 Settings
               </Button>
             </nav>
@@ -86,7 +85,7 @@ const HomePage = () => {
             <Card className="cursor-pointer hover:shadow-lg transition-shadow">
               <CardContent className="flex items-center justify-center p-6">
                 <Button variant="ghost" className="flex flex-col items-center gap-2 h-auto py-8">
-                  <Plus size={40} />
+                  <Plus className="h-10 w-10" />
                   <span className="text-lg">Start New Chat</span>
                 </Button>
               </CardContent>
@@ -102,7 +101,7 @@ const HomePage = () => {
                       <p className="text-sm text-muted-foreground">{chat.date}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <MessageSquare size={16} />
+                      <MessageSquare className="h-4 w-4" />
                       <span className="text-sm">{chat.apiType}</span>
                     </div>
                   </div>
