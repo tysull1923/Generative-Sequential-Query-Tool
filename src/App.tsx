@@ -1,18 +1,19 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import HomePage from './pages';
 import ChatPage from './pages/chat';
 import './styles/globals.css';
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <div className="min-h-screen bg-background">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/chat" element={<ChatPage />} />
         </Routes>
       </div>
-    </Router>
+    </BrowserRouter>
   );
 }
 
