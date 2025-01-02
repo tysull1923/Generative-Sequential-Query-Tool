@@ -2,6 +2,13 @@ import React from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Settings, Plus, History, MessageSquare } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ChatHistory {
   id: string;
@@ -28,9 +35,23 @@ const HomePage = () => {
   ];
 
   const [apiStatus, setApiStatus] = React.useState({
-    openai: 'operational',
-    claude: 'operational'
+    openai: false,
+    claude: false
   });
+
+  const [selectedModel, setSelectedModel] = React.useState('');
+
+  const openAiModels = [
+    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+    { value: 'gpt-4', label: 'GPT-4' },
+    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
+  ];
+
+  const claudeModels = [
+    { value: 'claude-3-opus', label: 'Claude 3 Opus' },
+    { value: 'claude-3-sonnet', label: 'Claude 3 Sonnet' },
+    { value: 'claude-3-haiku', label: 'Claude 3 Haiku' },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -39,20 +60,53 @@ const HomePage = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">GSQT</h1>
-            <nav className="flex items-center space-x-4">
-              <Button variant="ghost" className="flex items-center gap-2">
-                <Plus className="h-5 w-5" />
-                New Chat
-              </Button>
-              <Button variant="ghost" className="flex items-center gap-2">
-                <History className="h-5 w-5" />
-                Recent Chats
-              </Button>
-              <Button variant="ghost" className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Settings
-              </Button>
-            </nav>
+            <div className="flex items-center gap-6">
+              {/* API Status Indicators */}
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${apiStatus.openai ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span>OpenAI</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${apiStatus.claude ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span>Claude</span>
+                </div>
+              </div>
+              {/* Model Selector */}
+              <Select onValueChange={setSelectedModel} value={selectedModel}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Model" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="" disabled>Select Model</SelectItem>
+                  {openAiModels.map((model) => (
+                    <SelectItem key={model.value} value={model.value}>
+                      {model.label}
+                    </SelectItem>
+                  ))}
+                  {claudeModels.map((model) => (
+                    <SelectItem key={model.value} value={model.value}>
+                      {model.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* Navigation */}
+              <nav className="flex items-center space-x-4">
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  New Chat
+                </Button>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <History className="h-5 w-5" />
+                  Recent Chats
+                </Button>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Settings
+                </Button>
+              </nav>
+            </div>
           </div>
         </div>
       </header>
@@ -60,25 +114,6 @@ const HomePage = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="grid gap-8">
-          {/* API Status Section */}
-          <Card>
-            <CardHeader>
-              <h2 className="text-xl font-semibold">API Status</h2>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-around">
-                <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${apiStatus.openai === 'operational' ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span>OpenAI API: {apiStatus.openai}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${apiStatus.claude === 'operational' ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span>Claude API: {apiStatus.claude}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Chat Histories */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {/* New Chat Card */}
