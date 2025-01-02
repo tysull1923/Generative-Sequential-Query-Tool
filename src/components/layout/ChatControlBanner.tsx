@@ -8,7 +8,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }) => {
+interface ChatControlBannerProps {
+    onAddStep: (type: string) => void;
+    onPause: () => void;
+    onPlay: (delay: number) => void;
+    isPlaying: boolean;
+    requests: Array<{
+      id: string;
+      content: string;
+      status: string;
+    }>;
+  }
+
+
+const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying, requests }: ChatControlBannerProps) => {
   const [delay, setDelay] = useState(15);
   const handlePlay = () => {
     onPlay(delay);

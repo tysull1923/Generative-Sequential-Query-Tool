@@ -117,7 +117,7 @@ const NewChatPage = () => {
     if (!request?.response) return;
     console.log('Saving response for request:', id);
   };
-  const delay = 30; 
+  const delay = 5; 
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top Banner */}

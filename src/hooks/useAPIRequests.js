@@ -16,6 +16,8 @@ export const useApiRequests = () => {
       if (!isProcessing) break;
       
       try {
+        request.status = 'in-progress';
+
         const response = await service.sendChat([{
           role: 'user',
           content: request.content

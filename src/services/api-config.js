@@ -6,9 +6,5 @@ export const API_CONFIG = {
     CLAUDE: {
       name: 'Claude',
       keyName: 'CLAUDE_API_KEY'
-    },
-    Test: {
-        name: 'Claude',
-        keyName: 'CLAUDE_API_KEY'
-      }
+    }
   };
