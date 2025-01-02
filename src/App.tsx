@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import HomePage from '@/pages/index'
 import '@/styles/globals.css'
 
