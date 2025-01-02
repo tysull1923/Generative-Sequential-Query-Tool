@@ -49,11 +49,17 @@ const HomePage = () => {
     { value: 'claude', label: 'Claude' },
   ];
 
-  const handleNewChat = () => {
+  const handleNewChat = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Navigating to chat page...');
     navigate('/chat');
   };
 
-  const handleChatSelect = (id: string) => {
+  const handleChatSelect = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Navigating to chat with ID:', id);
     navigate(`/chat?id=${id}`);
   };
 
@@ -92,7 +98,12 @@ const HomePage = () => {
               </Select>
               {/* Navigation */}
               <nav className="flex items-center space-x-4">
-                <Button variant="ghost" className="flex items-center gap-2" onClick={handleNewChat}>
+                <Button 
+                  variant="ghost" 
+                  className="flex items-center gap-2" 
+                  onClick={handleNewChat}
+                  type="button"
+                >
                   <Plus className="h-5 w-5" />
                   New Chat
                 </Button>
@@ -117,23 +128,29 @@ const HomePage = () => {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {/* New Chat Card */}
             <Card 
+              role="button"
+              tabIndex={0}
               className="cursor-pointer hover:shadow-lg transition-shadow"
               onClick={handleNewChat}
+              onKeyPress={(e) => e.key === 'Enter' && handleNewChat(e as unknown as React.MouseEvent)}
             >
               <CardContent className="flex items-center justify-center p-6">
-                <Button variant="ghost" className="flex flex-col items-center gap-2 h-auto py-8">
+                <div className="flex flex-col items-center gap-2 py-8">
                   <Plus className="h-10 w-10" />
                   <span className="text-lg">Start New Chat</span>
-                </Button>
+                </div>
               </CardContent>
             </Card>
 
             {/* Existing Chat History Cards */}
             {chatHistories.map((chat) => (
               <Card 
-                key={chat.id} 
+                key={chat.id}
+                role="button"
+                tabIndex={0}
                 className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => handleChatSelect(chat.id)}
+                onClick={(e) => handleChatSelect(chat.id, e)}
+                onKeyPress={(e) => e.key === 'Enter' && handleChatSelect(chat.id, e as unknown as React.MouseEvent)}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
