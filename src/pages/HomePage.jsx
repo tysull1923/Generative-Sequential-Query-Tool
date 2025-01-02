@@ -53,7 +53,7 @@ const HomePage = () => {
           </div>
           
 
-          <Button onClick={() => navigate('/newchat')} className="flex items-center" size="lg">
+          <Button onClick={() => navigate('/new-chat')} className="flex items-center" size="lg">
             <Plus className="mr-2 h-4 w-4" />
             New Chat
           </Button>

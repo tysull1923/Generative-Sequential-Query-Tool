@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button } from '../components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '../components/ui/card';
 import { Textarea } from '../components/ui/textarea';
 import { Pause, Play, Save, MoveUp, MoveDown, Trash2, Plus } from 'lucide-react';
@@ -74,7 +74,8 @@ const NewChatPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen flex flex-col">
+      {/* Top Banner */}
       <Header />
       <main className="flex flex-1">
         {/* Left Panel - Requests (1/3 width) */}

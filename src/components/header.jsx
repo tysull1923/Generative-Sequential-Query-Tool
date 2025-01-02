@@ -1,6 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { Settings, MessageSquarePlus, History } from 'lucide-react';
 import ChatPage from '@/pages/chat';
 import NewChatPage from '@/pages/newchat';
@@ -19,7 +20,7 @@ const Header = () => {
         </div>
         
             <nav className="flex space-x-4">
-              <Button onClick={() => navigate('/newchat')} variant="ghost" className="flex items-center">
+              <Button onClick={() => navigate('/new-chat')} variant="ghost" className="flex items-center">
                 <MessageSquarePlus className="mr-2 h-4 w-4" />
                 New Chat
               </Button>
@@ -27,7 +28,7 @@ const Header = () => {
                 <History className="mr-2 h-4 w-4" />
                 Recent Chats
               </Button>
-              <Button onClick={() => navigate('/SettingsPage')} variant="ghost" className="flex items-center">
+              <Button onClick={() => navigate('/settings')} variant="ghost" className="flex items-center">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </Button>
