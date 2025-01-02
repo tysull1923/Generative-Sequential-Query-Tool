@@ -17,6 +17,9 @@ const APIStatus = () => {
   const [openaiKey, setOpenaiKey] = React.useState('');
   const [claudeKey, setClaudeKey] = React.useState('');
   const [isUpdating, setIsUpdating] = React.useState(false);
+  const isSettingPage = location.pathname === "/settings";
+  const isHomePage = location.pathname === '/';
+
 
   const handleUpdateKeys = async () => {
     setIsUpdating(true);
@@ -34,6 +37,7 @@ const APIStatus = () => {
 
   return (
     <div className="flex items-center space-x-4">
+      
       <div className="flex items-center space-x-6">
         <div className="flex items-center">
           <div className={`h-2 w-2 rounded-full mr-2 ${
@@ -51,7 +55,10 @@ const APIStatus = () => {
         </div>
       </div>
 
-      <Dialog>
+     
+
+      {isHomePage && (
+        <Dialog>
         <DialogTrigger asChild>
           <Button variant="ghost" size="icon">
             <Settings className="h-4 w-4" />
@@ -90,6 +97,7 @@ const APIStatus = () => {
           </div>
         </DialogContent>
       </Dialog>
+      )}
     </div>
   );
 };
