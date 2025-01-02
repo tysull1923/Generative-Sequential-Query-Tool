@@ -3,36 +3,78 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '../components/ui/card';
 import { Textarea } from '../components/ui/textarea';
 import { Pause, Play, Save, MoveUp, MoveDown, Trash2, Plus } from 'lucide-react';
-import Header from "@/components/Header"
+import Header from "@/components/layout/Header";
+import ChatControlBanner from '@/components/layout/ChatControlBanner';
+import { useApiRequests } from '@/hooks/useAPIRequests';
+import ChatCard from '@/components/features/ChatCard';
+import PauseStepCard from '@/components/features/PauseStepCard';
+// interface ChatRequest {
+//   id: string;
+//   number: number;
+//   content: string;
+//   status: 'pending' | 'in-progress' | 'completed' | 'paused';
+//   response?: string;
+// }
 interface ChatRequest {
   id: string;
-  number: number;
-  content: string;
+  type: 'chat' | 'pause';
+  content?: string;
   status: 'pending' | 'in-progress' | 'completed' | 'paused';
   response?: string;
+  isPaused?: boolean;
+  number: number;
 }
 
 const NewChatPage = () => {
   const [requests, setRequests] = useState<ChatRequest[]>([
     {
       id: '1',
+      type: 'chat',
       number: 1,
       content: '',
       status: 'pending'
     }
-  ]);
-
-  const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
-
-  const addNewRequest = () => {
+   ]);
+   
+   const addNewRequest = () => {
     const newNumber = Math.max(...requests.map(r => r.number)) + 1;
     setRequests([...requests, {
       id: Date.now().toString(),
+      type: 'chat',
       number: newNumber,
       content: '',
       status: 'pending'
     }]);
+   };
+   
+   const addPauseStep = (afterId: string) => {
+    const index = requests.findIndex(r => r.id === afterId);
+    const newRequests = [...requests];
+    newRequests.splice(index + 1, 0, {
+      id: Date.now().toString(),
+      type: 'pause',
+      number: requests.length + 1,
+      status: 'pending',
+      isPaused: true
+    });
+    setRequests(newRequests);
+   };
+
+   const togglePauseStep = (id: string) => {
+    setRequests(requests.map(req => {
+      if (req.id === id && req.type === 'pause') {
+        return {
+          ...req,
+          isPaused: !req.isPaused
+        };
+      }
+      return req;
+    }));
   };
+  const [selectedAPI] = useState('OpenAI');
+  const { processRequests, isProcessing, setIsProcessing } = useApiRequests();
+
+  const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
 
   const updateRequestContent = (id: string, content: string) => {
     setRequests(requests.map(req => 
@@ -72,16 +114,44 @@ const NewChatPage = () => {
     if (!request?.response) return;
     console.log('Saving response for request:', id);
   };
-
+  const delay = 30; 
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top Banner */}
       <Header />
+      <ChatControlBanner 
+        onAddStep={(type) => {/* Handle step addition */}}
+        onPlay={() => processRequests(requests, selectedAPI, delay)}
+        onPause={() => setIsProcessing(false)}
+        isPlaying={isProcessing}
+      />
       <main className="flex flex-1">
         {/* Left Panel - Requests (1/3 width) */}
         <div className="w-1/3 border-r p-4 bg-background overflow-y-auto">
           <div className="space-y-4">
-            {requests.map((request) => (
+          {requests.map((request, index) => (
+            request.type === 'pause' ? (
+              <PauseStepCard
+                key={request.id}
+                number={request.number}
+                isPaused={request.isPaused}
+                onToggle={() => togglePauseStep(request.id)}
+                onDelete={() => deleteRequest(request.id)}
+              />
+            ) : (
+              <ChatCard
+                key={request.id}
+                {...request}
+                isFirst={index === 0}
+                isLast={index === requests.length - 1}
+                onMove={moveRequest}
+                onDelete={deleteRequest}
+                onContentChange={updateRequestContent}
+                onAddPause={addPauseStep}
+              />
+            )
+          ))}
+            {/* {requests.map((request) => (
               <Card 
                 key={request.id}
                 className={`transition-shadow hover:shadow-md ${
@@ -162,7 +232,7 @@ const NewChatPage = () => {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            ))} */}
             <Button
               onClick={addNewRequest}
               className="w-full flex items-center justify-center gap-2"

@@ -23,16 +23,12 @@ const HomePage = () => {
     { id: 3, title: "Content Generation", date: "2024-12-31", queries: 7 }
   ];
 
-  const apiStatus = {
-    openai: "operational",
-    claude: "operational"
-  };
-
+ 
   return (
     <div className="min-h-screen bg-gray-100">
+      
       {/* Top Banner */}
       <Header />
-
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
@@ -50,7 +46,7 @@ const HomePage = () => {
             
             
             <APIStatus />
-          </div>
+          </div> 
           
 
           <Button onClick={() => navigate('/new-chat')} className="flex items-center" size="lg">

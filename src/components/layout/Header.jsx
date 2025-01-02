@@ -4,13 +4,22 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Settings, MessageSquarePlus, History } from 'lucide-react';
 import APIStatus from '../features/APIStatus';
+import { useState } from 'react';
+import { useApiConnection } from '@/hooks/useAPIConnection';
+
 
 const Header = () => {
+  const [selectedAPI, setSelectedAPI] = useState('OpenAI');
+  //const [apiStatus, setApiStatus] = useState('Connected');
+  const apiStatus = useApiConnection(selectedAPI);
   const location = useLocation();
   const isHomePage = location.pathname === '/';
-
+  const isSettingPage = location.pathname === "/settings";
+  const isNewChatPage = location.pathname === "/new-chat";
   return (
-    <header className="bg-white border-b sticky top-0 z-50">
+    // 
+    <header className="bg-gray-800 text-white py-4 px-6 shadow-lg">
+
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -18,12 +27,6 @@ const Header = () => {
             GSQT
           </Link>
           
-          {/* API Status and Selection (only show on home page) */}
-          {isHomePage && (
-            <div className="flex items-center space-x-4">
-              <APIStatus />
-            </div>
-          )}
 
           {/* Navigation */}
           <nav className="flex items-center space-x-2">
@@ -32,7 +35,7 @@ const Header = () => {
               className="flex items-center"
               asChild
             >
-              <Link to="/chat">
+              <Link to="/new-chat">
                 <MessageSquarePlus className="mr-2 h-4 w-4" />
                 New Chat
               </Link>
@@ -61,6 +64,35 @@ const Header = () => {
               </Link>
             </Button>
           </nav>
+          {/* API Status and Selection (only show on home page) */}
+          {isHomePage && (
+            <div className="flex items-center space-x-4">
+              <APIStatus />
+            </div>
+          )}
+          {isSettingPage && (
+            <div className="flex items-center space-x-4">
+              <APIStatus />
+            </div>
+          )}
+          {isNewChatPage && (
+            <div className="flex items-center space-x-4">
+              <select 
+                value={selectedAPI}
+                onChange={(e) => setSelectedAPI(e.target.value)}
+                className="bg-gray-700 rounded px-3 py-1 text-sm"
+              >
+                <option value="OpenAI">OpenAI</option>
+                <option value="Claude">Claude</option>
+              </select>
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${
+                  apiStatus === 'Connected' ? 'bg-green-500' : 'bg-red-500'
+                }`}></div>
+                <span className="text-sm">{apiStatus}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>
