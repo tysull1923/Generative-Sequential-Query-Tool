@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Pause, Play, Save, MoveUp, MoveDown, Trash2 } from 'lucide-react';
+import Header from '@/components/layout/Header';
 
 interface Request {
   id: string;
@@ -71,32 +72,11 @@ const ChatPage = () => {
 
   return (
     
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col">
       {/* Top Banner */}
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-2xl font-bold">GSQT</h1>
-            
-            <nav className="flex space-x-4">
-              <Button variant="ghost" className="flex items-center">
-                
-                New Chat
-              </Button>
-              <Button variant="ghost" className="flex items-center">
-                
-                Recent Chats
-              </Button>
-              <Button variant="ghost" className="flex items-center">
-                
-                Settings
-              </Button>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
       {/* Left Panel - Requests (1/3 width) */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="flex flex-1">
         <div className="w-1/3 border-r p-4 bg-background overflow-y-auto">
           <div className="space-y-4">
             {requests.map((request) => (

@@ -5,6 +5,8 @@ import { Settings, MessageSquarePlus, History, Plus } from 'lucide-react';
 import APIStatus from '../components/features/APIStatus';
 import { useNavigate } from 'react-router-dom';
 import ChatPage from './chat';
+import Header from '@/components/layout/Header';
+
 import {
   Select,
   SelectContent,
@@ -29,28 +31,7 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Top Banner */}
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-2xl font-bold">GSQT</h1>
-            
-            <nav className="flex space-x-4">
-              <Button onClick={() => navigate('/chat')} variant="ghost" className="flex items-center">
-                <MessageSquarePlus className="mr-2 h-4 w-4" />
-                New Chat
-              </Button>
-              <Button variant="ghost" className="flex items-center">
-                <History className="mr-2 h-4 w-4" />
-                Recent Chats
-              </Button>
-              <Button onClick={() => navigate('/SettingsPage')} variant="ghost" className="flex items-center">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Button>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
