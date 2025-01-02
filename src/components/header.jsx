@@ -2,7 +2,9 @@ import React from 'react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Settings, MessageSquarePlus, History } from 'lucide-react';
-
+import ChatPage from '@/pages/chat';
+import NewChatPage from '@/pages/newchat';
+import SettingsPage from '@/pages/SettingsPage';
 const Header = () => {
   const navigate = useNavigate();
   const [selectedAPI, setSelectedAPI] = useState('OpenAI');
@@ -17,7 +19,7 @@ const Header = () => {
         </div>
         
             <nav className="flex space-x-4">
-              <Button onClick={() => navigate('/chat')} variant="ghost" className="flex items-center">
+              <Button onClick={() => navigate('/newchat')} variant="ghost" className="flex items-center">
                 <MessageSquarePlus className="mr-2 h-4 w-4" />
                 New Chat
               </Button>
