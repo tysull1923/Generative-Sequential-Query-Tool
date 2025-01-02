@@ -9,8 +9,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }) => {
-  const [delay, setDelay] = useState(0);
-  
+  const [delay, setDelay] = useState(15);
+  const handlePlay = () => {
+    onPlay(delay);
+  };
   return (
     <div className="bg-gray-100 border-b py-2 px-6">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -42,7 +44,7 @@ const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }) => {
         <div className="flex gap-2">
           <Button 
             variant="outline"
-            onClick={onPlay}
+            onClick={handlePlay}
             disabled={isPlaying}
           >
             <Play className="h-4 w-4" />
