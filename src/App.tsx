@@ -1,12 +1,19 @@
-import HomePage from '@/pages/index'
-import '@/styles/globals.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HomePage from './pages';
+import ChatPage from './pages/chat';
+import './styles/globals.css';
 
 function App() {
   return (
-    <div className="min-h-screen bg-background">
-      <HomePage />
-    </div>
-  )
+    <Router>
+      <div className="min-h-screen bg-background">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/chat" element={<ChatPage />} />
+        </Routes>
+      </div>
+    </Router>
+  );
 }
 
-export default App
+export default App;
