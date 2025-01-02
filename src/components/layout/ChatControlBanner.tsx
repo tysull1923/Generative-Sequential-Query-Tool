@@ -17,10 +17,10 @@ interface ChatControlBannerProps {
 
 
 const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }: ChatControlBannerProps) => {
-  const [delay, setDelay] = useState(15);
+  const [delay, setDelay] = useState(0);
   const handlePlay = () => {
     onPlay(delay);
-    isPlaying = true;
+    //isPlaying = true;
   };
   return (
     <div className="bg-gray-100 border-b py-2 px-6">
@@ -53,8 +53,10 @@ const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }: ChatContro
         <div className="flex gap-2">
           <Button 
             variant="outline"
+            //onClick={() => onPlay(delay)}
             onClick={handlePlay}
             disabled={isPlaying}
+            className={`${isPlaying ? 'bg-green-200 text-green-700' : ''}`}
           >
             <Play className="h-4 w-4" />
           </Button>

@@ -117,14 +117,20 @@ const NewChatPage = () => {
     if (!request?.response) return;
     console.log('Saving response for request:', id);
   };
-  const delay = 5; 
+  const delay = 0; 
+  const handlePlay = async (delay: number) => {
+    //setIsProcessing(true);
+    await processRequests(requests, selectedAPI, delay);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top Banner */}
       <Header />
       <ChatControlBanner 
         onAddStep={(type) => {/* Handle step addition */}}
-        onPlay={() => processRequests(requests, selectedAPI, delay)}
+        //onPlay={handlePlay}
+        onPlay={handlePlay}
         onPause={() => setIsProcessing(false)}
         isPlaying={isProcessing}
       />

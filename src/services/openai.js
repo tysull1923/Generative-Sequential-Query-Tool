@@ -15,23 +15,32 @@ export const openAIService = {
   },
 
   async sendChat(messages, apiKey) {
-    const response = await fetch(`${OPENAI_API_URL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages,
-        temperature: 0.7
-      })
-    });
+    try {
+      const response = await fetch(`${OPENAI_API_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4',
+          messages,
+          temperature: 0.7
+        })
+      });
+    } catch (error){
+      console.log("Error receiving response" + error.message);
+    }
+    
     
     if (!response.ok) {
+      console.log("Error in response");
       throw new Error('OpenAI API error');
     }
     
-    return response.json();
+    const data = await response.json();
+    return {
+      content: data.choices[0].message.content
+    };
   }
 };
