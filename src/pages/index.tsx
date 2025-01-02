@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Settings, Plus, History, MessageSquare } from 'lucide-react';
 import {
@@ -41,16 +41,9 @@ const HomePage = () => {
 
   const [selectedModel, setSelectedModel] = React.useState('');
 
-  const openAiModels = [
-    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
-    { value: 'gpt-4', label: 'GPT-4' },
-    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
-  ];
-
-  const claudeModels = [
-    { value: 'claude-3-opus', label: 'Claude 3 Opus' },
-    { value: 'claude-3-sonnet', label: 'Claude 3 Sonnet' },
-    { value: 'claude-3-haiku', label: 'Claude 3 Haiku' },
+  const models = [
+    { value: 'openai', label: 'OpenAI' },
+    { value: 'claude', label: 'Claude' },
   ];
 
   return (
@@ -79,12 +72,7 @@ const HomePage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="" disabled>Select Model</SelectItem>
-                  {openAiModels.map((model) => (
-                    <SelectItem key={model.value} value={model.value}>
-                      {model.label}
-                    </SelectItem>
-                  ))}
-                  {claudeModels.map((model) => (
+                  {models.map((model) => (
                     <SelectItem key={model.value} value={model.value}>
                       {model.label}
                     </SelectItem>
