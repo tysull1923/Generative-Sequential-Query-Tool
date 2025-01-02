@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Settings, Plus, History, MessageSquare } from 'lucide-react';
@@ -49,17 +49,13 @@ const HomePage = () => {
     { value: 'claude', label: 'Claude' },
   ];
 
-  const handleNewChat = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('Navigating to chat page...');
+  const handleNewChat = () => {
+    console.log('Attempting navigation to /chat');
     navigate('/chat');
   };
 
-  const handleChatSelect = (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('Navigating to chat with ID:', id);
+  const handleChatSelect = (id: string) => {
+    console.log(`Attempting navigation to /chat?id=${id}`);
     navigate(`/chat?id=${id}`);
   };
 
@@ -98,15 +94,12 @@ const HomePage = () => {
               </Select>
               {/* Navigation */}
               <nav className="flex items-center space-x-4">
-                <Button 
-                  variant="ghost" 
-                  className="flex items-center gap-2" 
-                  onClick={handleNewChat}
-                  type="button"
-                >
-                  <Plus className="h-5 w-5" />
-                  New Chat
-                </Button>
+                <Link to="/chat">
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <Plus className="h-5 w-5" />
+                    New Chat
+                  </Button>
+                </Link>
                 <Button variant="ghost" className="flex items-center gap-2">
                   <History className="h-5 w-5" />
                   Recent Chats
@@ -127,44 +120,35 @@ const HomePage = () => {
           {/* Chat Histories */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {/* New Chat Card */}
-            <Card 
-              role="button"
-              tabIndex={0}
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={handleNewChat}
-              onKeyPress={(e) => e.key === 'Enter' && handleNewChat(e as unknown as React.MouseEvent)}
-            >
-              <CardContent className="flex items-center justify-center p-6">
-                <div className="flex flex-col items-center gap-2 py-8">
-                  <Plus className="h-10 w-10" />
-                  <span className="text-lg">Start New Chat</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Existing Chat History Cards */}
-            {chatHistories.map((chat) => (
-              <Card 
-                key={chat.id}
-                role="button"
-                tabIndex={0}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={(e) => handleChatSelect(chat.id, e)}
-                onKeyPress={(e) => e.key === 'Enter' && handleChatSelect(chat.id, e as unknown as React.MouseEvent)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">{chat.title}</h3>
-                      <p className="text-sm text-muted-foreground">{chat.date}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      <span className="text-sm">{chat.apiType}</span>
-                    </div>
+            <Link to="/chat" className="block">
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
+                <CardContent className="flex items-center justify-center p-6">
+                  <div className="flex flex-col items-center gap-2 py-8">
+                    <Plus className="h-10 w-10" />
+                    <span className="text-lg">Start New Chat</span>
                   </div>
                 </CardContent>
               </Card>
+            </Link>
+
+            {/* Existing Chat History Cards */}
+            {chatHistories.map((chat) => (
+              <Link to={`/chat?id=${chat.id}`} key={chat.id} className="block">
+                <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">{chat.title}</h3>
+                        <p className="text-sm text-muted-foreground">{chat.date}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        <span className="text-sm">{chat.apiType}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
