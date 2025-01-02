@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, MessageSquarePlus, History, Plus } from 'lucide-react';
 import APIStatus from '../components/features/APIStatus';
+import { useNavigate } from 'react-router-dom';
+import ChatPage from './chat';
 import {
   Select,
   SelectContent,
@@ -12,6 +14,7 @@ import {
 } from "@/components/ui/select";
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const chatHistory = [
     { id: 1, title: "Product Analysis", date: "2025-01-01", queries: 5 },
     { id: 2, title: "Market Research", date: "2025-01-01", queries: 3 },
@@ -69,7 +72,7 @@ const HomePage = () => {
           </div>
           
 
-          <Button className="flex items-center" size="lg">
+          <Button onClick={() => navigate('/chat')} className="flex items-center" size="lg">
             <Plus className="mr-2 h-4 w-4" />
             New Chat
           </Button>
