@@ -36,8 +36,24 @@ const NewChatPage = () => {
     }
    ]);
    
-   const addNewRequest = () => {
-    const newNumber = Math.max(...requests.map(r => r.number)) + 1;
+   const addPauseStep = (afterId: string) => {
+    const index = requests.findIndex(r => r.id === afterId);
+    const afterRequest = requests[index];
+    
+    const newRequests = [...requests];
+    newRequests.splice(index + 1, 0, {
+      id: Date.now().toString(),
+      type: 'pause',
+      number: afterRequest.number, // Use the number of the request it follows
+      status: 'pending',
+      isPaused: true
+    });
+    setRequests(newRequests);
+  };
+  
+  const addNewRequest = () => {
+    const chatRequests = requests.filter(r => r.type === 'chat');
+    const newNumber = chatRequests.length + 1;
     setRequests([...requests, {
       id: Date.now().toString(),
       type: 'chat',
@@ -45,20 +61,7 @@ const NewChatPage = () => {
       content: '',
       status: 'pending'
     }]);
-   };
-   
-   const addPauseStep = (afterId: string) => {
-    const index = requests.findIndex(r => r.id === afterId);
-    const newRequests = [...requests];
-    newRequests.splice(index + 1, 0, {
-      id: Date.now().toString(),
-      type: 'pause',
-      number: requests.length + 1,
-      status: 'pending',
-      isPaused: true
-    });
-    setRequests(newRequests);
-   };
+  };
 
    const togglePauseStep = (id: string) => {
     setRequests(requests.map(req => {
@@ -141,13 +144,24 @@ const NewChatPage = () => {
             ) : (
               <ChatCard
                 key={request.id}
-                {...request}
+                id={request.id}
+                number={request.number}
+                content={request.content || ''}
+                status={request.status}
                 isFirst={index === 0}
                 isLast={index === requests.length - 1}
                 onMove={moveRequest}
                 onDelete={deleteRequest}
                 onContentChange={updateRequestContent}
                 onAddPause={addPauseStep}
+                // key={request.id}
+                // {...request}
+                // isFirst={index === 0}
+                // isLast={index === requests.length - 1}
+                // onMove={moveRequest}
+                // onDelete={deleteRequest}
+                // onContentChange={updateRequestContent}
+                // onAddPause={addPauseStep}
               />
             )
           ))}

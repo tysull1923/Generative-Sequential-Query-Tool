@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { MoveUp, MoveDown, Trash2 } from 'lucide-react';
 
-interface ChatCard {
+interface ChatCard extends Request{
  id: string;
  number: number;
  content: string;
