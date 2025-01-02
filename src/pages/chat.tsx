@@ -70,110 +70,136 @@ const ChatPage = () => {
   };
 
   return (
+    
     <div className="min-h-screen flex">
-      {/* Left Panel - Requests (1/3 width) */}
-      <div className="w-1/3 border-r p-4 bg-background overflow-y-auto">
-        <div className="space-y-4">
-          {requests.map((request) => (
-            <Card 
-              key={request.id}
-              className={`cursor-pointer transition-shadow hover:shadow-md ${selectedRequest === request.id ? 'ring-2 ring-primary' : ''}`}
-              onClick={() => setSelectedRequest(request.id)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm mb-2">{request.content}</p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${request.status === 'completed' ? 'bg-green-100 text-green-800' : request.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : request.status === 'paused' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
-                      {request.status}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-2 ml-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        moveRequest(request.id, 'up');
-                      }}
-                      disabled={requests.indexOf(request) === 0}
-                    >
-                      <MoveUp className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        moveRequest(request.id, 'down');
-                      }}
-                      disabled={requests.indexOf(request) === requests.length - 1}
-                    >
-                      <MoveDown className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleRequestStatus(request.id);
-                      }}
-                    >
-                      {request.status === 'paused' ? (
-                        <Play className="h-4 w-4" />
-                      ) : (
-                        <Pause className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteRequest(request.id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* Right Panel - Responses (2/3 width) */}
-      <div className="w-2/3 p-4 bg-background overflow-y-auto">
-        {selectedRequest ? (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">
-                Response
-              </h2>
-              <Button
-                variant="outline"
-                onClick={() => saveResponse(selectedRequest)}
-                className="flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                Save Response
+      {/* Top Banner */}
+      <header className="bg-white border-b">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <h1 className="text-2xl font-bold">GSQT</h1>
+            
+            <nav className="flex space-x-4">
+              <Button variant="ghost" className="flex items-center">
+                
+                New Chat
               </Button>
+              <Button variant="ghost" className="flex items-center">
+                
+                Recent Chats
+              </Button>
+              <Button variant="ghost" className="flex items-center">
+                
+                Settings
+              </Button>
+            </nav>
+          </div>
+        </div>
+      </header>
+      {/* Left Panel - Requests (1/3 width) */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="w-1/3 border-r p-4 bg-background overflow-y-auto">
+          <div className="space-y-4">
+            {requests.map((request) => (
+              <Card 
+                key={request.id}
+                className={`cursor-pointer transition-shadow hover:shadow-md ${selectedRequest === request.id ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => setSelectedRequest(request.id)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm mb-2">{request.content}</p>
+                      <span className={`text-xs px-2 py-1 rounded-full ${request.status === 'completed' ? 'bg-green-100 text-green-800' : request.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : request.status === 'paused' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {request.status}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-2 ml-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          moveRequest(request.id, 'up');
+                        }}
+                        disabled={requests.indexOf(request) === 0}
+                      >
+                        <MoveUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          moveRequest(request.id, 'down');
+                        }}
+                        disabled={requests.indexOf(request) === requests.length - 1}
+                      >
+                        <MoveDown className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleRequestStatus(request.id);
+                        }}
+                      >
+                        {request.status === 'paused' ? (
+                          <Play className="h-4 w-4" />
+                        ) : (
+                          <Pause className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteRequest(request.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Panel - Responses (2/3 width) */}
+        <div className="w-2/3 p-4 bg-background overflow-y-auto">
+          {selectedRequest ? (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold">
+                  Response
+                </h2>
+                <Button
+                  variant="outline"
+                  onClick={() => saveResponse(selectedRequest)}
+                  className="flex items-center gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  Save Response
+                </Button>
+              </div>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="whitespace-pre-wrap">
+                    {requests.find(r => r.id === selectedRequest)?.response || 'Response will appear here...'}
+                  </p>
+                </CardContent>
+              </Card>
             </div>
-            <Card>
-              <CardContent className="p-4">
-                <p className="whitespace-pre-wrap">
-                  {requests.find(r => r.id === selectedRequest)?.response || 'Response will appear here...'}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            Select a request to view its response
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              Select a request to view its response
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 };

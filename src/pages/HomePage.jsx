@@ -35,7 +35,7 @@ const HomePage = () => {
             <h1 className="text-2xl font-bold">GSQT</h1>
             
             <nav className="flex space-x-4">
-              <Button variant="ghost" className="flex items-center">
+              <Button onClick={() => navigate('/chat')} variant="ghost" className="flex items-center">
                 <MessageSquarePlus className="mr-2 h-4 w-4" />
                 New Chat
               </Button>
@@ -43,7 +43,7 @@ const HomePage = () => {
                 <History className="mr-2 h-4 w-4" />
                 Recent Chats
               </Button>
-              <Button variant="ghost" className="flex items-center">
+              <Button onClick={() => navigate('/SettingsPage')} variant="ghost" className="flex items-center">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </Button>
