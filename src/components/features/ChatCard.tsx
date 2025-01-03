@@ -18,6 +18,7 @@ interface ChatCard extends Request {
  isFirst: boolean;
  isLast: boolean;
  onAddPause: (id: string) => void;
+ onClick: () => void;
 }
 
 const ChatCard = ({
@@ -32,14 +33,10 @@ const ChatCard = ({
  onResponseClick,
  isFirst,
  isLast,
- onAddPause
+ onAddPause,
+ onClick
 }: ChatCard) => (
- <Card 
-   className={`my-4 ${
-     status === 'completed' ? 'hover:bg-gray-50 transition-colors' : ''
-   }`}
-   onClick={() => status === 'completed' && onResponseClick?.(id)}
- >
+ <Card className="my-4" onClick={onClick}>
    <CardHeader className="p-4 pb-0">
      <div className="flex justify-between items-center">
        <span className="font-semibold">Request #{number}</span>
