@@ -8,9 +8,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }) => {
+interface ChatControlBannerProps {
+    onAddStep: (type: string) => void;
+    onPause: () => void;
+    onPlay: (delay: number) => void;
+    isPlaying: boolean;
+  }
+
+
+const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }: ChatControlBannerProps) => {
   const [delay, setDelay] = useState(0);
-  
+  const handlePlay = () => {
+    onPlay(delay);
+    //isPlaying = true;
+  };
   return (
     <div className="bg-gray-100 border-b py-2 px-6">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -42,8 +53,10 @@ const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }) => {
         <div className="flex gap-2">
           <Button 
             variant="outline"
-            onClick={onPlay}
+            //onClick={() => onPlay(delay)}
+            onClick={handlePlay}
             disabled={isPlaying}
+            className={`${isPlaying ? 'bg-green-200 text-green-700' : ''}`}
           >
             <Play className="h-4 w-4" />
           </Button>

@@ -5,9 +5,11 @@ import { Textarea } from '../components/ui/textarea';
 import { Pause, Play, Save, MoveUp, MoveDown, Trash2, Plus } from 'lucide-react';
 import Header from "@/components/layout/Header";
 import ChatControlBanner from '@/components/layout/ChatControlBanner';
-import { useApiRequests } from '@/hooks/useAPIRequests';
+import { useApiRequests } from '@/hooks/useAPIRequester';
 import ChatCard from '@/components/features/ChatCard';
 import PauseStepCard from '@/components/features/PauseStepCard';
+import ResponsePanel from '@/components/features/ResponsePanel';
+import SystemContextCard from '@/components/features/SystemContextCard';
 // interface ChatRequest {
 //   id: string;
 //   number: number;
@@ -35,7 +37,8 @@ const NewChatPage = () => {
       status: 'pending'
     }
    ]);
-   
+   const [systemContext, setSystemContext] = useState<string>('');
+   const [showSystemContext, setShowSystemContext] = useState(false);
    const addPauseStep = (afterId: string) => {
     const index = requests.findIndex(r => r.id === afterId);
     const afterRequest = requests[index];
@@ -75,7 +78,7 @@ const NewChatPage = () => {
     }));
   };
   const [selectedAPI] = useState('OpenAI');
-  const { processRequests, isProcessing, setIsProcessing } = useApiRequests();
+  const { processRequests, isProcessing, setIsProcessing, conversationHistory} = useApiRequests(systemContext);
 
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
 
@@ -107,6 +110,7 @@ const NewChatPage = () => {
       return req;
     }));
   };
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
 
   const deleteRequest = (id: string) => {
     setRequests(requests.filter(req => req.id !== id));
@@ -117,14 +121,26 @@ const NewChatPage = () => {
     if (!request?.response) return;
     console.log('Saving response for request:', id);
   };
-  const delay = 30; 
+  const delay = 0; 
+  const handlePlay = async (delay: number) => {
+    try {
+      console.log('Starting request process');
+      setIsProcessing(true);
+      await processRequests(requests, selectedAPI);
+    } catch (error) {
+      console.error('Request failed:', error);
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top Banner */}
       <Header />
       <ChatControlBanner 
         onAddStep={(type) => {/* Handle step addition */}}
-        onPlay={() => processRequests(requests, selectedAPI, delay)}
+        //onPlay={handlePlay}
+        onPlay={handlePlay}
         onPause={() => setIsProcessing(false)}
         isPlaying={isProcessing}
       />
@@ -132,6 +148,29 @@ const NewChatPage = () => {
         {/* Left Panel - Requests (1/3 width) */}
         <div className="w-1/3 border-r p-4 bg-background overflow-y-auto">
           <div className="space-y-4">
+          {/* Add System Context Button */}
+          {!showSystemContext && (
+            <Button
+              onClick={() => setShowSystemContext(true)}
+              className="w-full flex items-center justify-center gap-2 mb-4"
+              variant="outline"
+            >
+              <Plus className="h-4 w-4" />
+              Add System Context
+            </Button>
+          )}
+          
+          {/* System Context Card */}
+          {showSystemContext && (
+            <SystemContextCard
+              content={systemContext}
+              onContentChange={setSystemContext}
+              onDelete={() => {
+                setShowSystemContext(false);
+                setSystemContext('');
+              }}
+            />
+          )}
           {requests.map((request, index) => (
             request.type === 'pause' ? (
               <PauseStepCard
@@ -154,6 +193,8 @@ const NewChatPage = () => {
                 onDelete={deleteRequest}
                 onContentChange={updateRequestContent}
                 onAddPause={addPauseStep}
+                onClick={() => setSelectedRequestId(request.id)} // Add this line
+                response={request.response} // Add this line
                 // key={request.id}
                 // {...request}
                 // isFirst={index === 0}
@@ -258,16 +299,19 @@ const NewChatPage = () => {
         </div>
 
         {/* Right Panel - Responses (2/3 width) */}
-        <div className="w-2/3 p-4 bg-background overflow-y-auto">
-          {selectedRequest ? (
+        <ResponsePanel
+          selectedRequestId={selectedRequestId}
+          requests={requests}
+          onSaveResponse={saveResponse}
+        />
+        {/* <div className="w-2/3 p-4 bg-background overflow-y-auto">
+          {selectedRequestId ? (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">
-                  Response
-                </h2>
+                <h2 className="text-xl font-semibold">Response</h2>
                 <Button
                   variant="outline"
-                  onClick={() => saveResponse(selectedRequest)}
+                  onClick={() => saveResponse(selectedRequestId)}
                   className="flex items-center gap-2"
                 >
                   <Save className="h-4 w-4" />
@@ -277,7 +321,7 @@ const NewChatPage = () => {
               <Card>
                 <CardContent className="p-4">
                   <p className="whitespace-pre-wrap">
-                    {requests.find(r => r.id === selectedRequest)?.response || 'Response will appear here...'}
+                    {requests.find(r => r.id === selectedRequestId)?.response || 'No response yet'}
                   </p>
                 </CardContent>
               </Card>
@@ -287,7 +331,8 @@ const NewChatPage = () => {
               Select a request to view its response
             </div>
           )}
-        </div>
+        </div> */}
+        
       </main>
     </div>
   );
