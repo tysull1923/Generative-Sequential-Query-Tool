@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { openAIService } from '../services/openai';
 import { anthropicService } from '../services/anthropic';
 
-export const useApiRequests = () => {
+export const useApiRequests = (systemContext) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [conversationHistory, setConversationHistory] = useState([]);
 
@@ -19,7 +19,10 @@ export const useApiRequests = () => {
     
       const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
       console.log('Got API key:', apiKey ? 'Yes' : 'No');
-      const updatedHistory = [...conversationHistory];
+      const updatedHistory = systemContext 
+      ? [{ role: 'system', content: systemContext }] 
+      : [];
+      //const updatedHistory = [...conversationHistory];
       for (const request of requests) {
         if (request.type === 'chat') {
           updatedHistory.push({ role: 'user', content: request.content });

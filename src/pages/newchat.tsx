@@ -78,7 +78,7 @@ const NewChatPage = () => {
     }));
   };
   const [selectedAPI] = useState('OpenAI');
-  const { processRequests, isProcessing, setIsProcessing, conversationHistory} = useApiRequests();
+  const { processRequests, isProcessing, setIsProcessing, conversationHistory} = useApiRequests(systemContext);
 
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
 
