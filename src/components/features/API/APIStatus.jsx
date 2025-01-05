@@ -1,6 +1,6 @@
 // src/components/features/APIStatus.jsx
 import React from 'react';
-import { useAPIStatus } from '../../hooks/useAPIStatus';
+import { useAPIStatus } from '@/hooks/useAPIStatuses';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
@@ -11,8 +11,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+//import { APISelector } from "./APISelector"
 
-const APIStatus = () => {
+const APIStatusGetter = () => {
   const { apiStatus, updateAPIKey } = useAPIStatus();
   const [selectedAPI, setSelectedAPI] = React.useState('OpenAI');
   
@@ -58,10 +59,10 @@ const APIStatus = () => {
           <span className="text-sm">Claude</span>
         </div>
       </div>
-
+      
      
 
-      {isHomePage && (
+      {/* {isHomePage && (
         <Dialog>
         <DialogTrigger asChild>
           <Button variant="ghost" size="icon">
@@ -101,7 +102,7 @@ const APIStatus = () => {
           </div>
         </DialogContent>
       </Dialog>
-      )}
+      )} */}
 
 
       {isNewChatPage && (
@@ -127,4 +128,4 @@ const APIStatus = () => {
   );
 };
 
-export default APIStatus;
+export default APIStatusGetter;

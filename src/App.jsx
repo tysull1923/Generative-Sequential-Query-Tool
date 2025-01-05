@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage';
+import HomePage from './pages/Home/HomePage';
 import ChatPage from './pages/chat';
 import NewChatPage from "@/pages/newchat.tsx"
 import SettingsPage from './pages/SettingsPage';

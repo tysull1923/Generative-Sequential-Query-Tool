@@ -1,10 +1,10 @@
-import Header from '@/components/layout/Header';
+import Header from '@/components/Banner/MainBanner/MainHeader';
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle2, EyeOff, Eye } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { openAIService } from '../services/openai';
-import { anthropicService } from '../services/anthropic';
-import { API_CONFIG } from '../services/api-config';
+import { openAIService } from '../services/api/implementations/openai';
+import { anthropicService } from '../services/api/implementations/anthropic';
+import { API_CONFIG } from '../services/api/interfaces/api-config';
 
 const SettingsPage = () => {
   const [keys, setKeys] = useState({
