@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Settings, MessageSquarePlus, History } from 'lucide-react';
 import APIStatus from '@/components/features/API/GetAPIStatus';
 import { useState } from 'react';
-import MainBanner from './MainBanner';
+import MainBanner  from './MainBanner';
 import NewChatDropdown from './NewChatDropDown';
 //import MainBanner from './MainBanner';
 

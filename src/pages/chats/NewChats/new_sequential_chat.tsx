@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '../components/ui/card';
 import { Textarea } from '../components/ui/textarea';
 import { Pause, Play, Save, MoveUp, MoveDown, Trash2, Plus } from 'lucide-react';
-import Header from "@/components/Banner/MainBanner/MainHeader";
+import Header  from "@/components/Banner/MainBanner/MainHeader";
 import ChatControlBanner from '@/components/Banner/ChatBanner/ChatControlBanner';
 import { useApiRequests } from '@/hooks/useAPIRequester';
 import ChatCard from '@/components/features/ChatCard';
