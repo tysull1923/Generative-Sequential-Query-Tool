@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Pause, Play, Save, MoveUp, MoveDown, Trash2 } from 'lucide-react';
-import Header from '@/components/layout/Header';
+import Header from '@/components/Banner/MainBanner/MainHeader';
 
 interface Request {
   id: string;

@@ -1,6 +1,6 @@
 // src/hooks/useAPIStatus.js
 import { useState, useEffect } from 'react';
-import { validateOpenAIKey, validateClaudeKey } from '../lib/utils/apiKeyValidator';
+import { validateOpenAIKey, validateClaudeKey } from '../services/api/utils/apiKeyValidator';
 
 export function useAPIStatus() {
   const [apiStatus, setApiStatus] = useState({

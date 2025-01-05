@@ -3,9 +3,11 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Settings, MessageSquarePlus, History } from 'lucide-react';
-import APIStatus from '../features/APIStatus';
+import APIStatus from '@/components/features/API/GetAPIStatus';
 import { useState } from 'react';
-import { useApiConnection } from '@/hooks/useAPIConnection';
+import MainBanner  from './MainBanner';
+import NewChatDropdown from './NewChatDropDown';
+//import MainBanner from './MainBanner';
 
 
 const Header = () => {
@@ -26,10 +28,10 @@ const Header = () => {
           <Link to="/" className="text-2xl font-bold hover:text-primary/90 transition-colors">
             GSQT
           </Link>
+          {/* <MainBanner /> */}
+            <MainBanner />
           
-
-          {/* Navigation */}
-          <nav className="flex items-center space-x-2">
+          {/* <nav className="flex items-center space-x-2">
             <Button
               variant="ghost"
               className="flex items-center"
@@ -63,9 +65,13 @@ const Header = () => {
                 <span className="sr-only">Settings</span>
               </Link>
             </Button>
-          </nav>
+          </nav> */}
+
+
+
           {/* API Status and Selection (only show on home page) */}
-          {isHomePage && (
+          <APIStatus />
+          {/* {isHomePage && (
             <div className="flex items-center space-x-4">
               <APIStatus />
             </div>
@@ -79,9 +85,9 @@ const Header = () => {
             <div className="flex items-center space-x-4">
               <APIStatus />
             </div>
-          )}
+          )} */}
         </div>
-      </div>
+      </div> 
     </header>
   );
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { openAIService } from '../services/openai';
-import { anthropicService } from '../services/anthropic';
+import { openAIService } from '../services/api/implementations/openai';
+import { anthropicService } from '../services/api/implementations/anthropic';
 
 export const useApiConnection = (selectedAPI) => {
   const [status, setStatus] = useState('disconnected');

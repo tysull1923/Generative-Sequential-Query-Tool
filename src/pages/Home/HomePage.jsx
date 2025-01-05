@@ -2,10 +2,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, MessageSquarePlus, History, Plus } from 'lucide-react';
-import APIStatus from '../components/features/APIStatus';
+//import APIStatus from '../components/features/APIStatus';
 import { useNavigate } from 'react-router-dom';
-import ChatPage from './chat';
-import Header from '@/components/layout/Header';
+//import ChatPage from './chat';
+import Header from '@/components/Banner/MainBanner/MainHeader';
 
 import {
   Select,
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+//import MainBanner from '@/components/Banner/MainBanner/MainBanner';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -29,10 +30,11 @@ const HomePage = () => {
       
       {/* Top Banner */}
       <Header />
+      
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <div className="flex space-x-4">
+          {/* <div className="flex space-x-4">
             <Select>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select API" />
@@ -45,8 +47,7 @@ const HomePage = () => {
             </Select>
             
             
-            <APIStatus />
-          </div> 
+          </div>  */}
           
 
           <Button onClick={() => navigate('/new-chat')} className="flex items-center" size="lg">
