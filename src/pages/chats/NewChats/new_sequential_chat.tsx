@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '../components/ui/card';
-import { Textarea } from '../components/ui/textarea';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { Pause, Play, Save, MoveUp, MoveDown, Trash2, Plus } from 'lucide-react';
 import Header  from "@/components/Banner/MainBanner/MainHeader";
 import ChatControlBanner from '@/components/Banner/ChatBanner/ChatControlBanner';
-import { useApiRequests } from '@/hooks/useAPIRequester';
-import ChatCard from '@/components/features/ChatCard';
+import { useApiService } from '@/hooks/useAPIRequest';
+import ChatCard from '@/components/features/seqChatCard';
 import PauseStepCard from '@/components/features/PauseStepCard';
 import ResponsePanel from '@/components/features/ResponsePanel';
 import SystemContextCard from '@/components/features/SystemContextCard';
+import ChatBanner from '@/components/Banner/ChatBanner/ChatBanner';
 // interface ChatRequest {
 //   id: string;
 //   number: number;
@@ -78,7 +79,7 @@ const NewChatPage = () => {
     }));
   };
   const [selectedAPI] = useState('OpenAI');
-  const { processRequests, isProcessing, setIsProcessing, conversationHistory} = useApiRequests(systemContext);
+  const { processRequests, isProcessing, setIsProcessing, conversationHistory} = useApiService(systemContext);
 
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
 
@@ -143,6 +144,13 @@ const NewChatPage = () => {
         onPlay={handlePlay}
         onPause={() => setIsProcessing(false)}
         isPlaying={isProcessing}
+      />
+      <ChatBanner
+        chatType={ChatType.BASE}
+        title={title}
+        settings={settings}
+        onSettingsChange={handleSettingsChange}
+        onTitleChange={setTitle}
       />
       <main className="flex flex-1">
         {/* Left Panel - Requests (1/3 width) */}

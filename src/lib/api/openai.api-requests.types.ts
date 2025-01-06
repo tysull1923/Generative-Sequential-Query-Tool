@@ -7,13 +7,13 @@ export enum Role {
   
   // API Request
   
-  interface ChatRequest {
+  export interface ChatRequest {
     id: string;
     role: Role;
     type: 'chat' | 'pause';
     content?: string;
     status: 'pending' | 'in-progress' | 'completed' | 'paused';
-    response?: chatResponse;
+    response?: ChatResponse;
     isPaused?: boolean;
     number: number;
   }
@@ -21,7 +21,7 @@ export enum Role {
   /**
    * API Response interface
    */
-  export interface chatResponse  {
+  export interface ChatResponse  {
     provider: Role;
     content: string;
     responseType: 'text' | 'code' | 'images';

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Dropdown } from '@/components/shared/Dropdown';
 import { Button } from '@/components/shared/Button';
 import { Menu } from 'lucide-react';
-import { ChatType, MainBannerProps } from '@/pages/Home/HomePage.types';
+import { ChatType } from '@/utils/types/chat.types';
+import { MainBannerProps } from '@/pages/Home/HomePage.types';
 import NewChatDropdown from './NewChatDropDown';
 
 /**
@@ -64,7 +65,7 @@ const MainBanner: React.FC<MainBannerProps> = ({
           <div className="flex items-center space-x-4">
             {/* New Dropdown */}
             <NewChatDropdown 
-            onNewChat= {onNewChat}/>
+            onNewChat= {handleNewChat}/>
             {/* <div className="relative">
               <Dropdown
                 trigger={

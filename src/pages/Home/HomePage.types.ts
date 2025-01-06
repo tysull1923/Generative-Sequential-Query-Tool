@@ -131,7 +131,7 @@ export enum ChatType {
    */
   export interface MainBannerProps {
     /** Callback for creating a new chat */
-    onNewChat: (type: ChatType) => "/new-chat";
+    onNewChat: (type: ChatType) => void;
     
     /** Callback for managing existing chats */
     onManageChats: (type: ChatType) => void;
@@ -147,7 +147,7 @@ export enum ChatType {
     
     /** Optional callback when API selection changes */
     onApiSelect?: (apiKey: string) => void;
-    selectedApi: string;
+    selectedApi?: string;
   }
   
   /**
