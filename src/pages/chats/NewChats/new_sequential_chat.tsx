@@ -11,6 +11,7 @@ import PauseStepCard from '@/components/features/PauseStepCard';
 import ResponsePanel from '@/components/features/ResponsePanel';
 import SystemContextCard from '@/components/features/SystemContextCard';
 import ChatBanner from '@/components/Banner/ChatBanner/ChatBanner';
+import { ChatType } from '@/utils/types/chat.types';
 // interface ChatRequest {
 //   id: string;
 //   number: number;
@@ -29,6 +30,8 @@ interface ChatRequest {
 }
 
 const NewChatPage = () => {
+  const [title, setTitle] = useState("New Chat");
+  const [settings, setting]
   const [requests, setRequests] = useState<ChatRequest[]>([
     {
       id: '1',
