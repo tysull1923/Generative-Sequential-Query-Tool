@@ -32,6 +32,17 @@ export default [
 			'react-refresh/only-export-components': [
 				'warn',
 				{ allowConstantExport: true },
+			],
+			"max-len": [
+				"error",
+				{
+					"code": 150,  // Set the max line length to 150 characters
+					"ignoreComments": true,  // Ignore comments when checking line length
+					"ignoreTrailingComments": true,  // Ignore trailing comments in the line length check
+					"ignoreUrls": true,  // Optional: Ignore lines containing URLs, to avoid issues with long URLs
+					"ignoreStrings": true,  // Optional: Ignore string literals
+					"ignoreTemplateLiterals": true  // Optional: Ignore template literals
+				}
 			]
 		},
 	},
