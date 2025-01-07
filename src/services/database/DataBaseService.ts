@@ -157,6 +157,7 @@ export class DatabaseService extends EventEmitter {
       await mongoose.connect(this.config.uri, connectionOptions);
       this.connection = mongoose.connection;
       this.emit('connected');
+      console.log("trying to connect to database");
     } catch (error) {
       this.emit('error', error);
       // Don't throw error, just log it
