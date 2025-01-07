@@ -1,5 +1,5 @@
 import mongoose, { Connection, Collection } from 'mongoose';
-import { EventEmitter } from 'events';
+import { EventEmitter } from '@/utils/EventEmitter';
 import { Chat, Workflow, Settings } from './schemas';
 
 // ==================== Types & Interfaces ====================
@@ -126,43 +126,83 @@ export class DatabaseService extends EventEmitter {
     }
   }
 
-  public async connect(): Promise<void> {
+  public isConnected(): boolean {
     try {
-      if (this.isConnected()) {
-        return;
-      }
-
-      const connectionOptions = {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        useCreateIndex: true,
-        useFindAndModify: false,
-        poolSize: this.config.options.poolSize,
-        connectTimeoutMS: this.config.options.connectTimeoutMS,
-        socketTimeoutMS: this.config.options.socketTimeoutMS,
-        ssl: this.config.options.ssl,
-        sslValidate: this.config.options.sslValidate,
-        sslCA: this.config.options.sslCA,
-        dbName: this.config.dbName,
-        autoReconnect: true,
-        reconnectTries: this.config.options.maxRetries,
-        reconnectInterval: this.config.options.retryDelay
-      };
-
-      await mongoose.connect(this.config.uri, connectionOptions);
-      this.connection = mongoose.connection;
-      
-      await this.createIndexes();
-      this.startHealthCheck();
-      this.updateMetrics();
-      
+      return mongoose.connection.readyState === 1;
     } catch (error) {
-      const dbError: DatabaseError = error;
-      dbError.isOperational = true;
-      this.log('error', `Failed to connect to MongoDB: ${error.message}`);
-      throw dbError;
+      return false;
     }
   }
+
+  public async connect(): Promise<void> {
+    try {
+      if (this.isConnected()) return;
+      const connectionOptions = {
+              useNewUrlParser: true,
+              useUnifiedTopology: true,
+              useCreateIndex: true,
+              useFindAndModify: false,
+              poolSize: this.config.options.poolSize,
+              connectTimeoutMS: this.config.options.connectTimeoutMS,
+              socketTimeoutMS: this.config.options.socketTimeoutMS,
+              ssl: this.config.options.ssl,
+              sslValidate: this.config.options.sslValidate,
+              sslCA: this.config.options.sslCA,
+              dbName: this.config.dbName,
+              autoReconnect: true,
+              reconnectTries: this.config.options.maxRetries,
+              reconnectInterval: this.config.options.retryDelay
+            };
+      
+      await mongoose.connect(this.config.uri, connectionOptions);
+      this.connection = mongoose.connection;
+      this.emit('connected');
+    } catch (error) {
+      this.emit('error', error);
+      // Don't throw error, just log it
+      console.error('Database connection failed:', error);
+    }
+  }
+ 
+
+
+  // public async connect(): Promise<void> {
+  //   try {
+  //     if (this.isConnected()) {
+  //       return;
+  //     }
+
+  //     const connectionOptions = {
+  //       useNewUrlParser: true,
+  //       useUnifiedTopology: true,
+  //       useCreateIndex: true,
+  //       useFindAndModify: false,
+  //       poolSize: this.config.options.poolSize,
+  //       connectTimeoutMS: this.config.options.connectTimeoutMS,
+  //       socketTimeoutMS: this.config.options.socketTimeoutMS,
+  //       ssl: this.config.options.ssl,
+  //       sslValidate: this.config.options.sslValidate,
+  //       sslCA: this.config.options.sslCA,
+  //       dbName: this.config.dbName,
+  //       autoReconnect: true,
+  //       reconnectTries: this.config.options.maxRetries,
+  //       reconnectInterval: this.config.options.retryDelay
+  //     };
+
+  //     await mongoose.connect(this.config.uri, connectionOptions);
+  //     this.connection = mongoose.connection;
+      
+  //     await this.createIndexes();
+  //     this.startHealthCheck();
+  //     this.updateMetrics();
+      
+  //   } catch (error) {
+  //     const dbError: DatabaseError = error;
+  //     dbError.isOperational = true;
+  //     this.log('error', `Failed to connect to MongoDB: ${error.message}`);
+  //     throw dbError;
+  //   }
+  // }
 
   public async disconnect(): Promise<void> {
     try {
@@ -186,9 +226,6 @@ export class DatabaseService extends EventEmitter {
     }
   }
 
-  public isConnected(): boolean {
-    return mongoose.connection.readyState === 1;
-  }
 
   public getCollection(name: string): Collection {
     if (!this.isConnected()) {

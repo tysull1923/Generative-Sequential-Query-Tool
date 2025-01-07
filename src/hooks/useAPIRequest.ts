@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { openAIService } from '../services/api/implementations/openai_connector';
 import { anthropicService } from '../services/api/implementations/anthropic';
-import { chatRequest } from '@/lib/api/openai.api-requests.types';
+import { ChatRequest } from '@/lib/api/openai.api-requests.types';
 import { ApiProvider } from '@/services/api/interfaces/api.types';
 
-export const useApiRequests = (systemContext: boolean) => {
+export const useApiService = (systemContext: string) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [conversationHistory, setConversationHistory] = useState([]);
+  const [conversationHistory, setConversationHistory] = useState<[{ role: string, content: string}]>();
 
-  const processRequests = async (requests: chatRequest, selectedAPI: ApiProvider, delay = 0) => {
+  const processRequests = async (requests: ChatRequest[], selectedAPI: ApiProvider, delay = 0) => {
     console.log('Starting with history:', conversationHistory);
     setIsProcessing(true);
 

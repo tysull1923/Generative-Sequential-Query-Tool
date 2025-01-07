@@ -1,6 +1,6 @@
 import { Schema, model, Document, Types } from 'mongoose';
-import { EncryptionService } from '../encryption/EncryptionService';
-
+//import { EncryptionService } from '../encryption/encryptionService';
+import { BaseMessage, FileMessage, ChatResponse, ChatStep, ChatType, ChatSavingParams } from '@/utils/types/chat.types';
 // ==================== Chat Interfaces ====================
 
 interface IMessage {
@@ -26,8 +26,19 @@ interface IChatMetadata {
   tags: string[];
 }
 
+
+// Update IChatSettings interface to include chatType
 interface IChatSettings {
   temperature: number;
+  chatType: ChatType;  // Add this property
+  savingParams?: ChatSavingParams;
+  // ... other settings
+}
+
+interface IChatSettings {
+  temperature: number;
+  chatType: ChatType;  // Add this property
+  savingParams?: ChatSavingParams;
   maxTokens?: number;
   topP?: number;
   frequencyPenalty?: number;
@@ -36,6 +47,7 @@ interface IChatSettings {
 }
 
 export interface IChat extends Document {
+  id: string;
   type: 'base' | 'sequential' | 'requirements';
   title: string;
   messages: IMessage[];
@@ -303,8 +315,8 @@ WorkflowSchema.index({ userId: 1, 'metadata.modified': -1 });
 WorkflowSchema.index({ userId: 1, status: 1 });
 WorkflowSchema.index({ title: 'text', description: 'text' });
 
-SettingsSchema.index({ userId: 1 }, { unique: true });
-SettingsSchema.index({ 'apiKeys.service': 1 });
+// SettingsSchema.index({ userId: 1 }, { unique: true });
+// SettingsSchema.index({ 'apiKeys.service': 1 });
 
 // ==================== Middleware ====================
 
@@ -318,26 +330,26 @@ WorkflowSchema.pre('save', function(next) {
   next();
 });
 
-SettingsSchema.pre('save', function(next) {
-  this.metadata.modified = new Date();
-  next();
-});
+// SettingsSchema.pre('save', function(next) {
+//   this.metadata.modified = new Date();
+//   next();
+// });
 
 // Encrypt API keys before saving
-SettingsSchema.pre('save', async function(next) {
-  const encryptionService = new EncryptionService();
+// SettingsSchema.pre('save', async function(next) {
+//   const encryptionService = new EncryptionService();
   
-  for (const key of this.apiKeys) {
-    if (!key.encryptedKey.startsWith('enc_')) {
-      try {
-        key.encryptedKey = await encryptionService.encrypt(key.encryptedKey);
-      } catch (error) {
-        next(error);
-      }
-    }
-  }
-  next();
-});
+//   for (const key of this.apiKeys) {
+//     if (!key.encryptedKey.startsWith('enc_')) {
+//       try {
+//         key.encryptedKey = await encryptionService.encrypt(key.encryptedKey);
+//       } catch (error) {
+//         next(error);
+//       }
+//     }
+//   }
+//   next();
+// });
 
 // ==================== Models ====================
 

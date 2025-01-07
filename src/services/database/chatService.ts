@@ -1,7 +1,10 @@
 import mongoose, { ClientSession } from 'mongoose';
 import { Chat, IChat } from './schemas';
+import { ChatDocument } from '@/utils/types/chat.types';
 import { DatabaseService } from './DataBaseService';
-import NodeCache from 'node-cache';
+//import NodeCache from 'node-cache';
+import { BrowserCache } from '../cache/BrowserCache';
+
 
 // ==================== Types & Interfaces ====================
 
@@ -12,9 +15,6 @@ export interface MessageDocument {
   metadata?: Record<string, any>;
 }
 
-export interface ChatDocument extends Omit<IChat, '_id'> {
-  id?: string;
-}
 
 export interface ChatFilter {
   userId?: string;
@@ -52,7 +52,7 @@ export class ChatServiceError extends Error {
 export class ChatService {
   private static instance: ChatService;
   private dbService: DatabaseService;
-  private cache: NodeCache;
+  private cache: BrowserCache;
   private readonly options: Required<ChatServiceOptions>;
 
   private constructor(options: ChatServiceOptions = {}) {
@@ -62,9 +62,8 @@ export class ChatService {
       cacheTTL: options.cacheTTL ?? 300, // 5 minutes
       batchSize: options.batchSize ?? 100
     };
-    this.cache = new NodeCache({
+    this.cache = new BrowserCache({
       stdTTL: this.options.cacheTTL,
-      checkperiod: this.options.cacheTTL * 0.2
     });
   }
 
