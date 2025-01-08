@@ -5,7 +5,7 @@ import ChatBanner from '@/components/Banner/ChatBanner/ChatBanner';
 import BaseChat from '@/components/Chat/BasicChat/BaseChatMainPage';
 import SequentialChat from '@/components/Chat/Sequential/SequentialChatMainPage';
 import SystemContextModal from '@/components/features/SystemsContext/SystemContextModal';
-import { useApiService } from '@/hooks/useAPIRequest';
+import { useApiService } from '@/services/api/hooks/useAPIRequest';
 import { ApiProvider } from '@/services/api/interfaces/api.types';
 import {
   ChatType,

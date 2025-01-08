@@ -1,6 +1,6 @@
 // src/components/features/APIStatus.jsx
 import React from 'react';
-import { useAPIStatus } from '@/hooks/useAPIStatus';
+import { useAPIStatus } from '@/services/api/hooks/useAPIStatus';
 import { ApiProvider, ApiStatus, ApiConfig } from '@/services/api/interfaces/api.types';
 
 

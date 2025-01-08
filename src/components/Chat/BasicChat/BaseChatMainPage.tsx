@@ -96,7 +96,7 @@ const BaseChat: React.FC<BaseChatProps> = ({
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={chatContainerRef}>
         {/* System Context */}
-        {showSystemContext && (
+        {/* {showSystemContext && (
           <SystemContextCard
             content={systemContext}
             onContentChange={setSystemContext}
@@ -105,7 +105,7 @@ const BaseChat: React.FC<BaseChatProps> = ({
               setSystemContext('');
             }}
           />
-        )}
+        )} */}
 
         {/* Chat Messages */}
         {requests.map((request) => (

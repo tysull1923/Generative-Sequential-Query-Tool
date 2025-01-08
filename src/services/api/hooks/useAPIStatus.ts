@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { validateOpenAIKey, validateClaudeKey } from '../services/api/utils/apiKeyValidator';
+import { validateOpenAIKey, validateClaudeKey } from '@/services/api/utils/apiKeyValidator';
 import { ApiProvider, ApiConfig, ApiStatus } from '@/services/api/interfaces/api.types';
 
 export function useAPIStatus() {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { openAIService } from '../services/api/implementations/openai_connector';
-import { anthropicService } from '../services/api/implementations/anthropic';
+import { openAIService } from '@/services/api/implementations/openai_connector';
+import { anthropicService } from '@/services/api/implementations/anthropic';
 import { ChatRequest } from '@/lib/api/openai.api-requests.types';
 import { ApiProvider, ApiConfig } from '@/services/api/interfaces/api.types';
 
