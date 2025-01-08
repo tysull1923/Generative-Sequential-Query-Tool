@@ -4,7 +4,7 @@ import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ChatCard from '@/components/Chat/BasicChatCard';
 import ResponseCard from '@/components/Chat/ResponseCard';
-import SystemContextCard from '@/components/features/SystemContextCard';
+import SystemContextCard from '@/components/features/SystemsContext/SystemContextCard';
 import {
   ChatCardState,
   ChatRequest,
