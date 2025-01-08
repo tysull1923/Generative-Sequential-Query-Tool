@@ -55,7 +55,6 @@ export class DatabaseService extends EventEmitter {
   private constructor() {
     super();
     this.config = this.loadConfig();
-    this.setupEventListeners();
   }
 
   public static getInstance(): DatabaseService {
@@ -67,18 +66,26 @@ export class DatabaseService extends EventEmitter {
 
   private loadConfig(): DatabaseConfig {
     return {
-      uri: process.env.MONGODB_URI || 'mongodb://localhost:27017',
-      dbName: process.env.MONGODB_DB_NAME || 'gsqt_db',
+      uri: 'mongodb://localhost:27017', //process.env.MONGODB_URI ||
+      dbName: 'gsqt_db', //process.env.MONGODB_DB_NAME ||
       options: {
-        poolSize: parseInt(process.env.MONGODB_POOL_SIZE || '10'),
-        connectTimeoutMS: parseInt(process.env.MONGODB_CONNECT_TIMEOUT || '10000'),
-        socketTimeoutMS: parseInt(process.env.MONGODB_SOCKET_TIMEOUT || '45000'),
-        maxRetries: parseInt(process.env.MONGODB_MAX_RETRIES || '5'),
-        retryDelay: parseInt(process.env.MONGODB_RETRY_DELAY || '5000'),
-        ssl: process.env.MONGODB_SSL === 'true',
-        sslValidate: process.env.MONGODB_SSL_VALIDATE === 'true',
-        sslCA: process.env.MONGODB_SSL_CA,
-        logLevel: (process.env.MONGODB_LOG_LEVEL as 'error' | 'warn' | 'info' | 'debug') || 'info'
+        poolSize: 10,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        maxRetries: 5,
+        retryDelay: 5000,
+        ssl: false,
+        sslValidate: false,
+        logLevel: 'info'
+        // poolSize: parseInt(process.env.MONGODB_POOL_SIZE || '10'),
+        // connectTimeoutMS: parseInt(process.env.MONGODB_CONNECT_TIMEOUT || '10000'),
+        // socketTimeoutMS: parseInt(process.env.MONGODB_SOCKET_TIMEOUT || '45000'),
+        // maxRetries: parseInt(process.env.MONGODB_MAX_RETRIES || '5'),
+        // retryDelay: parseInt(process.env.MONGODB_RETRY_DELAY || '5000'),
+        // ssl: process.env.MONGODB_SSL === 'true',
+        // sslValidate: process.env.MONGODB_SSL_VALIDATE === 'true',
+        // sslCA: process.env.MONGODB_SSL_CA,
+        // logLevel: (process.env.MONGODB_LOG_LEVEL as 'error' | 'warn' | 'info' | 'debug') || 'info'
       }
     };
   }
@@ -158,6 +165,8 @@ export class DatabaseService extends EventEmitter {
       this.connection = mongoose.connection;
       this.emit('connected');
       console.log("trying to connect to database");
+      this.setupEventListeners(); // Set up listeners after connection is established
+
     } catch (error) {
       this.emit('error', error);
       // Don't throw error, just log it

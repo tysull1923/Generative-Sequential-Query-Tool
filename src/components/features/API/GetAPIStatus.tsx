@@ -6,11 +6,11 @@ import { ApiProvider, ApiStatus, ApiConfig } from '@/services/api/interfaces/api
 
 const APIStatus = () => {
   const { apiStatus, updateAPIKey } = useAPIStatus();
+  const [ apiName, setAPIName] = React.useState<ApiConfig["name"]>();
   const [selectedAPI, setSelectedAPI] = React.useState<ApiProvider.OPENAI | ApiProvider.CLAUDE>(ApiProvider.OPENAI);
   const [openaiKey, setOpenaiKey] = React.useState('');
   const [claudeKey, setClaudeKey] = React.useState('');
   const [isUpdating, setIsUpdating] = React.useState(false);
-  const [ apiName, setAPIName] = React.useState<ApiConfig["name"]>()
 
  
 

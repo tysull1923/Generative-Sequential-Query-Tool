@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Pause, Play, Save, MoveUp, MoveDown, Trash2, Plus } from 'lucide-react';
 import Header from "@/components/Banner/MainBanner/MainHeader";
-import ChatControlBanner from '@/components/Banner/ChatBanner/ChatControlBanner';
+import SequentialPromptsPlayPause from '@/components/Chat/Sequential/SequentialPromptsPlayPause';
 import { useApiService } from '@/hooks/useAPIRequest';
 import ChatCard from '@/components/features/seqChatCard';
 import PauseStepCard from '@/components/features/PauseStepCard';
@@ -155,13 +155,7 @@ const NewChatPage = () => {
 		<div className="min-h-screen flex flex-col">
 			{/* Top Banner */}
 			<Header />
-			<ChatControlBanner
-				onAddStep={(type) => {/* Handle step addition */ }}
-				//onPlay={handlePlay}
-				onPlay={handlePlay}
-				onPause={() => setIsProcessing(false)}
-				isPlaying={isProcessing}
-			/>
+			
 			<ChatBanner
 				chatType={ChatType.BASE}
 				title={title}
@@ -173,6 +167,13 @@ const NewChatPage = () => {
 				{/* Left Panel - Requests (1/3 width) */}
 				<div className="w-1/3 border-r p-4 bg-background overflow-y-auto">
 					<div className="space-y-4">
+					<SequentialPromptsPlayPause
+						onAddStep={(type) => {/* Handle step addition */ }}
+						//onPlay={handlePlay}
+						onPlay={handlePlay}
+						onPause={() => setIsProcessing(false)}
+						isPlaying={isProcessing}
+					/>
 						{/* Add System Context Button */}
 						{!showSystemContext && (
 							<Button

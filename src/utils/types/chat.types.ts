@@ -16,9 +16,40 @@ export enum ChatType {
     BASE = 'BASE_CHAT',
     SEQUENTIAL = 'SEQUENTIAL_CHAT',
     REQUIREMENTS = 'REQUIREMENTS_CHAT',
-    WORKFLOW = 'WORKFLOW_CREATION',
-    SCHEDULER = 'SCHEDULER_CREATION'
   }
+    //WORKFLOW = 'WORKFLOW_CREATION',
+    //SCHEDULER = 'SCHEDULER_CREATION'
+
+  export enum Role {
+    SYSTEM = 'system',
+    USER = 'user',
+    DEVELOPER = 'developer',
+    ASSISTANT = 'assistant'
+  }
+  
+  // API Request
+  
+  export type ChatRequest = {
+    id: string;
+    role: Role;
+    type: ChatType;
+    step: 'chat' | 'pause';
+    content?: string;
+    status: 'pending' | 'in-progress' | 'completed' | 'paused';
+    response?: ChatResponse;
+    isPaused?: boolean;
+    number: number;
+  }
+  
+  /**
+   * API Response interface
+   */
+  export type ChatResponse = {
+    provider: Role;
+    content: string;
+    responseType: TextResponse | CodeResponse | ImageResponse | ErrorResponse;
+  }
+  
   export interface ChatDocument {
     id: string;
     title: string;
@@ -189,7 +220,7 @@ export enum ChatType {
     code: string;
   }
   
-  export type ChatResponse = TextResponse | CodeResponse | ImageResponse | ErrorResponse;
+  //export type ChatResponse = TextResponse | CodeResponse | ImageResponse | ErrorResponse;
   
   // Sequential Chat Types
   /**

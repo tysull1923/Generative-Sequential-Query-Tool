@@ -1,6 +1,7 @@
 import { Schema, model, Document, Types } from 'mongoose';
 //import { EncryptionService } from '../encryption/encryptionService';
 import { BaseMessage, FileMessage, ChatResponse, ChatStep, ChatType, ChatSavingParams } from '@/utils/types/chat.types';
+import { ChatRequest } from '@/lib/api/openai.api-requests.types';
 // ==================== Chat Interfaces ====================
 
 interface IMessage {
@@ -50,7 +51,7 @@ export interface IChat extends Document {
   id: string;
   type: 'base' | 'sequential' | 'requirements';
   title: string;
-  messages: IMessage[];
+  messages: ChatRequest[];
   systemContext?: string;
   settings: IChatSettings;
   metadata: IChatMetadata;

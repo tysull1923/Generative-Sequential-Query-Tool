@@ -4,16 +4,16 @@ import { ApiProvider, ApiConfig, ApiStatus } from '@/services/api/interfaces/api
 
 export function useAPIStatus() {
   const [apiStatus, setApiStatus] = useState<ApiStatus["isAvailable"]>(false);
-
   useEffect(() => {
     checkAPIStatus();
   }, []);
+  const [openaiKey, setOpenAIKey] = useState<ApiConfig["apiKey"]>();
 
   const checkAPIStatus = async () => {
     // Get API keys from environment variables or local storage
-    const openaiKey = localStorage.getItem('openai_api_key') || import.meta.env.VITE_OPENAI_API_KEY;
+    const openaiKeyString = localStorage.getItem('openai_api_key') || import.meta.env.VITE_OPENAI_API_KEY;
     const claudeKey = localStorage.getItem('claude_api_key') || import.meta.env.VITE_ANTHROPIC_API_KEY;
-
+    setOpenAIKey(openaiKeyString);
     // Check OpenAI API status
     if (openaiKey) {
       const isOpenAIValid = await validateOpenAIKey(openaiKey);

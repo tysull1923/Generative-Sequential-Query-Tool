@@ -24,7 +24,7 @@ import {
   ExecutionStatus
 } from '@/utils/types/chat.types';
 import { ApiService } from '@/services/api/APIService';
-
+import { useApiService } from '@/hooks/useAPIRequest';
 
 
 /**
@@ -72,10 +72,10 @@ export const useChatStore = create<ChatState>()(
     (set, get) => {
       // Initialize services
       const chatService = ChatService.getInstance();
-      const apiService = new ApiService({
-        baseURL: process.env.VITE_API_URL || '',
-        apiKey: process.env.VITE_API_KEY || ''
-      });
+      // const apiService = new ApiService({
+      //   baseURL: process.env.VITE_API_URL || '',
+      //   apiKey: process.env.VITE_API_KEY || ''
+      // });
 
       return {
         // Initial state
@@ -203,10 +203,10 @@ export const useChatStore = create<ChatState>()(
             };
 
             // Send to API
-            const response = await apiService.sendMessage({
-              message,
-              settings: activeChat.settings
-            });
+            // const response = await apiService.sendMessage({
+            //   message,
+            //   settings: activeChat.settings
+            // });
 
             // Update chat document
             await chatService.updateChat(activeChat.id, {
