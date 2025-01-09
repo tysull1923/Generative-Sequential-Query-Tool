@@ -451,7 +451,7 @@ const SequentialChat: React.FC<SequentialChatProps> = ({
       {/* Right Panel - Responses */}
       <div 
         className="bg-background overflow-hidden"
-        style={{ width: `calc(100% - ${leftPanelWidth}px)` }}
+        style={{ width: `calc(100% + ${leftPanelWidth}px)` }}
       >
         <ResponsePanel
           selectedRequestId={selectedRequestId}
