@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { openAIService } from '@/services/api/implementations/openai_connector';
 import { anthropicService } from '@/services/api/implementations/anthropic';
-import { ChatRequest } from '@/lib/api/openai.api-requests.types';
+//import { ChatRequest } from '@/lib/api/openai.api-requests.types';
 import { ApiProvider, ApiConfig } from '@/services/api/interfaces/api.types';
+import { SequentialStepType, ChatRequest } from '@/utils/types/chat.types';
 
 export const useApiService = (systemContext: string) => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -30,7 +31,7 @@ export const useApiService = (systemContext: string) => {
       : [];
       //const updatedHistory = [...conversationHistory];
       for (const request of requests) {
-        if (request.type === 'chat') {
+        if (request.step === SequentialStepType.MESSAGE) {
           updatedHistory.push({ role: 'user', content: request.content });
           const response = await service.sendChat(updatedHistory, apiKey);
           const assistantMessage = response.choices[0].message;

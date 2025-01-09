@@ -1,7 +1,9 @@
-import React, { useState, useRef } from 'react';
+// src/pages/chat/components/BaseChat.tsx
+import React, { useState, useRef, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ChatCard from '@/components/features/ChatCards/ChatCard';
+import SystemContextCard from '@/components/features/SystemsContext/SystemContextCard';
 import ResponsePanel from '@/components/features/Responses/ResponsePanel';
 import {
   ChatType,
@@ -10,7 +12,8 @@ import {
   Role,
   FileAttachment,
   ExecutionStatus,
-  ChatCardState
+  ChatCardState,
+  SequentialStepType
 } from '@/utils/types/chat.types';
 
 interface BaseChatProps {
@@ -26,26 +29,38 @@ interface BaseChatProps {
 const BaseChat: React.FC<BaseChatProps> = ({
   requests,
   setRequests,
+  systemContext,
+  setSystemContext,
   onProcessRequests,
+  isProcessing,
   onSave
 }) => {
+  // State
   const [error, setError] = useState<string | null>(null);
+  const [showSystemContext, setShowSystemContext] = useState(false);
   const [attachments, setAttachments] = useState<Record<string, FileAttachment[]>>({});
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const [responseId , setResponseID] = useState<ChatRequest["id"]>();
+  // Refs
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Separate active and completed requests
-  const pendingRequest = requests.find(req => 
-    req.status === ChatCardState.READY
-  );
-  
-  const completedRequests = requests.filter(req => 
-    req.status === ChatCardState.SENT || req.status === ChatCardState.COMPLETE
-  );
+  // Auto scroll to bottom when new requests are added
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [requests]);
 
+  // Handlers
   const addNewRequest = () => {
     const newRequest: ChatRequest = {
       id: Date.now().toString(),
       role: Role.USER,
       type: ChatType.BASE,
+      //step: SequentialStepType,
       content: '',
       status: ChatCardState.READY,
       number: requests.length + 1
@@ -69,14 +84,79 @@ const BaseChat: React.FC<BaseChatProps> = ({
     }));
   };
 
+  const handleRemoveAttachment = (requestId: string, attachmentId: string) => {
+    setAttachments(prev => ({
+      ...prev,
+      [requestId]: prev[requestId]?.filter(att => att.id !== attachmentId) || []
+    }));
+  };
+
+  const moveRequest = (id: string, direction: 'up' | 'down') => {
+    const index = requests.findIndex(r => r.id === id);
+    if ((direction === 'up' && index === 0) ||
+        (direction === 'down' && index === requests.length - 1)) return;
+
+    const newRequests = [...requests];
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    const tempNumber = newRequests[index].number;
+    newRequests[index].number = newRequests[swapIndex].number;
+    newRequests[swapIndex].number = tempNumber;
+    
+    [newRequests[index], newRequests[swapIndex]] = 
+    [newRequests[swapIndex], newRequests[index]];
+
+    setRequests(newRequests);
+  };
+
   const deleteRequest = (id: string) => {
-    setRequests(prev => prev.filter(req => req.id !== id));
+    const index = requests.findIndex(r => r.id === id);
+    const newRequests = requests.filter(req => req.id !== id);
+    
+    for (let i = index; i < newRequests.length; i++) {
+      newRequests[i] = {
+        ...newRequests[i],
+        number: newRequests[i].number - 1
+      };
+    }
+
+    setRequests(newRequests);
+    setAttachments(prev => {
+      const newAttachments = { ...prev };
+      delete newAttachments[id];
+      return newAttachments;
+    });
+    
+    if (selectedRequestId === id) {
+      setSelectedRequestId(null);
+    }
   };
 
   const updateRequestContent = (id: string, content: string) => {
-    setRequests(prev =>
-      prev.map(req => req.id === id ? { ...req, content } : req)
-    );
+    setRequests(requests.map(req =>
+      req.id === id ? { ...req, content } : req
+    ));
+  };
+
+  const handleSaveResponse = (id: string) => {
+    const request = requests.find(r => r.id === id);
+    if (request?.response) {
+      // Implement save functionality
+      onSave({
+        id,
+        title: `Chat ${request.number}`,
+        type: ChatType.BASE,
+        messages: [],
+        responses: [request.response],
+        settings: {
+          temperature: 0.7,
+          chatType: ChatType.BASE
+        },
+        executionStatus: ExecutionStatus.COMPLETED,
+        lastModified: new Date(),
+        createdAt: new Date()
+      });
+    }
   };
 
   return (
@@ -88,78 +168,97 @@ const BaseChat: React.FC<BaseChatProps> = ({
         </Alert>
       )}
 
-      {/* Main Content Area - Completed Requests */}
-      <div className="flex-1 p-4">
-        <div className="space-y-6">
-          {completedRequests.map((request) => (
-            <div key={request.id} className="flex flex-col">
-              {/* Request - At the top left */}
-              <div className="w-1/3">
-                <div className="bg-gray-50 p-4 rounded-lg shadow">
-                  <ChatCard
-                    id={request.id}
-                    number={request.number}
-                    content={request.content || ''}
-                    status={request.status}
-                    chatType={ChatType.BASE}
-                    isFirst={request.number === 1}
-                    isLast={false}
-                    attachments={attachments[request.id]}
-                    onMove={() => {}}
-                    onDelete={deleteRequest}
-                    onContentChange={updateRequestContent}
-                    onSend={() => onProcessRequests(request.id)}
-                    onAttach={handleAttachment}
-                    onRemoveAttachment={() => {}}
-                  />
-                </div>
-              </div>
+      {/* Chat History Area */}
+      <div className="flex-1 overflow-y-auto p-4" ref={chatContainerRef}>
+        {showSystemContext && (
+          <SystemContextCard
+            content={systemContext}
+            onContentChange={setSystemContext}
+            onDelete={() => {
+              setShowSystemContext(false);
+              setSystemContext('');
+            }}
+          />
+        )}
+        <div className="fixed top-4 right-4 bottom-32 w-2/3">
+          <ResponsePanel
+            selectedRequestId={responseId}
+            requests={requests}
+            onSaveResponse={handleSaveResponse}
+          />
+        </div>
 
-              {/* Response - Full width below */}
-              {request.response && (
-                <div className="w-full mt-4">
-                  <div className="bg-white p-4 rounded-lg shadow">
+        {/* Completed Requests Display */}
+        <div className="space-y-4">
+          {requests
+            .filter(request => request.status === ChatCardState.COMPLETE)
+            .map(request => (
+              <div 
+                key={request.id} 
+                className="space-y-4"
+                onClick={() => setSelectedRequestId(request.id)}
+              >
+                {/* Request - Right aligned, 2/3 width */}
+                <div className="ml-auto w-2/3 bg-gray-50 p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                  <div className="fixed top-4 right-4 bottom-32 w-2/3">
                     <ResponsePanel
-                      selectedRequestId={request.id}
-                      requests={[request]}
-                      onSaveResponse={onSave}
+                      selectedRequestId={selectedRequestId}
+                      requests={requests}
+                      onSaveResponse={handleSaveResponse}
                     />
                   </div>
+                  {/* {request.content} */}
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            ))}
         </div>
       </div>
 
-      {/* Active Input Area - Bottom Center */}
+      {/* Response Panel - Only show when a request is selected */}
+      {selectedRequestId && (
+        <div className="fixed top-4 right-4 bottom-32 w-2/3">
+          <ResponsePanel
+            selectedRequestId={selectedRequestId}
+            requests={requests}
+            onSaveResponse={handleSaveResponse}
+          />
+        </div>
+      )}
+
+      {/* Input Area - Centered at bottom */}
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-1/2 z-10">
-        {pendingRequest ? (
-          <div className="bg-white shadow-lg rounded-lg">
+        {/* Only show the current (pending) request card */}
+        {requests
+          .filter(request => request.status === ChatCardState.READY)
+          .slice(-1)
+          .map(request => (
             <ChatCard
-              id={pendingRequest.id}
-              number={pendingRequest.number}
-              content={pendingRequest.content || ''}
-              status={pendingRequest.status}
+              key={request.id}
+              id={request.id}
+              number={request.number}
+              content={request.content || ''}
+              status={request.status}
               chatType={ChatType.BASE}
-              isFirst={pendingRequest.number === 1}
+              isFirst={false}
               isLast={true}
-              attachments={attachments[pendingRequest.id]}
-              onMove={() => {}}
+              attachments={attachments[request.id]}
+              onMove={moveRequest}
               onDelete={deleteRequest}
               onContentChange={updateRequestContent}
-              onSend={() => onProcessRequests(pendingRequest.id)}
+              onSend={() => onProcessRequests(request.id)}
               onAttach={handleAttachment}
-              onRemoveAttachment={() => {}}
+              onRemoveAttachment={handleRemoveAttachment}
             />
-          </div>
-        ) : (
-          <button
+          ))}
+
+        {/* Add new chat card if there are no pending requests */}
+        {!requests.some(req => req.status === ChatCardState.READY) && (
+          <div 
             onClick={addNewRequest}
-            className="w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:bg-gray-100 transition-colors"
+            className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:bg-gray-100 transition-colors"
           >
             <p className="text-gray-600">Click to start a new chat</p>
-          </button>
+          </div>
         )}
       </div>
     </div>

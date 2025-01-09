@@ -81,7 +81,7 @@ const ResponsePanel = ({
           </div>
           <Card className="flex-grow overflow-auto">
             <CardContent className="p-4 h-full">
-              {formatResponse(requests.find(r => r.id === selectedRequestId)?.response || 'No response yet')}
+              {formatResponse(requests.find(r => r.id === selectedRequestId)?.response.content || 'No response yet')}
             </CardContent>
           </Card>
         </div>

@@ -296,7 +296,7 @@ const SequentialChat: React.FC<SequentialChatProps> = ({
     }
   };
 
-  // Sequential Execution
+  //Sequential Execution
   // const processSequentialRequests = async () => {
   //   if (executionStatus === ExecutionStatus.RUNNING) return;
     

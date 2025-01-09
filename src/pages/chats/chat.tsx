@@ -12,6 +12,7 @@ import {
   ChatType,
   ChatSettings,
   ChatRequest,
+  ChatResponse,
   Role,
   ExecutionStatus,
   ChatCardState
@@ -36,7 +37,10 @@ const ChatPage: React.FC = () => {
   const [isSystemContextModalOpen, setIsSystemContextModalOpen] = useState(false);
   const [executionStatus, setExecutionStatus] = useState<ExecutionStatus>(ExecutionStatus.IDLE);
   const [error, setError] = useState<string | null>(null);
-  
+  const [chatResponse, setChatResponse] = useState<ChatResponse>({
+    provider: Role.ASSISTANT,
+    content: ''
+});
   // Get API context and LangChain service
   const { selectedAPI } = useAPI();
   const { 
@@ -51,6 +55,7 @@ const ChatPage: React.FC = () => {
 
   // Initialize requests if empty
   useEffect(() => {
+    
     if (requests.length === 0) {
       setRequests([{
         id: '1',
@@ -58,6 +63,7 @@ const ChatPage: React.FC = () => {
         type: settings.chatType,
         content: '',
         status: ChatCardState.READY,
+        response: chatResponse,
         number: 1
       }]);
     }
