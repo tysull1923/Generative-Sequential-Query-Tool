@@ -1,20 +1,19 @@
 // src/components/Banner/ChatBanner/ChatBanner.tsx
 // src/components/Banner/ChatBanner/ChatBanner.tsx
+
+
+// src/components/Banner/ChatBanner/ChatBanner.tsx
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   ChatType,
   ChatSettings,
-  ChatParameters,
   ChatSavingParams,
+  SequentialStepType,
 } from '@/utils/types/chat.types';
-import { AlertCircle, ChevronDown } from 'lucide-react';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import ToolsMenu from '@/components/features/Tools/ToolsMenu';
+import ChatStepCardSettings from '@/components/features/ChatStepCards/ChatStepCardsSettings';
 import SaveSettings from '@/components/features/ChatSaveSettings/ChatSaveSettingsMenu';
+import { AlertCircle } from 'lucide-react';
 
 interface ChatBannerProps {
   chatType: ChatType;
@@ -24,7 +23,7 @@ interface ChatBannerProps {
   onTitleChange: (title: string) => void;
   onSystemContextClick: () => void;
   hasSystemContext: boolean;
-  onAddStep?: (stepType: 'pause' | 'delay') => void;
+  onAddStep?: (stepType: SequentialStepType.PAUSE | SequentialStepType.DELAY) => void;
   className?: string;
 }
 
@@ -36,7 +35,7 @@ const ChatBanner: React.FC<ChatBannerProps> = ({
   onTitleChange,
   onSystemContextClick,
   hasSystemContext,
-  onAddStep,
+  //onAddStep,
   className = ''
 }) => {
   // State
@@ -99,7 +98,7 @@ const ChatBanner: React.FC<ChatBannerProps> = ({
 
   return (
     <div className={`w-full bg-white shadow-sm border-b border-gray-200 px-4 py-2 flex items-center justify-between ${className}`}>
-      {/* Left section - Tools Menu */}
+      {/* Left section - Tools Menu and Sequential Step Settings */}
       <div className="flex items-center space-x-4">
         <ToolsMenu
           settings={settings}
@@ -109,31 +108,13 @@ const ChatBanner: React.FC<ChatBannerProps> = ({
           hasSystemContext={hasSystemContext}
         />
 
-        {/* Sequential Chat Step Options */}
+        {/* Only show ChatStepCardSettings for Sequential Chat
         {chatType === ChatType.SEQUENTIAL && onAddStep && (
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100">
-                <span>Add Step</span>
-                <ChevronDown size={16} />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48 p-2">
-              <button
-                onClick={() => onAddStep('pause')}
-                className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md"
-              >
-                Add Pause
-              </button>
-              <button
-                onClick={() => onAddStep('delay')}
-                className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md"
-              >
-                Add Delay
-              </button>
-            </PopoverContent>
-          </Popover>
-        )}
+          <ChatStepCardSettings
+            onAddStep={onAddStep}
+            className="ml-2"
+          />
+        )} */}
       </div>
 
       {/* Middle section - Title */}
@@ -178,6 +159,184 @@ const ChatBanner: React.FC<ChatBannerProps> = ({
 };
 
 export default ChatBanner;
+// import React, { useState, useCallback, useRef, useEffect } from 'react';
+// import {
+//   ChatType,
+//   ChatSettings,
+//   ChatParameters,
+//   ChatSavingParams,
+// } from '@/utils/types/chat.types';
+// import { AlertCircle, ChevronDown } from 'lucide-react';
+// import {
+//   Popover,
+//   PopoverContent,
+//   PopoverTrigger,
+// } from '@/components/ui/popover';
+// import ToolsMenu from '@/components/features/Tools/ToolsMenu';
+// import SaveSettings from '@/components/features/ChatSaveSettings/ChatSaveSettingsMenu';
+
+// interface ChatBannerProps {
+//   chatType: ChatType;
+//   title: string;
+//   settings: ChatSettings;
+//   onSettingsChange: (settings: Partial<ChatSettings>) => void;
+//   onTitleChange: (title: string) => void;
+//   onSystemContextClick: () => void;
+//   hasSystemContext: boolean;
+//   onAddStep?: (stepType: 'pause' | 'delay') => void;
+//   className?: string;
+// }
+
+// const ChatBanner: React.FC<ChatBannerProps> = ({
+//   chatType,
+//   title,
+//   settings,
+//   onSettingsChange,
+//   onTitleChange,
+//   onSystemContextClick,
+//   hasSystemContext,
+//   onAddStep,
+//   className = ''
+// }) => {
+//   // State
+//   const [isEditingTitle, setIsEditingTitle] = useState(false);
+//   const [titleInput, setTitleInput] = useState(title);
+//   const [error, setError] = useState<string | null>(null);
+//   const titleInputRef = useRef<HTMLInputElement>(null);
+
+//   // Update local title when prop changes
+//   useEffect(() => {
+//     setTitleInput(title);
+//   }, [title]);
+
+//   // Focus input when editing starts
+//   useEffect(() => {
+//     if (isEditingTitle && titleInputRef.current) {
+//       titleInputRef.current.focus();
+//     }
+//   }, [isEditingTitle]);
+
+//   // Tools menu handlers
+//   const handleTemperatureChange = useCallback((value: string) => {
+//     const temp = parseFloat(value);
+//     if (!isNaN(temp) && temp >= 0 && temp <= 2) {
+//       onSettingsChange({ temperature: temp });
+//     }
+//   }, [onSettingsChange]);
+
+//   const handleChatTypeChange = useCallback((type: ChatType) => {
+//     onSettingsChange({ chatType: type });
+//   }, [onSettingsChange]);
+
+//   // Saving params handlers
+//   const handleSavingParamsChange = useCallback((params: Partial<ChatSavingParams>) => {
+//     const currentParams = settings.savingParams || {
+//       saveToApplication: false,
+//       saveToFile: false
+//     };
+//     onSettingsChange({
+//       savingParams: { ...currentParams, ...params }
+//     });
+//   }, [settings.savingParams, onSettingsChange]);
+
+//   // Title handlers
+//   const handleTitleSubmit = useCallback(() => {
+//     if (titleInput.trim() !== title) {
+//       onTitleChange(titleInput.trim());
+//     }
+//     setIsEditingTitle(false);
+//   }, [titleInput, title, onTitleChange]);
+
+//   const handleTitleKeyDown = useCallback((e: React.KeyboardEvent) => {
+//     if (e.key === 'Enter') {
+//       handleTitleSubmit();
+//     } else if (e.key === 'Escape') {
+//       setTitleInput(title);
+//       setIsEditingTitle(false);
+//     }
+//   }, [handleTitleSubmit, title]);
+
+//   return (
+//     <div className={`w-full bg-white shadow-sm border-b border-gray-200 px-4 py-2 flex items-center justify-between ${className}`}>
+//       {/* Left section - Tools Menu */}
+//       <div className="flex items-center space-x-4">
+//         <ToolsMenu
+//           settings={settings}
+//           onTemperatureChange={handleTemperatureChange}
+//           onChatTypeChange={handleChatTypeChange}
+//           onSystemContextClick={onSystemContextClick}
+//           hasSystemContext={hasSystemContext}
+//         />
+
+//         {/* Sequential Chat Step Options */}
+//         {chatType === ChatType.SEQUENTIAL && onAddStep && (
+//           <Popover>
+//             <PopoverTrigger asChild>
+//               <button className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100">
+//                 <span>Add Step</span>
+//                 <ChevronDown size={16} />
+//               </button>
+//             </PopoverTrigger>
+//             <PopoverContent className="w-48 p-2">
+//               <button
+//                 onClick={() => onAddStep('pause')}
+//                 className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md"
+//               >
+//                 Add Pause
+//               </button>
+//               <button
+//                 onClick={() => onAddStep('delay')}
+//                 className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md"
+//               >
+//                 Add Delay
+//               </button>
+//             </PopoverContent>
+//           </Popover>
+//         )}
+//       </div>
+
+//       {/* Middle section - Title */}
+//       <div
+//         className="flex-1 mx-4 text-center"
+//         onDoubleClick={() => setIsEditingTitle(true)}
+//       >
+//         {isEditingTitle ? (
+//           <input
+//             ref={titleInputRef}
+//             type="text"
+//             value={titleInput}
+//             onChange={(e) => setTitleInput(e.target.value)}
+//             onBlur={handleTitleSubmit}
+//             onKeyDown={handleTitleKeyDown}
+//             className="w-full text-center bg-white border-b border-blue-500 focus:outline-none px-2 py-1"
+//           />
+//         ) : (
+//           <h1 className="text-lg font-medium truncate cursor-pointer">
+//             {title || 'Untitled Chat'}
+//           </h1>
+//         )}
+//       </div>
+
+//       {/* Right section - Save Settings */}
+//       <div className="flex items-center space-x-4">
+//         <SaveSettings
+//           settings={settings}
+//           onSavingParamsChange={handleSavingParamsChange}
+//         />
+
+//         {/* Error Indicator */}
+//         {error && (
+//           <div className="text-red-500 flex items-center space-x-1">
+//             <AlertCircle size={16} />
+//             <span className="text-sm">{error}</span>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default ChatBanner;
 
 
 

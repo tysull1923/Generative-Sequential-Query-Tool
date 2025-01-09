@@ -22,6 +22,63 @@ export const useLangChainService = (
   const [isProcessing, setIsProcessing] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<Array<HumanMessage | SystemMessage | AIMessage>>([]);
   const [apiKeyValue, setAPIKey] = useState<ApiConfig["apiKey"]>();
+  const [isConnected, setIsConnected] = useState(false);
+
+  const checkApiKeys = () => {
+    const openaiKey = import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('OPENAI_API_KEY');
+    const claudeKey = import.meta.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem('ANTHROPIC_API_KEY');
+    
+    return {
+      hasOpenAI: !!openaiKey,
+      hasClaude: !!claudeKey,
+      openaiKey,
+      claudeKey
+    };
+  };
+
+  const checkOllamaConnection = async () => {
+    try {
+      const response = await fetch(`${ollamaConfig?.baseUrl || "http://localhost:11434"}/api/version`, {
+        method: 'GET',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to connect to Ollama');
+      }
+      
+      const data = await response.json();
+      setIsConnected(true);
+      return { connected: true, version: data.version };
+    } catch (error) {
+      setIsConnected(false);
+      console.error('Ollama connection failed:', error);
+      return { connected: false, error };
+    }
+  };
+
+  const getAvailableAPI = async (): Promise<{ api: ExtendedApiProvider; apiKey?: string }> => {
+    const { hasOpenAI, hasClaude, openaiKey, claudeKey } = checkApiKeys();
+    
+    // If we have API keys, use them in order of preference
+    if (hasOpenAI) {
+      return { api: 'OpenAI', apiKey: openaiKey };
+    }
+    if (hasClaude) {
+      return { api: 'Anthropic', apiKey: claudeKey };
+    }
+    
+    // If no API keys, check if Ollama is available
+    try {
+      const ollamaStatus = await checkOllamaConnection();
+      if (ollamaStatus.connected) {
+        return { api: 'Ollama' };
+      }
+    } catch (error) {
+      console.error('Failed to connect to Ollama:', error);
+    }
+    
+    throw new Error('No available API providers found. Please configure an API key or ensure Ollama is running.');
+  };
 
   const createModel = (selectedAPI: ExtendedApiProvider, apiKey?: string) => {
     switch (selectedAPI) {
@@ -40,11 +97,92 @@ export const useLangChainService = (
       case 'Ollama':
         return new ChatOllama({
           baseUrl: ollamaConfig?.baseUrl || "http://localhost:11434",
-          model: ollamaConfig?.model || "llama2",
+          model: ollamaConfig?.model || "llama3.1",
           temperature: ollamaConfig?.temperature || 0.7,
         });
       default:
         throw new Error(`Unsupported API provider: ${selectedAPI}`);
+    }
+  };
+
+  const processRequests = async (
+    requests: ChatRequest[], 
+    selectedAPI: ExtendedApiProvider, 
+    delay = 0
+  ) => {
+    console.log('Starting with history:', conversationHistory);
+    setIsProcessing(true);
+
+    try {
+      let activeAPI = selectedAPI;
+      let activeApiKey;
+
+      // If no API key is available for the selected API, get an available one
+      if (selectedAPI !== 'Ollama') {
+        const apiKey = selectedAPI === 'OpenAI' 
+          ? (import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('OPENAI_API_KEY'))
+          : (import.meta.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem('ANTHROPIC_API_KEY'));
+
+        if (!apiKey) {
+          console.log('No API key found, attempting to find available provider...');
+          const available = await getAvailableAPI();
+          activeAPI = available.api;
+          activeApiKey = available.apiKey;
+          console.log(`Defaulting to ${activeAPI}`);
+        } else {
+          activeApiKey = apiKey;
+        }
+      }
+
+      // If we're using Ollama, verify the connection first
+      if (activeAPI === 'Ollama') {
+        const ollamaStatus = await checkOllamaConnection();
+        if (!ollamaStatus.connected) {
+          throw new Error('Failed to connect to Ollama. Please ensure Ollama is running.');
+        }
+      }
+
+      // Create model with the active API
+      const model = createModel(activeAPI, activeApiKey);
+
+      // Initialize message history with system context if provided
+      let currentHistory = [...conversationHistory];
+      if (systemContext && currentHistory.length === 0) {
+        currentHistory = [new SystemMessage({ content: systemContext })];
+      }
+
+      // Process each request sequentially
+      for (const request of requests) {
+        const messages = convertToLangChainMessages([request], systemContext);
+        currentHistory = [...currentHistory, ...messages];
+
+        if (delay > 0) {
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+
+        try {
+          const response = await model.invoke(currentHistory);
+          const aiMessage = new AIMessage({ content: response.content });
+          currentHistory.push(aiMessage);
+          
+          request.response = response.content;
+          request.status = 'completed';
+        } catch (error) {
+          console.error(`Error processing request with ${activeAPI}:`, error);
+          request.status = 'error';
+          request.response = `Error: ${error.message}`;
+          throw error;
+        }
+      }
+
+      setConversationHistory(currentHistory);
+      return requests;
+
+    } catch (error) {
+      console.error('LangChain request failed:', error);
+      throw error;
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -59,91 +197,10 @@ export const useLangChainService = (
     }
 
     for (const request of requests) {
-      if (request.type === 'chat') {
-        messages.push(new HumanMessage({ content: request.content }));
-      }
+      messages.push(new HumanMessage({ content: request.content }));
     }
 
     return messages;
-  };
-
-  const processRequests = async (
-    requests: ChatRequest[], 
-    selectedAPI: ExtendedApiProvider, 
-    delay = 0
-  ) => {
-    console.log('Starting with history:', conversationHistory);
-    setIsProcessing(true);
-
-    try {
-      let model;
-      
-      if (selectedAPI === 'Ollama') {
-        // Create Ollama model with local configuration
-        model = createModel('Ollama');
-      } else {
-        // Get API key for cloud providers
-        const apiKey = selectedAPI === 'OpenAI' 
-          ? (process.env.VITE_OPENAI_API_KEY || localStorage.getItem('OPENAI_API_KEY'))
-          : (process.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem('ANTHROPIC_API_KEY'));
-
-        if (!apiKey) {
-          throw new Error(`No API key found for ${selectedAPI}`);
-        }
-
-        setAPIKey(apiKey);
-        model = createModel(selectedAPI, apiKey);
-      }
-
-      // Initialize message history with system context if provided
-      let currentHistory = [...conversationHistory];
-      if (systemContext && currentHistory.length === 0) {
-        currentHistory = [new SystemMessage({ content: systemContext })];
-      }
-
-      // Process each request sequentially
-      for (const request of requests) {
-        if (request.type === 'chat') {
-          // Add user message to history
-          const userMessage = new HumanMessage({ content: request.content });
-          currentHistory.push(userMessage);
-
-          // Apply delay if specified
-          if (delay > 0) {
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
-
-          try {
-            // Get response from model
-            const response = await model.invoke(currentHistory);
-            
-            // Add assistant response to history
-            currentHistory.push(new AIMessage({ content: response.content }));
-            
-            // Update request status and response
-            request.response = response.content;
-            request.status = 'completed';
-          } catch (error) {
-            console.error(`Error processing request with ${selectedAPI}:`, error);
-            request.status = 'error';
-            request.response = `Error: ${error.message}`;
-            throw error;
-          }
-        }
-      }
-
-      // Update conversation history
-      setConversationHistory(currentHistory);
-      console.log('Updated history:', currentHistory);
-      
-      return requests;
-
-    } catch (error) {
-      console.error('LangChain request failed:', error);
-      throw error;
-    } finally {
-      setIsProcessing(false);
-    }
   };
 
   const resetHistory = () => {
@@ -152,20 +209,17 @@ export const useLangChainService = (
 
   const getModelInfo = async (selectedAPI: ExtendedApiProvider) => {
     if (selectedAPI === 'Ollama') {
-      const model = createModel('Ollama');
       try {
-        // Attempt to get model information
-        const modelInfo = await fetch(`${ollamaConfig?.baseUrl || "http://localhost:11434"}/api/show`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: ollamaConfig?.model || "llama2"
-          })
-        }).then(res => res.json());
+        const response = await fetch(`${ollamaConfig?.baseUrl || "http://localhost:11434"}/api/tags`, {
+          method: 'GET'
+        });
         
-        return modelInfo;
+        if (!response.ok) {
+          throw new Error('Failed to get Ollama models');
+        }
+        
+        const data = await response.json();
+        return data.models;
       } catch (error) {
         console.error('Failed to get Ollama model info:', error);
         return null;
@@ -180,6 +234,8 @@ export const useLangChainService = (
     setIsProcessing, 
     conversationHistory,
     resetHistory,
-    getModelInfo
+    getModelInfo,
+    checkConnection: checkOllamaConnection,
+    isConnected
   };
 };

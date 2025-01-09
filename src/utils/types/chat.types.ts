@@ -29,22 +29,23 @@ export enum ChatType {
   
   // API Request
   
-  export type ChatRequest = {
+  export interface ChatRequest {
     id: string;
     role: Role;
     type: ChatType;
-    step: 'chat' | 'pause';
+    step?: SequentialStepType;
     content?: string;
-    status: 'pending' | 'in-progress' | 'completed' | 'paused';
+    status: ChatCardState;
     response?: ChatResponse;
     isPaused?: boolean;
     number: number;
   }
   
+  
   /**
    * API Response interface
    */
-  export type ChatResponse = {
+  export interface ChatResponse {
     provider: Role;
     content: string;
     responseType: TextResponse | CodeResponse | ImageResponse | ErrorResponse;
@@ -55,7 +56,7 @@ export enum ChatType {
     title: string;
     type: ChatType;
     settings: ChatSettings;
-    messages: (BaseMessage | FileMessage)[];
+    messages: ChatRequest[];
     responses: ChatResponse[];  // Add this property
     executionStatus: ExecutionStatus | undefined;
     steps?: ChatStep[];        // Add this property
@@ -230,6 +231,7 @@ export enum ChatType {
   export interface PauseStep {
     type: SequentialStepType.PAUSE;
     id: string;
+    isPaused: boolean;
     position: number;
   }
   
@@ -252,8 +254,19 @@ export enum ChatType {
     type: SequentialStepType.MESSAGE;
     id: string;
     position: number;
-    message: BaseMessage;
+    //message: BaseMessage;
+    //response?: ChatResponse;
   }
+  // export interface MessageStep extends ChatRequest {
+  //   position: number;
+  // } 
+  //{
+  //   type: SequentialStepType.MESSAGE;
+  //   id: string;
+  //   position: number;
+  //   message: BaseMessage;
+  //   response?: ChatResponse;
+  // }
   
   export type SequentialStep = PauseStep | DelayStep | MessageStep;
   

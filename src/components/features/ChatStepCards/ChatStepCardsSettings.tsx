@@ -1,4 +1,5 @@
 // src/components/SequentialSteps/SequentialStepsMenu.tsx
+// src/components/features/ChatStepCards/ChatStepCardSettings.tsx
 import React from 'react';
 import { ChevronDown, Pause, Clock } from 'lucide-react';
 import {
@@ -7,14 +8,14 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-//import { Separator } from '@/components/ui/separator';
+import { SequentialStepType } from '@/utils/types/chat.types';
 
-interface SequentialStepsMenuProps {
-  onAddStep: (stepType: 'pause' | 'delay') => void;
+interface ChatStepCardSettingsProps {
+  onAddStep: (stepType: SequentialStepType.PAUSE | SequentialStepType.DELAY) => void;
   className?: string;
 }
 
-const SequentialStepsMenu: React.FC<SequentialStepsMenuProps> = ({
+const ChatStepCardSettings: React.FC<ChatStepCardSettingsProps> = ({
   onAddStep,
   className = ''
 }) => {
@@ -34,7 +35,7 @@ const SequentialStepsMenu: React.FC<SequentialStepsMenuProps> = ({
           <div className="space-y-1">
             {/* Pause Step */}
             <button
-              onClick={() => onAddStep('pause')}
+              onClick={() => onAddStep(SequentialStepType.PAUSE)}
               className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-100 rounded-md transition-colors"
             >
               <Pause className="h-4 w-4" />
@@ -43,7 +44,7 @@ const SequentialStepsMenu: React.FC<SequentialStepsMenuProps> = ({
 
             {/* Delay Step */}
             <button
-              onClick={() => onAddStep('delay')}
+              onClick={() => onAddStep(SequentialStepType.DELAY)}
               className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-100 rounded-md transition-colors"
             >
               <Clock className="h-4 w-4" />
@@ -52,9 +53,8 @@ const SequentialStepsMenu: React.FC<SequentialStepsMenuProps> = ({
           </div>
 
           {/* Description */}
-          {/* <Separator className="my-2" /> */}
-          <div className="px-3 py-2">
-            <p className="text-xs text-muted-foreground">
+          <div className="mt-2 px-3 py-2 bg-gray-50 rounded-md">
+            <p className="text-xs text-gray-600">
               Pause steps wait for manual continuation.
               Delay steps wait for a specified time.
             </p>
@@ -65,4 +65,4 @@ const SequentialStepsMenu: React.FC<SequentialStepsMenuProps> = ({
   );
 };
 
-export default SequentialStepsMenu;
+export default ChatStepCardSettings;

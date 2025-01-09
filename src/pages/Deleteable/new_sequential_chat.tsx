@@ -6,9 +6,9 @@ import { Pause, Play, Save, MoveUp, MoveDown, Trash2, Plus } from 'lucide-react'
 import Header from "@/components/Banner/MainBanner/MainHeader";
 import SequentialPromptsPlayPause from '@/components/Chat/Sequential/SequentialPromptsPlayPause';
 import { useApiService } from '@/hooks/useAPIRequest';
-import ChatCard from '@/components/Chat/Sequential/seqChatCard';
+import ChatCard from '@/components/PossiblyDeleteable/seqChatCard';
 import PauseStepCard from '@/components/features/ChatStepCards/PauseStepCard';
-import ResponsePanel from '@/components/features/ResponsePanel';
+import ResponsePanel from '@/components/features/Responses/ResponsePanel';
 import SystemContextCard from '@/components/features/SystemsContext/SystemContextCard';
 import ChatBanner from '@/components/Banner/ChatBanner/ChatBanner';
 import { ChatSettings, ChatType } from '@/utils/types/chat.types';

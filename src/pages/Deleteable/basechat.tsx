@@ -5,8 +5,8 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ChatBanner from '@/components/Banner/ChatBanner/ChatBanner';
-import ChatCard from '@/components/Chat/BasicChatCard';
-import ResponseCard from '@/components/Chat/ResponseCard';
+import ChatCard from '@/components/PossiblyDeleteable/BasicChatCard';
+import ResponseCard from '@/components/features/Responses/ResponseCard';
 import {
   ChatType,
   ChatSettings,

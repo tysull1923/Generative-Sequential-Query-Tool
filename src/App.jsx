@@ -6,10 +6,12 @@ import SettingsPage from './pages/SettingsPage';
 import './styles/globals.css';
 //import BaseChat from './pages/chats/Chats/basechat';
 import ChatPage from './pages/chats/chat';
+import { APIProvider } from './context/APIContext';
 
 function App() {
   return (
-    <div className="min-h-screen bg-background">
+    <APIProvider>
+      <div className="min-h-screen bg-background">
       <Routes>
         <Route path="/" element={<HomePage />} />
         {/* <Route path="/chat" element={<ChatPage />} /> */}
@@ -19,6 +21,8 @@ function App() {
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </div>
+    </APIProvider>
+    
   );
 }
 

@@ -3,7 +3,8 @@
  */
 export enum ApiProvider {
   OPENAI = 'openai',
-  CLAUDE = 'claude'
+  CLAUDE = 'claude',
+  OLLAMA = 'ollama'
 }
 
 /**
