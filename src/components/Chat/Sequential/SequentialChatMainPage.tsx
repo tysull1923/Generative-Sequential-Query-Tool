@@ -25,7 +25,7 @@ interface SequentialChatProps {
   systemContext: string;
   setSystemContext: React.Dispatch<React.SetStateAction<string>>;
   //onProcessRequests: (requestId: string, allRequests: ChatRequest[]) => Promise<void>;
-  onProcessRequests: (requestId: string) => Promise<void>;
+  onProcessRequests: (requestId: string | ChatRequest[]) => Promise<void>;
   isProcessing: boolean;
   onSave?: (chat: ChatDocument) => void;
   title?: string;
@@ -208,13 +208,13 @@ const SequentialChat: React.FC<SequentialChatProps> = ({
         
         // Sort requests by position to ensure correct order
         const sortedRequests = [...requests].sort((a, b) => a.number - b.number);
-        
+        onProcessRequests(sortedRequests);
         // Process from current index
         for (let i = 0; i < sortedRequests.length; i++) {
           if (executionStatus === ExecutionStatus.PAUSED) break;
           
           const request = sortedRequests[i];
-    ;
+    
     
           // Handle pause step
           
@@ -223,7 +223,8 @@ const SequentialChat: React.FC<SequentialChatProps> = ({
               
     
               // Process this request with context of all previous messages
-              await onProcessRequests(request.id);
+              //await onProcessRequests(request.id);
+
             } catch (error) {
               console.error('Error processing request:', error);
               request.status = ChatCardState.ERROR;
@@ -287,7 +288,7 @@ const SequentialChat: React.FC<SequentialChatProps> = ({
     const newRequest: ChatRequest = {
       id: Date.now().toString(),
       role: Role.USER,
-      type: ChatType.SEQUENTIAL,
+      type: ChatType.BASE,
       step: SequentialStepType.MESSAGE,
       content: '',
       status: ChatCardState.READY,

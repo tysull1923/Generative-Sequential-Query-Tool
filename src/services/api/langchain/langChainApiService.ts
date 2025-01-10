@@ -175,11 +175,12 @@ export const useLangChainService = (
           const message = new HumanMessage({ content: request.content });
           currentHistory = [...currentHistory, message];
 
-          if (delay > 0) {
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
+          // if (delay > 0) {
+          //   await new Promise(resolve => setTimeout(resolve, delay));
+          // }
 
           try {
+            console.log("Trying to invoke model");
             const response = await activeModel.invoke(currentHistory);
             const aiMessage = new AIMessage({ content: response.toString() });
             currentHistory.push(aiMessage);
@@ -191,6 +192,7 @@ export const useLangChainService = (
               langChainMessage: aiMessage
             };
             request.status = ChatCardState.COMPLETE;
+            console.log("Complete");
             request.langChainMessage = message;
 
           } catch (error) {

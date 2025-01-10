@@ -70,38 +70,76 @@ const ChatPage: React.FC = () => {
   }, [settings.chatType]);
 
   // Process requests handler
-  const handleProcessRequests = async (requestId?: string) => {
+  const handleProcessRequests = async (requestP?: string | ChatRequest[]) => {
     setError(null);
-    
-    try {
-      setIsProcessing(true);
-      setExecutionStatus(ExecutionStatus.RUNNING);
-      
-      const requestsToProcess = requestId 
-        ? [requests.find(r => r.id === requestId)!]
-        : requests;
-        console.log("Testin:" + requestId);
-      const processedRequests = await processRequests(requestsToProcess, selectedAPI);
-      
-      setRequests(prev => {
-        return prev.map(req => {
-          const processed = processedRequests.find(p => p.id === req.id);
-          return processed || req;
+    if (settings.chatType === ChatType.SEQUENTIAL){
+      try{
+        
+          const requestsToProcess = requestP;
+          const processedRequests = await processRequests(requestsToProcess, selectedAPI);
+        
+          setRequests(prev => {
+            return prev.map(req => {
+              const processed = processedRequests.find(p => p.id === req.id);
+              return processed || req;
+            });
+          });
+          
+          setExecutionStatus(ExecutionStatus.COMPLETED);
+        
+      } catch (error) {
+        console.error('Request failed:', error);
+        setError(error.message || 'Failed to process request');
+        setExecutionStatus(ExecutionStatus.ERROR);
+      } finally {
+        setIsProcessing(false);
+      }
+    }
+    if (settings.chatType === ChatType.BASE && typeof requestP === "string"){
+      try {
+        setIsProcessing(true);
+        setExecutionStatus(ExecutionStatus.RUNNING);
+        
+        const requestsToProcess = requestP
+          ? [requests.find(r => r.id === requestP)!]
+          : requests;
+          console.log("Testin:" + requestP);
+        const processedRequests = await processRequests(requestsToProcess, selectedAPI);
+        
+        setRequests(prev => {
+          return prev.map(req => {
+            const processed = processedRequests.find(p => p.id === req.id);
+            return processed || req;
+          });
         });
-      });
-      
-      setExecutionStatus(ExecutionStatus.COMPLETED);
-    } catch (error) {
-      console.error('Request failed:', error);
-      setError(error.message || 'Failed to process request');
-      setExecutionStatus(ExecutionStatus.ERROR);
-    } finally {
-      setIsProcessing(false);
+        
+        setExecutionStatus(ExecutionStatus.COMPLETED);
+      } catch (error) {
+        console.error('Request failed:', error);
+        setError(error.message || 'Failed to process request');
+        setExecutionStatus(ExecutionStatus.ERROR);
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
   const handleSettingsChange = (newSettings: Partial<ChatSettings>) => {
+    // if (newSettings.chatType && newSettings.chatType !== prev.chatType) {
+      //         setRequests([{
+      //           id: '1',
+      //           role: Role.USER,
+      //           type: newSettings.chatType,
+      //           step: SequentialStepType.MESSAGE,
+      //           content: '',
+      //           status: ChatCardState.READY,
+      //           number: 1
+      //         }]);
+      //         setExecutionStatus(ExecutionStatus.IDLE);
+      //       }
     setSettings(prev => ({ ...prev, ...newSettings }));
+    console.log("Old Setting:" + settings.chatType);
+    console.log("New Settings:" + newSettings.chatType);
   };
 
   const handleSave = async (chatDoc: any) => {
