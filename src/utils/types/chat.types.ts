@@ -46,7 +46,7 @@ export interface ChatRequest {
   step?: SequentialStepType;
   content: MessageContent;
   status: ChatCardState;
-  response: ChatResponse;
+  response?: ChatResponse;
   isPaused?: boolean;
   number: number;
   langChainMessage?: BaseMessage;

@@ -14,7 +14,8 @@ import {
   Role,
   FileAttachment,
   ExecutionStatus,
-  ChatCardState
+  ChatCardState,
+  SequentialStepType
 } from '@/utils/types/chat.types';
 
 interface BaseChatProps {
@@ -55,6 +56,7 @@ const BaseChat: React.FC<BaseChatProps> = ({
       id: Date.now().toString(),
       role: Role.USER,
       type: ChatType.BASE,
+      step: SequentialStepType.MESSAGE,
       content: '',
       status: ChatCardState.READY,
       number: requests.length + 1

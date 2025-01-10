@@ -5,7 +5,7 @@ import { Ollama } from "@langchain/ollama";
 import { BaseMessage, SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
-import { ChatRequest, ChatCardState, ChatResponse, Role } from '@/utils/types/chat.types';
+import { ChatRequest, ChatCardState, ChatResponse, Role, SequentialStepType } from '@/utils/types/chat.types';
 import { 
   ApiProvider, 
   ApiConfig, 
@@ -125,9 +125,10 @@ export const useLangChainService = (
   ) => {
     console.log('Processing requests with history:', messageHistory);
     setIsProcessing(true);
-
+  
     try {
       // Get available API and config
+      console.log("getting API");
       const { api, config } = await getAvailableAPI();
       const activeAPI = selectedAPI || api;
       
@@ -136,6 +137,7 @@ export const useLangChainService = (
       if (!activeModel || currentModel?.constructor.name !== activeAPI) {
         activeModel = createModel({ ...config, provider: activeAPI });
         setCurrentModel(activeModel);
+        console.log("model Created");
       }
 
       if (!activeModel) {
@@ -151,39 +153,94 @@ export const useLangChainService = (
 
       // Process each request sequentially
       for (const request of requests) {
-        // Convert request to LangChain message
-        const message = new HumanMessage({ content: request.content });
-        currentHistory = [...currentHistory, message];
+        console.log("start handling requests");
+        // // Handle Pause Step
+        // if (request.step === SequentialStepType.PAUSE && request.isPaused) {
+        //   request.status = ChatCardState.COMPLETE;
+        //   // Exit the processing loop - will resume from next request when restarted
+        //   break;
+        // }
 
-        if (delay > 0) {
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
+        // // Handle Delay Step
+        // if (request.step === SequentialStepType.DELAY) {
+        //   await new Promise(resolve => setTimeout(resolve, 15000)); // 15 seconds delay
+        //   request.status = ChatCardState.COMPLETE;
+        //   continue; // Skip to next request
+        // }
 
-        try {
-          const response = await activeModel.invoke(currentHistory);
-          const aiMessage = new AIMessage({ content: response.toString() });
-          currentHistory.push(aiMessage);
-          
-          // Update request with response
-          request.response = {
-            provider: Role.ASSISTANT,
-            content: response.toString(),
-            langChainMessage: aiMessage
-          };
-          request.status = ChatCardState.COMPLETE;
-          request.langChainMessage = message;
+        // Only process message steps
+        if (request.step === SequentialStepType.MESSAGE) {
+          console.log("At process Message STEP");
+          // Convert request to LangChain message
+          const message = new HumanMessage({ content: request.content });
+          currentHistory = [...currentHistory, message];
 
-        } catch (error) {
-          console.error(`Error processing request with ${activeAPI}:`, error);
-          request.status = ChatCardState.ERROR;
-          request.response = {
-            provider: Role.ASSISTANT,
-            content: `Error: ${error.message}`,
-            responseType: { type: 'error', message: error.message, code: 'PROCESSING_ERROR' }
-          };
-          throw error;
+          if (delay > 0) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+
+          try {
+            const response = await activeModel.invoke(currentHistory);
+            const aiMessage = new AIMessage({ content: response.toString() });
+            currentHistory.push(aiMessage);
+            
+            // Update request with response
+            request.response = {
+              provider: Role.ASSISTANT,
+              content: response.toString(),
+              langChainMessage: aiMessage
+            };
+            request.status = ChatCardState.COMPLETE;
+            request.langChainMessage = message;
+
+          } catch (error) {
+            console.error(`Error processing request with ${activeAPI}:`, error);
+            request.status = ChatCardState.ERROR;
+            request.response = {
+              provider: Role.ASSISTANT,
+              content: `Error: ${error.message}`,
+              responseType: { type: 'error', message: error.message, code: 'PROCESSING_ERROR' }
+            };
+            throw error;
+          }
         }
       }
+
+      // Process each request sequentially
+      // for (const request of requests) {
+      //   // Convert request to LangChain message
+      //   const message = new HumanMessage({ content: request.content });
+      //   currentHistory = [...currentHistory, message];
+
+      //   if (delay > 0) {
+      //     await new Promise(resolve => setTimeout(resolve, delay));
+      //   }
+
+      //   try {
+      //     const response = await activeModel.invoke(currentHistory);
+      //     const aiMessage = new AIMessage({ content: response.toString() });
+      //     currentHistory.push(aiMessage);
+          
+      //     // Update request with response
+      //     request.response = {
+      //       provider: Role.ASSISTANT,
+      //       content: response.toString(),
+      //       langChainMessage: aiMessage
+      //     };
+      //     request.status = ChatCardState.COMPLETE;
+      //     request.langChainMessage = message;
+
+      //   } catch (error) {
+      //     console.error(`Error processing request with ${activeAPI}:`, error);
+      //     request.status = ChatCardState.ERROR;
+      //     request.response = {
+      //       provider: Role.ASSISTANT,
+      //       content: `Error: ${error.message}`,
+      //       responseType: { type: 'error', message: error.message, code: 'PROCESSING_ERROR' }
+      //     };
+      //     throw error;
+      //   }
+      // }
 
       setMessageHistory(currentHistory);
       return requests;

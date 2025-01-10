@@ -80,7 +80,7 @@ const ChatPage: React.FC = () => {
       const requestsToProcess = requestId 
         ? [requests.find(r => r.id === requestId)!]
         : requests;
-
+        console.log("Testin:" + requestId);
       const processedRequests = await processRequests(requestsToProcess, selectedAPI);
       
       setRequests(prev => {
