@@ -7,22 +7,24 @@ import './styles/globals.css';
 //import BaseChat from './pages/chats/Chats/basechat';
 import ChatPage from './pages/chats/chat';
 import { APIProvider } from './context/APIContext';
+//import { DatabaseProvider } from './context/DatabaseContext';
 
 function App() {
   return (
-    <APIProvider>
-      <div className="min-h-screen bg-background">
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        {/* <Route path="/chat" element={<ChatPage />} /> */}
-        {/* <Route path="/base-chat" element={<BaseChat />} />
-        <Route path="/new-chat" element={<NewChatPage />} /> */}
-        <Route path="/chat" element={<ChatPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-      </Routes>
-    </div>
-    </APIProvider>
-    
+    //<DatabaseProvider>
+      <APIProvider>
+        <div className="min-h-screen bg-background">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          {/* <Route path="/chat" element={<ChatPage />} /> */}
+          {/* <Route path="/base-chat" element={<BaseChat />} />
+          <Route path="/new-chat" element={<NewChatPage />} /> */}
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Routes>
+      </div>
+      </APIProvider>
+    //</DatabaseProvider>
   );
 }
 
