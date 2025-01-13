@@ -2,7 +2,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, MessageSquarePlus, History, Plus } from 'lucide-react';
-//import APIStatus from '../components/features/APIStatus';
 import { useNavigate } from 'react-router-dom';
 //import ChatPage from './chat';
 import Header from '@/components/Banner/MainBanner/MainHeader';

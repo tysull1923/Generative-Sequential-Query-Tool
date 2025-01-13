@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-interface ChatControlBannerProps {
+interface SequentialPromptsBannerProps {
     onAddStep: (type: string) => void;
     onPause: () => void;
     onPlay: (delay: number) => void;
@@ -16,7 +16,7 @@ interface ChatControlBannerProps {
   }
 
 
-const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }: ChatControlBannerProps) => {
+const SequentialPromptsPlayPause = ({ onAddStep, onPause, onPlay, isPlaying }: SequentialPromptsBannerProps) => {
   const [delay, setDelay] = useState(0);
   const handlePlay = () => {
     onPlay(delay);
@@ -25,7 +25,7 @@ const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }: ChatContro
   return (
     <div className="bg-gray-100 border-b py-2 px-6">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        {/* Tools Section */}
+        {/* Tools Section
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="flex items-center gap-2">
@@ -47,7 +47,7 @@ const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }: ChatContro
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
 
         {/* Play/Pause Controls */}
         <div className="flex gap-2">
@@ -70,7 +70,7 @@ const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }: ChatContro
         </div>
 
         {/* Add Step Menu */}
-        <DropdownMenu>
+        {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
@@ -88,10 +88,10 @@ const ChatControlBanner = ({ onAddStep, onPause, onPlay, isPlaying }: ChatContro
               Verification Step
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
       </div>
     </div>
   );
 };
 
-export default ChatControlBanner;
+export default SequentialPromptsPlayPause;

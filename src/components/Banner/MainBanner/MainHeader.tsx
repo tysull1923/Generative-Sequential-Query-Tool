@@ -20,20 +20,20 @@ const MainHeader: React.FC<MainHeaderProps> = ({ className = '' }) => {
   const handleNewChat = useCallback((type: ChatType) => {
     switch (type) {
       case ChatType.BASE:
-        navigate('/chat/base');
+        navigate('/chat');
         break;
       case ChatType.SEQUENTIAL:
-        navigate('/chat/sequential');
+        navigate('/chat');
         break;
       case ChatType.REQUIREMENTS:
-        navigate('/chat/requirements');
+        navigate('/chat');
         break;
-      case ChatType.WORKFLOW:
-        navigate('/workflow/new');
-        break;
-      case ChatType.SCHEDULER:
-        navigate('/scheduler/new');
-        break;
+      // case ChatType.WORKFLOW:
+      //   navigate('/workflow/new');
+      //   break;
+      // case ChatType.SCHEDULER:
+      //   navigate('/scheduler/new');
+      //   break;
     }
   }, [navigate]);
 
@@ -48,12 +48,12 @@ const MainHeader: React.FC<MainHeaderProps> = ({ className = '' }) => {
       case ChatType.REQUIREMENTS:
         navigate('/manage/requirements');
         break;
-      case ChatType.WORKFLOW:
-        navigate('/manage/workflow');
-        break;
-      case ChatType.SCHEDULER:
-        navigate('/manage/scheduler');
-        break;
+      // case ChatType.WORKFLOW:
+      //   navigate('/manage/workflow');
+      //   break;
+      // case ChatType.SCHEDULER:
+      //   navigate('/manage/scheduler');
+      //   break;
     }
   }, [navigate]);
 

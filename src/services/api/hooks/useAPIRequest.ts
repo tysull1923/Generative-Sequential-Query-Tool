@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { openAIService } from '../services/api/implementations/openai_connector';
-import { anthropicService } from '../services/api/implementations/anthropic';
-import { ChatRequest } from '@/lib/api/openai.api-requests.types';
-import { ApiProvider } from '@/services/api/interfaces/api.types';
+import { openAIService } from '@/services/api/implementations/openai_connector';
+import { anthropicService } from '@/services/api/implementations/anthropic';
+//import { ChatRequest } from '@/lib/api/openai.api-requests.types';
+import { ApiProvider, ApiConfig } from '@/services/api/interfaces/api.types';
+import { SequentialStepType, ChatRequest } from '@/utils/types/chat.types';
 
 export const useApiService = (systemContext: string) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<[{ role: string, content: string}]>();
-
+  const [apiKeyValue, setAPIKey] = useState<ApiConfig["apiKey"]>();
+  
   const processRequests = async (requests: ChatRequest[], selectedAPI: ApiProvider, delay = 0) => {
     console.log('Starting with history:', conversationHistory);
     setIsProcessing(true);
@@ -18,15 +20,18 @@ export const useApiService = (systemContext: string) => {
         // const apiKey = localStorage.getItem(
         //   selectedAPI === 'OpenAI' ? 'OPENAI_API_KEY' : 'CLAUDE_API_KEY'
         // ) || import.meta.env.VITE_OPENAI_API_KEY;
-    
+      
+      
+      
       const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      console.log('Got API key:', apiKey ? 'Yes' : 'No');
+      setAPIKey(apiKey);
+      console.log('Got API key:', apiKeyValue ? 'Yes' : 'No');
       const updatedHistory = systemContext 
       ? [{ role: 'system', content: systemContext }] 
       : [];
       //const updatedHistory = [...conversationHistory];
       for (const request of requests) {
-        if (request.type === 'chat') {
+        if (request.step === SequentialStepType.MESSAGE) {
           updatedHistory.push({ role: 'user', content: request.content });
           const response = await service.sendChat(updatedHistory, apiKey);
           const assistantMessage = response.choices[0].message;
