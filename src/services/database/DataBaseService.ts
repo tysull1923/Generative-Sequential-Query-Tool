@@ -1,5 +1,5 @@
 // src/services/database/DatabaseService.ts
-import  mongoose from 'mongoose';
+import   mongoose  from 'mongoose';
 import { EventEmitter } from '@/utils/EventEmitter';
 import { Chat, Workflow, Settings } from './schemas';
 
@@ -102,44 +102,74 @@ export class DatabaseService extends EventEmitter {
     });
   }
 
+  // Change this line at the top of the file
+
+  // And update the connect method to use mongoose.connect instead:
   public async connect(): Promise<void> {
-    try {
-      if (this.isConnected()) return;
+      try {
+          if (this.isConnected()) return;
 
-      // Create Mongoose connection
-      this.connection = mongoose.connect(this.config.uri, {
-        dbName: this.config.dbName,
-        autoCreate: true,
-        autoIndex: true
-      });
+          // Use mongoose.connect directly
+          await mongoose.connect(this.config.uri); 
+        
+          //   , {
+          //     dbName: this.config.dbName,
+          //     autoCreate: true,
+          //     autoIndex: true
+          // });
 
-      // Wait for connection to be ready
-      await new Promise<void>((resolve, reject) => {
-        if (!this.connection) {
-          reject(new Error('Connection failed to initialize'));
-          return;
-        }
-
-        this.connection.once('connected', () => {
+          this.connection = mongoose.connection;
           this.setupEventListeners();
-          resolve();
-        });
+          
+          this.metrics.isConnected = true;
+          this.emit('connected');
+          console.log('Successfully connected to database');
 
-        this.connection.once('error', (error) => {
-          reject(error);
-        });
-      });
-
-      this.metrics.isConnected = true;
-      this.emit('connected');
-      console.log('Successfully connected to database');
-
-    } catch (error) {
-      this.emit('error', error);
-      console.error('Database connection failed:', error);
-      throw error;
-    }
+      } catch (error) {
+          this.emit('error', error);
+          console.error('Database connection failed:', error);
+          throw error;
+      }
   }
+
+  // public async connect(): Promise<void> {
+  //   try {
+  //     if (this.isConnected()) return;
+
+  //     // Create Mongoose connection
+  //     this.connection = mongoose.connect(this.config.uri, {
+  //       dbName: this.config.dbName,
+  //       autoCreate: true,
+  //       autoIndex: true
+  //     });
+
+  //     // Wait for connection to be ready
+  //     await new Promise<void>((resolve, reject) => {
+  //       if (!this.connection) {
+  //         reject(new Error('Connection failed to initialize'));
+  //         return;
+  //       }
+
+  //       this.connection.once('connected', () => {
+  //         this.setupEventListeners();
+  //         resolve();
+  //       });
+
+  //       this.connection.once('error', (error) => {
+  //         reject(error);
+  //       });
+  //     });
+
+  //     this.metrics.isConnected = true;
+  //     this.emit('connected');
+  //     console.log('Successfully connected to database');
+
+  //   } catch (error) {
+  //     this.emit('error', error);
+  //     console.error('Database connection failed:', error);
+  //     throw error;
+  //   }
+  // }
 
   public isConnected(): boolean {
     return this.connection?.readyState === 1;

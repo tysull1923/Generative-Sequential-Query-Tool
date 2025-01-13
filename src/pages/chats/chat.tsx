@@ -17,6 +17,8 @@ import {
   ExecutionStatus,
   ChatCardState
 } from '@/utils/types/chat.types';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ChatApiService } from '@/services/database/chatDatabaseApiService';
 
 const DEFAULT_SETTINGS: ChatSettings = {
   temperature: 0.7,
@@ -29,6 +31,11 @@ const DEFAULT_SETTINGS: ChatSettings = {
 };
 
 const ChatPage: React.FC = () => {
+  //Database stuff
+  const navigate = useNavigate();
+  const location = useLocation();
+  const chatService = ChatApiService.getInstance();
+  const [ isSaving, setIsSaving ] = useState(false);
   // Common state
   const [title, setTitle] = useState("New Chat");
   const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS);
@@ -68,6 +75,28 @@ const ChatPage: React.FC = () => {
       }]);
     }
   }, [settings.chatType]);
+
+
+  // Load existing chat if ID is provided
+  useEffect(() => {
+    const loadExistingChat = async () => {
+      const chatId = location.state?.chatId;
+      if (chatId) {
+        try {
+          const chatData = await chatService.getChat(chatId);
+          setTitle(chatData.title);
+          setSettings(chatData.settings);
+          setRequests(chatData.messages || []);
+          setSystemContext(chatData.settings.systemContext || '');
+        } catch (error) {
+          console.error('Error loading chat:', error);
+          // Handle error appropriately
+        }
+      }
+    };
+
+    loadExistingChat();
+  }, [location.state?.chatId]);
 
   // Process requests handler
   const handleProcessRequests = async (requestP?: string | ChatRequest[]) => {
@@ -142,10 +171,106 @@ const ChatPage: React.FC = () => {
     console.log("New Settings:" + newSettings.chatType);
   };
 
-  const handleSave = async (chatDoc: any) => {
-    // Implement save functionality
-    console.log('Saving chat:', chatDoc);
-  };
+  // const handleSave = async (chatDoc: any) => {
+  //   // Implement save functionality
+  //   console.log('Saving chat:', chatDoc);
+  // };
+  // Update handleSave to use ChatApiService
+  // const handleSave = async () => {
+  //   if (!settings.savingParams?.saveToApplication) {
+  //     return; // Don't save if saveToApplication is false
+  //   }
+
+  //   try {
+  //     setIsSaving(true);
+  //     const chatData = {
+  //       title,
+  //       type: settings.chatType,
+  //       settings: {
+  //         ...settings,
+  //         systemContext
+  //       },
+  //       messages: requests,
+  //       executionStatus: executionStatus,
+  //       lastModified: new Date(),
+  //       createdAt: new Date()
+  //     };
+
+  //     if (location.state?.chatId) {
+  //       // Update existing chat
+  //       await chatService.updateChat(location.state.chatId, chatData);
+  //     } else {
+  //       // Create new chat
+  //       const chatId = await chatService.createChat(chatData);
+  //       // Update URL with new chat ID
+  //       navigate(location.pathname, { state: { chatId }, replace: true });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error saving chat:', error);
+  //     // Handle error appropriately
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
+  // In chat.tsx
+const handleSave = async () => {
+  if (!settings.savingParams?.saveToApplication) {
+    return;
+  }
+
+  try {
+    setIsSaving(true);
+    
+    // Ensure messages are properly formatted
+    const formattedRequests = requests.map(req => ({
+      id: req.id,
+      role: req.role,
+      type: req.type,
+      content: req.content || '',
+      status: req.status,
+      response: {
+        provider: req.response?.provider || 'assistant',
+        content: req.response?.content || ''
+      },
+      number: req.number
+    }));
+
+    const chatData = {
+      title: title || 'Untitled Chat',
+      type: settings.chatType,
+      settings: {
+        temperature: settings.temperature,
+        chatType: settings.chatType,
+        systemContext: systemContext || '',
+        savingParams: settings.savingParams
+      },
+      messages: formattedRequests,
+      executionStatus: executionStatus,
+      lastModified: new Date(),
+      createdAt: location.state?.chatId ? undefined : new Date()
+    };
+
+    if (location.state?.chatId) {
+      await chatService.updateChat(location.state.chatId, chatData);
+    } else {
+      const chatId = await chatService.createChat(chatData);
+      navigate(location.pathname, { state: { chatId }, replace: true });
+    }
+
+    console.log('Chat saved successfully');
+  } catch (error) {
+    console.error('Error saving chat:', error);
+  } finally {
+    setIsSaving(false);
+  }
+};
+
+  // Auto-save when requests change
+  useEffect(() => {
+    if (requests.length > 0 && settings.savingParams?.saveToApplication) {
+      handleSave();
+    }
+  }, [requests]);
 
   // Render appropriate chat component based on type
   const renderChatComponent = () => {
@@ -179,6 +304,12 @@ const ChatPage: React.FC = () => {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
           <strong className="font-bold">Error: </strong>
           <span className="block sm:inline">{error}</span>
+        </div>
+      )}
+      {/* Add saving indicator if needed */}
+      {isSaving && (
+        <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded">
+          Saving...
         </div>
       )}
       
