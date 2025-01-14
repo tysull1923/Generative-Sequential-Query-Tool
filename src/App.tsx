@@ -10,22 +10,22 @@ import { APIProvider } from './context/APIContext';
 //import { DatabaseProvider } from './context/DatabaseContext';
 
 function App() {
-  return (
-    //<DatabaseProvider>
-      <APIProvider>
-        <div className="min-h-screen bg-background">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          {/* <Route path="/chat" element={<ChatPage />} /> */}
-          {/* <Route path="/base-chat" element={<BaseChat />} />
+	return (
+		//<DatabaseProvider>
+		<APIProvider>
+			<div className="min-h-screen bg-background">
+				<Routes>
+					<Route path="/" element={<HomePage />} />
+					{/* <Route path="/chat" element={<ChatPage />} /> */}
+					{/* <Route path="/base-chat" element={<BaseChat />} />
           <Route path="/new-chat" element={<NewChatPage />} /> */}
-          <Route path="/chat" element={<ChatPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
-      </div>
-      </APIProvider>
-    //</DatabaseProvider>
-  );
+					<Route path="/chat" element={<ChatPage />} />
+					<Route path="/settings" element={<SettingsPage />} />
+				</Routes>
+			</div>
+		</APIProvider>
+		//</DatabaseProvider>
+	);
 }
 
 export default App;
