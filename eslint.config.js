@@ -1,49 +1,52 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import react from 'eslint-plugin-react'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
+import globals from "globals";
+import pluginJs from "@eslint/js";
+import tseslint from "typescript-eslint";
+import reactPlugin from "eslint-plugin-react";
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default [
 	{ ignores: ['dist'] },
 	{
-		files: ['**/*.{js,jsx}'],
+		files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
 		languageOptions: {
 			ecmaVersion: 2020,
-			globals: globals.browser,
+			globals: {
+				...globals.browser
+			},
 			parserOptions: {
 				ecmaVersion: 'latest',
 				ecmaFeatures: { jsx: true },
 				sourceType: 'module',
-			},
+			}
 		},
-		settings: { react: { version: '18.3' } },
 		plugins: {
-			react,
+			react: reactPlugin,
 			'react-hooks': reactHooks,
-			'react-refresh': reactRefresh,
+			'react-refresh': reactRefresh
 		},
 		rules: {
-			...js.configs.recommended.rules,
-			...react.configs.recommended.rules,
-			...react.configs['jsx-runtime'].rules,
-			...reactHooks.configs.recommended.rules,
+			...pluginJs.configs.recommended.rules,
+			...reactPlugin.configs.recommended.rules,
+			'react-hooks/rules-of-hooks': 'error',
+			'react-hooks/exhaustive-deps': 'warn',
 			'react/jsx-no-target-blank': 'off',
 			'react-refresh/only-export-components': [
 				'warn',
-				{ allowConstantExport: true },
+				{ allowConstantExport: true }
 			],
-			"max-len": [
+			"max-lines": [
 				"error",
 				{
-					"code": 150,  // Set the max line length to 150 characters
-					"ignoreComments": true,  // Ignore comments when checking line length
-					"ignoreTrailingComments": true,  // Ignore trailing comments in the line length check
-					"ignoreUrls": true,  // Optional: Ignore lines containing URLs, to avoid issues with long URLs
-					"ignoreStrings": true,  // Optional: Ignore string literals
-					"ignoreTemplateLiterals": true  // Optional: Ignore template literals
+					"max": 150,
+					"skipComments": true,
+					"skipBlankLines": true
 				}
 			]
-		},
+		}
 	},
-]
+	pluginJs.configs.recommended,
+	...tseslint.configs.recommended,
+	reactPlugin.configs.flat.recommended, // This is not a plugin object, but a shareable config object
+	reactPlugin.configs.flat['jsx-runtime'], // Add this if you are using React 17+
+];

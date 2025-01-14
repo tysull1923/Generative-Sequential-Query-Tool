@@ -1,5 +1,5 @@
 import Header from '@/components/Banner/MainBanner/MainHeader';
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AlertCircle, CheckCircle2, EyeOff, Eye } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { openAIService } from '../services/api/implementations/openai';
