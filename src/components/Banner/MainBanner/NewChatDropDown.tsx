@@ -41,17 +41,19 @@ const NewChatDropdown: React.FC<{ onNewChat: (type: ChatType) => void }> = ({ on
         onOpenChange={setIsNewMenuOpen}
         placement="bottom"
         items={[
-            {
-            label: 'New Chat',
-            items: [
-                { label: 'Base Chat', onClick: () => handleNewChat(ChatType.BASE) },
-                { label: 'Sequential Chat', onClick: () => handleNewChat(ChatType.SEQUENTIAL) },
-                { label: 'Requirements Chat', onClick: () => handleNewChat(ChatType.REQUIREMENTS) },
-            ],
-            },
-            { label: 'New Workflow', onClick: () => handleNewChat(ChatType.WORKFLOW) },
-            { label: 'New Scheduler', onClick: () => handleNewChat(ChatType.SCHEDULER) },
-            { label: 'More', onClick: () => navigate('/chat-types') },
+            { label: 'Base Chat', onClick: () => handleNewChat(ChatType.BASE) },
+            { label: 'Sequential Chat', onClick: () => handleNewChat(ChatType.SEQUENTIAL) },
+            { label: 'Requirements Chat', onClick: () => handleNewChat(ChatType.REQUIREMENTS) },
+            // {
+            // label: 'New Chat',
+            // items: [
+            //     { label: 'Base Chat', onClick: () => handleNewChat(ChatType.BASE) },
+            //     { label: 'Sequential Chat', onClick: () => handleNewChat(ChatType.SEQUENTIAL) },
+            //     { label: 'Requirements Chat', onClick: () => handleNewChat(ChatType.REQUIREMENTS) },
+            // ],
+            // }, { label: 'New Workflow', onClick: () => handleNewChat(ChatType.WORKFLOW) },
+            // { label: 'New Scheduler', onClick: () => handleNewChat(ChatType.SCHEDULER) },
+            // { label: 'More', onClick: () => navigate('/chat-types') },
         ]}
         />
     </div> 

@@ -97,9 +97,11 @@ const MainBanner: React.FC<MainBannerProps> = ({
                 ]}
               />
             </div>  */}
+            
 
+            {/* Removing from home page right now due to workflow and schedulers don't exist */}
             {/* Manage Chats Dropdown */}
-            <div className="relative">
+            {/* <div className="relative">
               <Dropdown
                 trigger={
                   <Button
@@ -123,10 +125,10 @@ const MainBanner: React.FC<MainBannerProps> = ({
                   { label: 'Manage All', onClick: () => navigate('/manage/all') },
                 ]}
               />
-            </div>
+            </div> */}
 
             {/* Dashboards Dropdown */}
-            <div className="relative">
+            {/* <div className="relative">
               <Dropdown
                 trigger={
                   <Button
@@ -146,7 +148,7 @@ const MainBanner: React.FC<MainBannerProps> = ({
                   { label: 'Scheduler Dashboard', onClick: () => handleDashboardNavigation('/dashboards/scheduler') },
                 ]}
               />
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
