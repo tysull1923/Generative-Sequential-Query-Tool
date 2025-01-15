@@ -54,6 +54,7 @@ const ChatPage: React.FC = () => {
     processRequests, 
     isProcessing, 
     setIsProcessing,
+    initializeHistory,
     checkOllamaConnection 
   } = useLangChainService(
     systemContext,
@@ -78,6 +79,26 @@ const ChatPage: React.FC = () => {
 
 
   // Load existing chat if ID is provided
+  // useEffect(() => {
+  //   const loadExistingChat = async () => {
+  //     const chatId = location.state?.chatId;
+  //     if (chatId) {
+  //       try {
+  //         const chatData = await chatService.getChat(chatId);
+  //         setTitle(chatData.title);
+  //         setSettings(chatData.settings);
+  //         setRequests(chatData.messages || []);
+  //         setSystemContext(chatData.settings.systemContext || '');
+  //       } catch (error) {
+  //         console.error('Error loading chat:', error);
+  //         // Handle error appropriately
+  //       }
+  //     }
+  //   };
+
+  //   loadExistingChat();
+  // }, [location.state?.chatId]);
+
   useEffect(() => {
     const loadExistingChat = async () => {
       const chatId = location.state?.chatId;
@@ -86,15 +107,21 @@ const ChatPage: React.FC = () => {
           const chatData = await chatService.getChat(chatId);
           setTitle(chatData.title);
           setSettings(chatData.settings);
-          setRequests(chatData.messages || []);
           setSystemContext(chatData.settings.systemContext || '');
+          
+          // Initialize message history in LangChain service
+          initializeHistory(chatData.messages || [], chatData.settings.systemContext);
+          
+          // Set requests state
+          setRequests(chatData.messages || []);
+          
         } catch (error) {
           console.error('Error loading chat:', error);
-          // Handle error appropriately
+          setError('Failed to load chat history. Please try again.');
         }
       }
     };
-
+  
     loadExistingChat();
   }, [location.state?.chatId]);
 
