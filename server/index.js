@@ -154,6 +154,19 @@ app.listen(PORT, () => {
   console.log(`API endpoint: http://localhost:${PORT}/api`);
 });
 
+app.delete('/api/chats/:id', async (req, res) => {
+  try {
+    const deletedChat = await Chat.findByIdAndDelete(req.params.id);
+    if (!deletedChat) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting chat:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // const app = express();
 // const PORT = 5000;
 

@@ -63,6 +63,15 @@ export class ChatApiService {
     }
     return error;
   }
+
+  // Add this method to the ChatApiService class
+  async deleteChat(id: string): Promise<void> {
+    try {
+      await axios.delete(`${API_BASE_URL}/chats/${id}`);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+}
 }
 
 
