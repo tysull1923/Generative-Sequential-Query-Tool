@@ -16,12 +16,21 @@ const NewChatDropdown: React.FC<{ onNewChat: (type: ChatType) => void }> = ({ on
 
   const handleNewChat = useCallback(
     (type: ChatType) => {
-      console.log('Selected Chat Type:', type); // Debug log
+      console.log('Selected Chat Type:', type);
       setIsNewMenuOpen(false);
-      onNewChat(type);
+      // Navigate to chat page with the selected type
+      navigate('/chat', { state: { selectedChatType: type } });
     },
-    [onNewChat]
+    [navigate]
   );
+  // const handleNewChat = useCallback(
+  //   (type: ChatType) => {
+  //     console.log('Selected Chat Type:', type); // Debug log
+  //     setIsNewMenuOpen(false);
+  //     onNewChat(type);
+  //   },
+  //   [onNewChat]
+  // );
   
   return (
     <div className="relative">
