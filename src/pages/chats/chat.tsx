@@ -33,11 +33,15 @@ const ChatPage: React.FC = () => {
   //Database stuff
   const navigate = useNavigate();
   const location = useLocation();
+  const initialSettings = {
+    ...DEFAULT_SETTINGS,
+    chatType: location.state?.selectedChatType || DEFAULT_SETTINGS.chatType
+  };
   const chatService = ChatApiService.getInstance();
   const [ isSaving, setIsSaving ] = useState(false);
   // Common state
   const [title, setTitle] = useState("New Chat");
-  const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<ChatSettings>(initialSettings);
   const [requests, setRequests] = useState<ChatRequest[]>([]);
   const [systemContext, setSystemContext] = useState<string>('');
   const [isSystemContextModalOpen, setIsSystemContextModalOpen] = useState(false);
@@ -61,8 +65,21 @@ const ChatPage: React.FC = () => {
   );
 
   // Initialize requests if empty
-  useEffect(() => {
+  // useEffect(() => {
     
+  //   if (requests.length === 0) {
+  //     setRequests([{
+  //       id: '1',
+  //       role: Role.USER,
+  //       type: settings.chatType,
+  //       content: '',
+  //       status: ChatCardState.READY,
+  //       response: chatResponse,
+  //       number: 1
+  //     }]);
+  //   }
+  // }, [settings.chatType]);
+  useEffect(() => {
     if (requests.length === 0) {
       setRequests([{
         id: '1',
@@ -70,12 +87,14 @@ const ChatPage: React.FC = () => {
         type: settings.chatType,
         content: '',
         status: ChatCardState.READY,
-        response: chatResponse,
+        response: {
+          provider: Role.ASSISTANT,
+          content: ''
+        },
         number: 1
       }]);
     }
   }, [settings.chatType]);
-
 
   // Load existing chat if ID is provided
   // useEffect(() => {

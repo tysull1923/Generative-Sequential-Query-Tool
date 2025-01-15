@@ -31,9 +31,9 @@ const APIStatus = () => {
           onChange={(e) => handleApiSelect(e.target.value)}
           className="bg-gray-700 rounded px-3 py-1 text-sm"
         >
+          <option value={ApiProvider.OLLAMA}>Ollama</option>
           <option value={ApiProvider.OPENAI}>OpenAI</option>
           <option value={ApiProvider.CLAUDE}>Claude</option>
-          <option value={ApiProvider.OLLAMA}>Ollama</option>
         </select>
         <div className="flex items-center space-x-6">
           <div className="flex items-center">
