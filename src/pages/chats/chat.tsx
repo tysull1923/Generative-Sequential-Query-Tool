@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAPI } from '@/context/APIContext';
 import { useLangChainService } from '@/services/api/langchain/langChainApiService';
-import Header from "@/components/Banner/MainBanner/MainHeader";
 import ChatBanner from '@/components/Banner/ChatBanner/ChatBanner';
 import BaseChat from '@/components/Chat/BasicChat/BaseChatMainPage';
 import SequentialChat from '@/components/Chat/Sequential/SequentialChatMainPage';
@@ -324,9 +323,7 @@ const handleSave = async () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
+    <> 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
           <strong className="font-bold">Error: </strong>
@@ -367,7 +364,7 @@ const handleSave = async () => {
       <main className="flex-1 flex overflow-hidden">
         {renderChatComponent()}
       </main>
-    </div>
+    </>
   );
 };
 

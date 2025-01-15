@@ -2,11 +2,12 @@ import Header from '@/components/Banner/MainBanner/MainHeader';
 import { useState } from 'react';
 import { AlertCircle, CheckCircle2, EyeOff, Eye } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { openAIService } from '../services/api/implementations/openai';
+import { openAIService } from '../services/api/implementations/openAI';
 import { anthropicService } from '../services/api/implementations/anthropic';
 import { API_CONFIG } from '../services/api/interfaces/api-config';
+import { LlmModelType } from '@/utils/types/ai-models';
 
-const SettingsPage = () => {
+function SettingsPage() {
 	const [keys, setKeys] = useState({
 		openai: localStorage.getItem('openai_api_key') || '',
 		claude: localStorage.getItem('claude_api_key') || ''
@@ -22,7 +23,7 @@ const SettingsPage = () => {
 		claude: false
 	});
 
-	const validateKey = async (type, key) => {
+	const validateKey = async (type: LlmModelType, key: string) => {
 		setStatus(prev => ({
 			...prev,
 			[type]: { ...prev[type], checking: true, error: null }
@@ -48,7 +49,7 @@ const SettingsPage = () => {
 		}
 	};
 
-	const handleKeyChange = (type, value) => {
+	const handleKeyChange = (type: LlmModelType, value: string) => {
 		setKeys(prev => ({ ...prev, [type]: value }));
 		setStatus(prev => ({
 			...prev,
@@ -56,7 +57,7 @@ const SettingsPage = () => {
 		}));
 	};
 
-	const toggleKeyVisibility = (type) => {
+	const toggleKeyVisibility = (type: LlmModelType) => {
 		setShowKeys(prev => ({ ...prev, [type]: !prev[type] }));
 	};
 

@@ -67,6 +67,7 @@ export interface ChatResponse {
  */
 export interface ChatDocument {
   id: string;
+  _id: string;
   title: string;
   type: ChatType;
   settings: ChatSettings;
