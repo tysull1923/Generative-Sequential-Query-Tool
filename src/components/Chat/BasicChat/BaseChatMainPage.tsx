@@ -51,6 +51,22 @@ const BaseChat: React.FC<BaseChatProps> = ({
     }
   }, [requests]);
 
+  useEffect(() => {
+    if (requests.length === 0) {
+      const newRequest: ChatRequest = {
+        id: Date.now().toString(),
+        role: Role.USER,
+        type: ChatType.BASE,
+        step: SequentialStepType.MESSAGE,
+        content: '',
+        status: ChatCardState.READY,
+        number: requests.length + 1
+      };
+  
+      setRequests(prev => [newRequest]);
+    }
+  }, []);
+
   const addNewRequest = () => {
     const newRequest: ChatRequest = {
       id: Date.now().toString(),
@@ -173,6 +189,7 @@ const BaseChat: React.FC<BaseChatProps> = ({
         )}
 
         {/* Request-Response Pairs */}
+        {/* isFirst was 1 */}
         <div className="space-y-6 mb-32">
           {requests.map((request) => (
             <div key={request.id} className="space-y-4">
@@ -184,7 +201,7 @@ const BaseChat: React.FC<BaseChatProps> = ({
                   content={request.content || ''}
                   status={request.status}
                   chatType={ChatType.BASE}
-                  isFirst={request.number === 1}
+                  isFirst={request.number === 1} 
                   isLast={request.number === requests.length}
                   attachments={attachments[request.id]}
                   onMove={moveRequest}
@@ -197,7 +214,7 @@ const BaseChat: React.FC<BaseChatProps> = ({
               </div>
 
               {/* Response Panel - Show directly below if response exists */}
-              {request.response && (
+              {request.response?.content && (  // Check specifically for response content
                 <div className="bg-white p-4 rounded-lg shadow">
                   <ResponsePanel
                     selectedRequestId={request.id}
@@ -206,6 +223,15 @@ const BaseChat: React.FC<BaseChatProps> = ({
                   />
                 </div>
               )}
+              {/* {request.response && (
+                <div className="bg-white p-4 rounded-lg shadow">
+                  <ResponsePanel
+                    selectedRequestId={request.id}
+                    requests={[request]}
+                    onSaveResponse={handleSaveResponse}
+                  />
+                </div>
+              )} */}
             </div>
           ))}
         </div>

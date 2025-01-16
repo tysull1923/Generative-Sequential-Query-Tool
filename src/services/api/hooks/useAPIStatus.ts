@@ -1,58 +1,116 @@
-import { useState, useEffect } from 'react';
-import { validateOpenAIKey, validateClaudeKey } from '@/services/api/utils/apiKeyValidator';
-import { ApiProvider, ApiConfig, ApiStatus } from '@/services/api/interfaces/api.types';
+// src/hooks/useAPIStatus.ts
+import { useState, useEffect, useCallback } from 'react';
+import { ApiProvider } from '@/services/api/interfaces/api.types';
+import { useLangChainService } from '@/services/api/langchain/langChainApiService';
 
-export function useAPIStatus() {
-  const [apiStatus, setApiStatus] = useState<ApiStatus["isAvailable"]>(false);
+export const useAPIStatus = (selectedAPI: ApiProvider) => {
+  const [status, setStatus] = useState<boolean>(false);
+  const [isChecking, setIsChecking] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Initialize langChainService with empty system context
+  const { checkConnection, getModelInfo } = useLangChainService("");
+
+  const checkAPIStatus = useCallback(async () => {
+    setIsChecking(true);
+    setError(null);
+    
+    try {
+      switch (selectedAPI) {
+        case ApiProvider.OLLAMA: {
+          const status = await checkConnection();
+          setStatus(status.connected);
+          break;
+        }
+        case ApiProvider.OPENAI: {
+          const apiKey = localStorage.getItem('OPENAI_API_KEY');
+          setStatus(!!apiKey);
+          break;
+        }
+        case ApiProvider.CLAUDE: {
+          const apiKey = localStorage.getItem('ANTHROPIC_API_KEY');
+          setStatus(!!apiKey);
+          break;
+        }
+        default:
+          setStatus(false);
+      }
+    } catch (err) {
+      setError(err.message);
+      setStatus(false);
+    } finally {
+      setIsChecking(false);
+    }
+  }, [selectedAPI, checkConnection]);
+
+  // Check status on mount and when selectedAPI changes
   useEffect(() => {
     checkAPIStatus();
-  }, []);
-  const [openaiKey, setOpenAIKey] = useState<ApiConfig["apiKey"]>();
-
-  const checkAPIStatus = async () => {
-    // Get API keys from environment variables or local storage
-    const openaiKeyString = localStorage.getItem('openai_api_key') || import.meta.env.VITE_OPENAI_API_KEY;
-    const claudeKey = localStorage.getItem('claude_api_key') || import.meta.env.VITE_ANTHROPIC_API_KEY;
-    setOpenAIKey(openaiKeyString);
-    // Check OpenAI API status
-    if (openaiKey) {
-      const isOpenAIValid = await validateOpenAIKey(openaiKey);
-      setApiStatus(true);
-    } else {
-      setApiStatus(false);
-    }
-
-    // Check Claude API status
-    if (claudeKey) {
-      const isClaudeValid = await validateClaudeKey(claudeKey);
-      setApiStatus(true);
-    } else {
-      setApiStatus(false);
-    }
-  };
-
-  const updateAPIKey = async (provider: ApiProvider, key: ApiConfig["apiKey"]) => {
-    localStorage.setItem(`${provider}_api_key`, key);
-    
-    // Validate and update status for the specific provider
-    if (provider === 'openai') {
-      const isValid = await validateOpenAIKey(key);
-      setApiStatus(true);
-      return isValid;
-    } else if (provider === 'claude') {
-      const isValid = await validateClaudeKey(key);
-      setApiStatus(false);
-      return isValid;
-    }
-    return false;
-  };
+  }, [selectedAPI, checkAPIStatus]);
 
   return {
-    apiStatus,
-    checkAPIStatus,
-    updateAPIKey
+    status,
+    isChecking,
+    error,
+    checkStatus: checkAPIStatus
   };
-}
+};
+
+// import { useState, useEffect } from 'react';
+// import { validateOpenAIKey, validateClaudeKey } from '@/services/api/utils/apiKeyValidator';
+// import { ApiProvider, ApiConfig, ApiStatus } from '@/services/api/interfaces/api.types';
+
+// export function useAPIStatus() {
+//   const [apiStatus, setApiStatus] = useState<ApiStatus["isAvailable"]>(false);
+//   useEffect(() => {
+//     checkAPIStatus();
+//   }, []);
+//   const [openaiKey, setOpenAIKey] = useState<ApiConfig["apiKey"]>();
+
+//   const checkAPIStatus = async () => {
+//     // Get API keys from environment variables or local storage
+//     const openaiKeyString = localStorage.getItem('openai_api_key') || import.meta.env.VITE_OPENAI_API_KEY;
+//     const claudeKey = localStorage.getItem('claude_api_key') || import.meta.env.VITE_ANTHROPIC_API_KEY;
+//     setOpenAIKey(openaiKeyString);
+//     // Check OpenAI API status
+//     if (openaiKey) {
+//       const isOpenAIValid = await validateOpenAIKey(openaiKey);
+//       setApiStatus(true);
+//     } else {
+//       setApiStatus(false);
+//     }
+
+//     // Check Claude API status
+//     if (claudeKey) {
+//       const isClaudeValid = await validateClaudeKey(claudeKey);
+//       setApiStatus(true);
+//     } else {
+//       setApiStatus(false);
+//     }
+//   };
+
+//   const updateAPIKey = async (provider: ApiProvider, key: ApiConfig["apiKey"]) => {
+//     localStorage.setItem(`${provider}_api_key`, key);
+    
+//     // Validate and update status for the specific provider
+//     if (provider === 'openai') {
+//       const isValid = await validateOpenAIKey(key);
+//       setApiStatus(true);
+//       return isValid;
+//     } else if (provider === 'claude') {
+//       const isValid = await validateClaudeKey(key);
+//       setApiStatus(false);
+//       return isValid;
+//     }
+//     return false;
+//   };
+
+//   return {
+//     apiStatus,
+//     checkAPIStatus,
+//     updateAPIKey
+//   };
+// }
 
 // import { useState, useEffect } from 'react';
 // import ApiStatusService from '@/services/api/implementations/ApiStatusService';
