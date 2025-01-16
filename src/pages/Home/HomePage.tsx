@@ -46,18 +46,18 @@ function HomePage() {
 	};
 
 	const handleDeleteChat = async (chatId: string) => {
-	try {
-		await chatService.deleteChat(chatId);
-		setChats(chats.filter(chat => chat._id !== chatId));
-		setDeleteChat(undefined);
-	} catch (err) {
-		console.error('Error deleting chat:', err);
-		setError('Failed to delete chat. Please try again.');
-	}
+		try {
+			await chatService.deleteChat(chatId);
+			setChats(chats.filter(chat => chat._id !== chatId));
+			setDeleteChat(undefined);
+		} catch (err) {
+			console.error('Error deleting chat:', err);
+			setError('Failed to delete chat. Please try again.');
+		}
 	};
 
 	const navigateToChat = (chatId: string) => {
-	navigate('/chat', { state: { chatId } });
+		navigate('/chat', { state: { chatId } });
 	};
 
 	if (loading) {
@@ -76,81 +76,81 @@ function HomePage() {
 			<div className="flex justify-between items-center mb-8">
 				<h1 className="text-2xl font-bold">Your Chats</h1>
 				<Button onClick={() => navigate('/chat')} className="flex items-center" size="lg">
-				<MessageSquarePlus className="mr-2 h-4 w-4" />
-				New Chat
+					<MessageSquarePlus className="mr-2 h-4 w-4" />
+					New Chat
 				</Button>
 			</div>
 
 			{error && (
 				<Alert variant="destructive" className="mb-6">
-				<AlertDescription>{error}</AlertDescription>
+					<AlertDescription>{error}</AlertDescription>
 				</Alert>
 			)}
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{chats.map((chat) => (
-				<Card 
-					key={chat._id} 
-					className="hover:shadow-lg transition-shadow cursor-pointer"
-				>
-					<div onClick={() => navigateToChat(chat._id)}>
-					<CardHeader>
-						<CardTitle className="text-lg">{chat.title || 'Untitled Chat'}</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-2">
-						<p className="text-sm text-gray-600">
-							{chat.settings?.savingParams?.summary || 'No summary available'}
-						</p>
-						<div className="flex gap-2">
-							<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-							{chat.settings?.chatType || 'Base Chat'}
-							</span>
-							{chat.settings?.selectedApi && (
-							<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-								{chat.settings.selectedApi}
-							</span>
-							)}
-						</div>
-						</div>
-					</CardContent>
-					</div>
-					<CardFooter className="flex justify-between items-center">
-					<span className="text-sm text-gray-500">
-						{new Date(chat.createdAt).toLocaleDateString()}
-					</span>
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={(e) => {
-						e.stopPropagation();
-						setDeleteChat(chat);
-						}}
+					<Card
+						key={chat._id}
+						className="hover:shadow-lg transition-shadow cursor-pointer"
 					>
-						<Trash2 className="h-4 w-4 text-red-500" />
-					</Button>
-					</CardFooter>
-				</Card>
+						<div onClick={() => navigateToChat(chat._id)}>
+							<CardHeader>
+								<CardTitle className="text-lg">{chat.title || 'Untitled Chat'}</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<div className="space-y-2">
+									<p className="text-sm text-gray-600">
+										{chat.settings?.savingParams?.summary || 'No summary available'}
+									</p>
+									<div className="flex gap-2">
+										<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+											{chat.settings?.chatType || 'Base Chat'}
+										</span>
+										{chat.settings?.selectedApi && (
+											<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+												{chat.settings.selectedApi}
+											</span>
+										)}
+									</div>
+								</div>
+							</CardContent>
+						</div>
+						<CardFooter className="flex justify-between items-center">
+							<span className="text-sm text-gray-500">
+								{new Date(chat.createdAt).toLocaleDateString()}
+							</span>
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={(e) => {
+									e.stopPropagation();
+									setDeleteChat(chat);
+								}}
+							>
+								<Trash2 className="h-4 w-4 text-red-500" />
+							</Button>
+						</CardFooter>
+					</Card>
 				))}
 			</div>
 
 			<AlertDialog open={!!deleteChat} onOpenChange={() => setDeleteChat(undefined)}>
 				<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>Delete Chat</AlertDialogTitle>
-					<AlertDialogDescription>
-					Are you sure you want to delete this chat? This action cannot be undone.
-					</AlertDialogDescription>
-				</AlertDialogHeader>
-				<AlertDialogFooter>
-					<AlertDialogCancel>Cancel</AlertDialogCancel>
-					<AlertDialogAction
-					onClick={() => deleteChat && handleDeleteChat(deleteChat._id)}
-					className="bg-red-500 hover:bg-red-600"
-					>
-					Delete
-					</AlertDialogAction>
-				</AlertDialogFooter>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete Chat</AlertDialogTitle>
+						<AlertDialogDescription>
+							Are you sure you want to delete this chat? This action cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => deleteChat && handleDeleteChat(deleteChat._id)}
+							className="bg-red-500 hover:bg-red-600"
+						>
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
 		</main>

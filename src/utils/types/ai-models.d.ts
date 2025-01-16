@@ -1,1 +1,1 @@
-export type LlmModelType = 'openai' | 'claude';
+export type LlmModelType = 'openai' | 'claude' | 'ollama';
