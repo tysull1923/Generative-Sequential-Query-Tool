@@ -6,6 +6,7 @@ import { MessageSquarePlus, Trash2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Banner/MainBanner/MainHeader';
 import { ChatApiService } from '@/services/database/chatDatabaseApiService';
+import  ChatHistoryCard from '@/components/features/ChatHistory/HistoricalChatCard'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +59,16 @@ const HomePage = () => {
   const navigateToChat = (chatId) => {
     navigate('/chat', { state: { chatId } });
   };
+  const handleCopyChat = async (chatId) => {
+    try {
+      const newChatId = await chatService.copyChat(chatId);
+      // Refresh the chat list to show the new copy
+      await fetchChats();
+    } catch (err) {
+      console.error('Error copying chat:', err);
+      setError('Failed to copy chat. Please try again.');
+    }
+  };
 
   if (loading) {
     return (
@@ -88,8 +99,17 @@ const HomePage = () => {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {chats.map((chat) => (
+            <ChatHistoryCard
+              key={chat._id}
+              chat={chat}
+              onDelete={(chatId) => setDeleteChat(chat)}
+              onCopy={handleCopyChat}
+            />
+          ))}
+        </div>
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {chats.map((chat) => (
             <Card 
               key={chat._id} 
@@ -134,7 +154,7 @@ const HomePage = () => {
               </CardFooter>
             </Card>
           ))}
-        </div>
+        </div> */}
 
         <AlertDialog open={!!deleteChat} onOpenChange={() => setDeleteChat(null)}>
           <AlertDialogContent>

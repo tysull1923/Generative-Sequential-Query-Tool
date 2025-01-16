@@ -51,21 +51,21 @@ const BaseChat: React.FC<BaseChatProps> = ({
     }
   }, [requests]);
 
-  useEffect(() => {
-    if (requests.length === 0) {
-      const newRequest: ChatRequest = {
-        id: Date.now().toString(),
-        role: Role.USER,
-        type: ChatType.BASE,
-        step: SequentialStepType.MESSAGE,
-        content: '',
-        status: ChatCardState.READY,
-        number: requests.length + 1
-      };
+  // useEffect(() => {
+  //   if (requests.length === 0) {
+  //     const newRequest: ChatRequest = {
+  //       id: Date.now().toString(),
+  //       role: Role.USER,
+  //       type: ChatType.BASE,
+  //       step: SequentialStepType.MESSAGE,
+  //       content: '',
+  //       status: ChatCardState.READY,
+  //       number: requests.length + 1
+  //     };
   
-      setRequests(prev => [newRequest]);
-    }
-  }, []);
+  //     setRequests(prev => [newRequest]);
+  //   }
+  // }, []);
 
   const addNewRequest = () => {
     const newRequest: ChatRequest = {
