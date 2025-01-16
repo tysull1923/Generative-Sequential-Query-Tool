@@ -7,6 +7,7 @@ import MainBanner from './MainBanner';
 import NewChatDropdown from './NewChatDropDown';
 import { MainHeaderProps, APIType } from './MainHeader.types';
 import { ChatType } from '@/utils/types/chat.types';
+import { useAPI } from '@/context/APIContext';
 
 const MainHeader: React.FC<MainHeaderProps> = ({ className = '' }) => {
   // const isHomePage = location.pathname === '/';
@@ -16,6 +17,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ className = '' }) => {
   const [ newChatType, onNewChat] = useState<ChatType>(ChatType.BASE);
   const navigate = useNavigate();
   const location = useLocation();
+  const selectedAPI = useAPI();
 
   const handleNewChat = useCallback((type: ChatType) => {
     switch (type) {
@@ -81,9 +83,20 @@ const MainHeader: React.FC<MainHeaderProps> = ({ className = '' }) => {
             onOpenSettings={handleOpenSettings}
           />
 
-          {/* API Status */}
-          <APIStatus 
-          />
+          <div className="flex items-center gap-4">
+            {/* Settings Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-gray-700 rounded-full"
+              onClick={handleOpenSettings}
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+
+            {/* API Status */}
+            <APIStatus />
+          </div>
         </div>
       </div>
     </header>

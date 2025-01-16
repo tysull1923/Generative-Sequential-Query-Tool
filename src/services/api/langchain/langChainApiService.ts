@@ -5,7 +5,7 @@ import { Ollama } from "@langchain/ollama";
 import { BaseMessage, SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
-import { ChatRequest, ChatCardState, ChatResponse, Role, SequentialStepType } from '@/utils/types/chat.types';
+import { ChatRequest, ChatCardState, ChatResponse, Role, SequentialStepType, ChatType } from '@/utils/types/chat.types';
 import { 
   ApiProvider, 
   ApiConfig, 
@@ -180,37 +180,44 @@ export const useLangChainService = (
       let currentHistory = [...messageHistory];
   
       // Handle single request case (string)
-      if (typeof requests === 'string') {
-        const message = new HumanMessage({ content: requests });
-        currentHistory.push(message);
+      // if (typeof requests === 'string') {
+      //   const message = new HumanMessage({ content: requests });
+      //   currentHistory.push(message);
   
-        const response = await activeModel.invoke(currentHistory);
-        const aiMessage = new AIMessage({ content: response.toString() });
-        currentHistory.push(aiMessage);
+      //   const response = await activeModel.invoke(currentHistory);
+      //   const aiMessage = new AIMessage({ content: response.toString() });
+      //   currentHistory.push(aiMessage);
         
-        setMessageHistory(currentHistory);
-        return [{
-          id: Date.now().toString(),
-          role: Role.USER,
-          type: ChatType.BASE,
-          content: requests,
-          status: ChatCardState.COMPLETE,
-          response: {
-            provider: Role.ASSISTANT,
-            content: response.toString(),
-          },
-          number: currentHistory.length / 2
-        }];
-      }
-  
+      //   setMessageHistory(currentHistory);
+      //   return [{
+      //     id: Date.now().toString(),
+      //     role: Role.USER,
+      //     type: ChatType.BASE,
+      //     content: requests,
+      //     status: ChatCardState.COMPLETE,
+      //     response: {
+      //       provider: Role.ASSISTANT,
+      //       content: response.toString(),
+      //     },
+      //     number: currentHistory.length / 2
+      //   }];
+      // }
+
       // Process multiple requests
       for (const request of requests) {
-        if (request.step === SequentialStepType.MESSAGE) {
+        console.log("Processing Request");
+        console.log(request.step);
+        console.log(request.number);
+        
+        if (request.step === SequentialStepType.MESSAGE || request.number === 1) {
+          console.log("Request is Message");
           const message = new HumanMessage({ content: request.content });
           currentHistory.push(message);
   
           try {
+            console.log("Trying to invoke model");
             const response = await activeModel.invoke(currentHistory);
+            console.log("Model Invoked with history");
             const aiMessage = new AIMessage({ content: response.toString() });
             currentHistory.push(aiMessage);
             

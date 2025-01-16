@@ -55,6 +55,14 @@ export class ChatApiService {
       throw this.handleError(error);
     }
   }
+  async copyChat(id: string): Promise<string> {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/chats/${id}/copy`);
+      return response.data._id;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
 
   private handleError(error: any): Error {
     console.error('API Error:', error.response?.data || error);

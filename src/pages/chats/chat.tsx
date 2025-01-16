@@ -14,7 +14,8 @@ import {
   ChatResponse,
   Role,
   ExecutionStatus,
-  ChatCardState
+  ChatCardState,
+  SequentialStepType
 } from '@/utils/types/chat.types';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChatApiService } from '@/services/database/chatDatabaseApiService';
@@ -79,22 +80,36 @@ const ChatPage: React.FC = () => {
   //     }]);
   //   }
   // }, [settings.chatType]);
+
+  //Put back!
   useEffect(() => {
     if (requests.length === 0) {
-      setRequests([{
-        id: '1',
-        role: Role.USER,
-        type: settings.chatType,
-        content: '',
-        status: ChatCardState.READY,
-        response: {
-          provider: Role.ASSISTANT,
-          content: ''
-        },
-        number: 1
-      }]);
+      const newRequest: ChatRequest = {
+            id: Date.now().toString(),
+            role: Role.USER,
+            type: settings.chatType,
+            step: SequentialStepType.MESSAGE,
+            content: '',
+            status: ChatCardState.READY,
+            number: requests.length + 1
+          };
+      
+      setRequests([newRequest]);
+      // setRequests([{
+      //   id: Date.now().toString(),
+      //   role: Role.USER,
+      //   type: settings.chatType,
+      //   step: SequentialStepType.MESSAGE,
+      //   content: '',
+      //   status: ChatCardState.READY,
+      //   number: requests.length + 1
+      // }]);
     }
   }, [settings.chatType]);
+  // response: {
+        //   provider: Role.ASSISTANT,
+        //   content: ''
+        // },
 
   // Load existing chat if ID is provided
   // useEffect(() => {
@@ -279,6 +294,26 @@ const handleSave = async () => {
       },
       number: req.number
     }));
+    // const formattedRequests = requests.map(req => {
+    //   const formatted = {
+    //     id: req.id,
+    //     role: req.role,
+    //     type: req.type,
+    //     content: req.content || '',
+    //     status: req.status,
+    //     number: req.number
+    //   };
+      
+    //   // Only add response if it exists
+    //   if (req.response) {
+    //     formatted.response = {
+    //       provider: req.response.provider,
+    //       content: req.response.content
+    //     };
+    //   }
+      
+    //   return formatted;
+    // });
 
     const chatData = {
       title: title || 'Untitled Chat',

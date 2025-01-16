@@ -6,6 +6,7 @@ import { MessageSquarePlus, Trash2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Banner/MainBanner/MainHeader';
 import { ChatApiService } from '@/services/database/chatDatabaseApiService';
+import  ChatHistoryCard from '@/components/features/ChatHistory/HistoricalChatCard'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -56,9 +57,19 @@ function HomePage() {
 		}
 	};
 
-	const navigateToChat = (chatId: string) => {
-		navigate('/chat', { state: { chatId } });
-	};
+  const navigateToChat = (chatId) => {
+    navigate('/chat', { state: { chatId } });
+  };
+  const handleCopyChat = async (chatId) => {
+    try {
+      const newChatId = await chatService.copyChat(chatId);
+      // Refresh the chat list to show the new copy
+      await fetchChats();
+    } catch (err) {
+      console.error('Error copying chat:', err);
+      setError('Failed to copy chat. Please try again.');
+    }
+  };
 
 	if (loading) {
 		return (
@@ -87,74 +98,89 @@ function HomePage() {
 				</Alert>
 			)}
 
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-				{chats.map((chat) => (
-					<Card
-						key={chat._id}
-						className="hover:shadow-lg transition-shadow cursor-pointer"
-					>
-						<div onClick={() => navigateToChat(chat._id)}>
-							<CardHeader>
-								<CardTitle className="text-lg">{chat.title || 'Untitled Chat'}</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<div className="space-y-2">
-									<p className="text-sm text-gray-600">
-										{chat.settings?.savingParams?.summary || 'No summary available'}
-									</p>
-									<div className="flex gap-2">
-										<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-											{chat.settings?.chatType || 'Base Chat'}
-										</span>
-										{chat.settings?.selectedApi && (
-											<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-												{chat.settings.selectedApi}
-											</span>
-										)}
-									</div>
-								</div>
-							</CardContent>
-						</div>
-						<CardFooter className="flex justify-between items-center">
-							<span className="text-sm text-gray-500">
-								{new Date(chat.createdAt).toLocaleDateString()}
-							</span>
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={(e) => {
-									e.stopPropagation();
-									setDeleteChat(chat);
-								}}
-							>
-								<Trash2 className="h-4 w-4 text-red-500" />
-							</Button>
-						</CardFooter>
-					</Card>
-				))}
-			</div>
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {chats.map((chat) => (
+            <ChatHistoryCard
+              key={chat._id}
+              chat={chat}
+              onDelete={(chatId) => setDeleteChat(chat)}
+              onCopy={handleCopyChat}
+            />
+          ))}
+        </div>
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {chats.map((chat) => (
+            <Card 
+              key={chat._id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+            >
+              <div onClick={() => navigateToChat(chat._id)}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{chat.title || 'Untitled Chat'}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">
+                      {chat.settings?.savingParams?.summary || 'No summary available'}
+                    </p>
+                    <div className="flex gap-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {chat.settings?.chatType || 'Base Chat'}
+                      </span>
+                      {chat.settings?.selectedApi && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {chat.settings.selectedApi}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </div>
+              <CardFooter className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">
+                  {new Date(chat.createdAt).toLocaleDateString()}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteChat(chat);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div> */}
 
-			<AlertDialog open={!!deleteChat} onOpenChange={() => setDeleteChat(undefined)}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Delete Chat</AlertDialogTitle>
-						<AlertDialogDescription>
-							Are you sure you want to delete this chat? This action cannot be undone.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={() => deleteChat && handleDeleteChat(deleteChat._id)}
-							className="bg-red-500 hover:bg-red-600"
-						>
-							Delete
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-		</main>
-	);
+        <AlertDialog open={!!deleteChat} onOpenChange={() => setDeleteChat(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Chat</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this chat? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteChat && handleDeleteChat(deleteChat._id)}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </main>
+  );
 };
 
 export default HomePage;

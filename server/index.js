@@ -138,6 +138,35 @@ app.put('/api/chats/:id', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+app.post('/api/chats/:id/copy', async (req, res) => {
+  try {
+    console.log('Copying chat:', req.params.id);
+    // Find the original chat
+    const originalChat = await Chat.findById(req.params.id);
+    if (!originalChat) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+
+    // Create a new chat document based on the original
+    const chatData = originalChat.toObject();
+    delete chatData._id; // Remove the original ID
+    
+    // Modify the title and timestamps
+    chatData.title = `${chatData.title || 'Untitled Chat'} (Copy)`;
+    chatData.createdAt = new Date();
+    chatData.lastModified = new Date();
+
+    // Create the new chat
+    const newChat = new Chat(chatData);
+    const savedChat = await newChat.save();
+    
+    console.log('Chat copied successfully with ID:', savedChat._id);
+    res.status(201).json(savedChat);
+  } catch (error) {
+    console.error('Error copying chat:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
