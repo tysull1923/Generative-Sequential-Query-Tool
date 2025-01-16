@@ -83,9 +83,20 @@ const MainHeader: React.FC<MainHeaderProps> = ({ className = '' }) => {
             onOpenSettings={handleOpenSettings}
           />
 
-          {/* API Status */}
-          <APIStatus 
-          />
+          <div className="flex items-center gap-4">
+            {/* Settings Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-gray-700 rounded-full"
+              onClick={handleOpenSettings}
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+
+            {/* API Status */}
+            <APIStatus />
+          </div>
         </div>
       </div>
     </header>
