@@ -8,6 +8,7 @@ import './styles/globals.css';
 //import BaseChat from './pages/chats/Chats/basechat';
 import ChatPage from './pages/chats/chat';
 import { APIProvider } from './context/APIContext';
+import { Toaster } from "@/components/ui/toaster"
 //import { DatabaseProvider } from './context/DatabaseContext';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
 						<Route path="/chat" element={<ChatPage />} />
 						<Route path="/settings" element={<SettingsPage />} />
 					</Routes>
+					<Toaster />
 				</div>
 			</div>
 		</APIProvider>
