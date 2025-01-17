@@ -49,6 +49,55 @@ export const useLangChainService = (
       return { connected: false, error };
     }
   };
+  const checkOpenAIConnection = async (apiKey: string) => {
+    try {
+      const model = new ChatOpenAI({
+        modelName: "gpt-3.5-turbo",
+        temperature: 0.7,
+        openAIApiKey: apiKey
+      });
+      
+      // Test the connection with a simple request
+      await model.invoke([new HumanMessage({ content: "test" })]);
+      
+      return { 
+        connected: true, 
+        provider: ApiProvider.OPENAI,
+        error: null 
+      };
+    } catch (error) {
+      return { 
+        connected: false, 
+        provider: ApiProvider.OPENAI,
+        error: error.message 
+      };
+    }
+  };
+  
+  const checkClaudeConnection = async (apiKey: string) => {
+    try {
+      const model = new ChatAnthropic({
+        modelName: "claude-3-sonnet-20240229",
+        temperature: 0.7,
+        anthropicApiKey: apiKey
+      });
+      
+      // Test the connection with a simple request
+      await model.invoke([new HumanMessage({ content: "test" })]);
+      
+      return { 
+        connected: true, 
+        provider: ApiProvider.CLAUDE,
+        error: null 
+      };
+    } catch (error) {
+      return { 
+        connected: false, 
+        provider: ApiProvider.CLAUDE,
+        error: error.message 
+      };
+    }
+  };
 
   const getAvailableAPI = async (): Promise<{ api: ApiProvider; config: Partial<ApiConfig> }> => {
     const { hasOpenAI, hasClaude, openaiKey, claudeKey } = checkApiKeys();
@@ -417,6 +466,78 @@ export const useLangChainService = (
     }
     return null;
   };
+  
+  const checkConnection = async (provider?: ApiProvider) => {
+    try {
+      // If no provider specified, check the one based on configuration
+      if (!provider) {
+        const { api } = await getAvailableAPI();
+        provider = api;
+      }
+  
+      switch (provider) {
+        case ApiProvider.OPENAI: {
+          const apiKey = import.meta.env.VITE_OPENAI_API_KEY;// || localStorage.getItem('OPENAI_API_KEY');
+          
+          if (!apiKey) {
+            return { 
+              connected: false, 
+              provider: ApiProvider.OPENAI,
+              error: 'No API key found' 
+            };
+          }
+          return await checkOpenAIConnection(apiKey);
+        }
+  
+        case ApiProvider.CLAUDE: {
+          const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem('ANTHROPIC_API_KEY');
+          if (!apiKey) {
+            return { 
+              connected: false, 
+              provider: ApiProvider.CLAUDE,
+              error: 'No API key found' 
+            };
+          }
+          return await checkClaudeConnection(apiKey);
+        }
+  
+        case ApiProvider.OLLAMA: {
+          try {
+            const response = await fetch(`${ollamaConfig?.baseUrl || "http://localhost:11434"}/api/version`);
+            if (!response.ok) {
+              throw new Error('Failed to connect to Ollama');
+            }
+            const data = await response.json();
+            return { 
+              connected: true, 
+              provider: ApiProvider.OLLAMA,
+              version: data.version,
+              error: null 
+            };
+          } catch (error) {
+            return { 
+              connected: false, 
+              provider: ApiProvider.OLLAMA,
+              error: error.message 
+            };
+          }
+        }
+  
+        default:
+          return { 
+            connected: false, 
+            provider: provider,
+            error: `Unsupported provider: ${provider}` 
+          };
+      }
+    } catch (error) {
+      return { 
+        connected: false, 
+        provider: provider,
+        error: error.message 
+      };
+    }
+  };
 
   return {
     processRequests,
@@ -425,7 +546,7 @@ export const useLangChainService = (
     messageHistory,
     resetHistory,
     getModelInfo,
-    checkConnection: checkOllamaConnection,
+    checkConnection,
     isConnected,
     currentModel,
     initializeHistory
