@@ -69,6 +69,7 @@ interface ResponsePanelProps {
   selectedRequestId: string | null;
   requests: any[];
   onSaveResponse: (id: string) => void;
+  toolbarContent?: React.ReactNode; // New prop for custom toolbar content
   className?: string;
 }
 
@@ -76,6 +77,7 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
   selectedRequestId,
   requests,
   onSaveResponse,
+  toolbarContent,
   className = ''
 }) => {
   const { toast } = useToast();
@@ -210,6 +212,7 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
                 <Save className="h-4 w-4" />
                 Save Response
               </Button>
+              {toolbarContent}
             </div>
           </div>
           <Card className="flex-grow overflow-auto">

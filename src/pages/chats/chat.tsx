@@ -6,6 +6,7 @@ import { useLangChainService } from '@/services/api/langchain/langChainApiServic
 import ChatBanner from '@/components/Banner/ChatBanner/ChatBanner';
 import BaseChat from '@/components/Chat/BasicChat/BaseChatMainPage';
 import SequentialChat from '@/components/Chat/Sequential/SequentialChatMainPage';
+import RequirementsChat from '@/components/Chat/RequirementsChat/RequirementsChatMainPage';
 import SystemContextModal from '@/components/features/SystemsContext/SystemContextModal';
 import {
   ChatType,
@@ -370,6 +371,8 @@ const handleSave = async () => {
     switch (settings.chatType) {
       case ChatType.SEQUENTIAL:
         return <SequentialChat {...commonProps} />;
+      case ChatType.REQUIREMENTS:
+        return <RequirementsChat {...commonProps} />;
       case ChatType.BASE:
       default:
         return <BaseChat {...commonProps} />;

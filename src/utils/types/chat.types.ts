@@ -213,6 +213,22 @@ export interface ChatSavingParams {
   fileName?: string;
 }
 
+export interface PromptItem {
+  id: string;
+  content: string;
+  sourceRequest: string;
+  createdAt: Date;
+}
+
+export interface PanelDimensions {
+  width: number;
+  minWidth: number;
+  maxWidth: number;
+}
+
+// Add other specific types as needed
+
+
 // /**
 //  * @fileoverview Core type definitions for the GSQT chat system
 //  */
