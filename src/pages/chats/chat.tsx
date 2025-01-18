@@ -185,7 +185,7 @@ const ChatPage: React.FC = () => {
         setIsProcessing(false);
       }
     }
-    if (settings.chatType === ChatType.BASE && typeof requestP === "string"){
+    if (settings.chatType === ChatType.BASE || settings.chatType === ChatType.REQUIREMENTS && typeof requestP === "string"){
       try {
         setIsProcessing(true);
         setExecutionStatus(ExecutionStatus.RUNNING);
