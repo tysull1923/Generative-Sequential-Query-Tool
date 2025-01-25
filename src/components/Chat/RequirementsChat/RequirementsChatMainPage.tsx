@@ -13,6 +13,7 @@ import {
   ChatCardState,
   SequentialStepType
 } from '@/utils/types/chat.types';
+import { useNavigate } from 'react-router-dom';
 
 // Components
 import RequirementsPromptArea from '@/components/Chat/RequirementsChat/RequirementsPromptArea';
@@ -53,6 +54,8 @@ const RequirementsChat: React.FC<RequirementsChatProps> = ({
   const [promptItems, setPromptItems] = useState<PromptItem[]>([]);
   const [sidePanelWidth, setSidePanelWidth] = useState(300);
   const [promptAreaWidth, setPromptAreaWidth] = useState(300);
+  const navigate = useNavigate();
+
 
   // Refs
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -249,6 +252,7 @@ const RequirementsChat: React.FC<RequirementsChatProps> = ({
         </div> 
 
         {/* Prompt Area Panel */}
+        
         {showPromptArea && (
           <RequirementsPromptArea
             items={promptItems}
@@ -257,6 +261,7 @@ const RequirementsChat: React.FC<RequirementsChatProps> = ({
             onClose={() => setShowPromptArea(false)}
             onRemoveItem={(id) => setPromptItems(prev => prev.filter(item => item.id !== id))}
             className="h-full"
+            navigate={navigate}
           />
         )}
       </div>

@@ -1,10 +1,14 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react';
-import { GripVertical, X, Copy, Check, ArrowUp, ArrowDown } from 'lucide-react';
+import { GripVertical, X, Copy, Check, ArrowUp, ArrowDown, ListPlus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+//import { useNavigate } from 'react-router-dom';
+import NewSequentialChatModal from '@/components/Chat/NewSequentialChatModal';
+import { ChatType, Role, SequentialStepType, ChatCardState, ExecutionStatus } from '@/utils/types/chat.types';
+
 
 interface PromptItem {
   id: string;
@@ -21,6 +25,7 @@ interface RequirementsPromptAreaProps {
   onRemoveItem: (id: string) => void;
   onMoveItem?: (id: string, direction: 'up' | 'down') => void;
   className?: string;
+  navigate: (path: string, options?: any) => void;
 }
 
 const MIN_WIDTH = 300;
@@ -33,18 +38,63 @@ const RequirementsPromptArea: React.FC<RequirementsPromptAreaProps> = ({
   onClose,
   onRemoveItem,
   onMoveItem,
-  className = ''
+  className = '',
+  navigate
 }) => {
   // State
   const [isResizing, setIsResizing] = useState(false);
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
-  
+  const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
+
+
+
   // Refs
   const panelRef = useRef<HTMLDivElement>(null);
   const resizeHandleRef = useRef<HTMLDivElement>(null);
   
   // Toast
   const { toast } = useToast();
+
+  const handleCreateNewChat = (title: string) => {
+    // Create sequential chat requests from prompt items
+    const chatRequests = items.map((item, index) => ({
+      id: Date.now().toString() + index,
+      role: Role.USER,
+      type: ChatType.SEQUENTIAL,
+      step: SequentialStepType.MESSAGE,
+      content: item.content,
+      status: ChatCardState.READY,
+      number: index + 1,
+    }));
+
+    // Navigate to new chat with initial state
+    // navigate('/chat', {
+    //   state: {
+    //     selectedChatType: ChatType.SEQUENTIAL,
+    //     initialTitle: title,
+    //     initialRequests: chatRequests,
+    //   },
+    // });
+    const chatState = {
+      selectedChatType: ChatType.SEQUENTIAL,
+      initialTitle: title,
+      initialRequests: chatRequests,
+      executionStatus: ExecutionStatus.IDLE
+    };
+    const stateParam = encodeURIComponent(JSON.stringify(chatState));
+    const newTabUrl = `/chat?state=${stateParam}`;
+    
+    // Open in new tab
+    window.open(newTabUrl, '_blank');
+
+    setIsNewChatModalOpen(false);
+    toast({
+      title: "New sequential chat created",
+      description: "Your prompts have been added to the new chat",
+      duration: 3000
+    });
+  };
+
 
   // Handle mouse movement during resize
   const handleResize = useCallback((e: MouseEvent) => {
@@ -141,16 +191,33 @@ const RequirementsPromptArea: React.FC<RequirementsPromptAreaProps> = ({
       {/* Header */}
       <div className="p-4 border-b flex items-center justify-between">
         <h2 className="font-semibold text-lg">Prompt Area</h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="h-8 w-8"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsNewChatModalOpen(true)}
+            disabled={items.length === 0}
+            className="h-8 w-8"
+            title="Create Sequential Chat"
+          >
+            <ListPlus className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-
+      {/* New Chat Modal */}
+      <NewSequentialChatModal
+        isOpen={isNewChatModalOpen}
+        onClose={() => setIsNewChatModalOpen(false)}
+        onCreateChat={handleCreateNewChat}
+      />
       {/* Prompt List */}
       <ScrollArea className="h-[calc(100vh-5rem)]">
         <div className="p-4 space-y-4">
@@ -226,6 +293,10 @@ const RequirementsPromptArea: React.FC<RequirementsPromptAreaProps> = ({
           )}
         </div>
       </ScrollArea>
+
+      
+
+
     </div>
   );
 };
