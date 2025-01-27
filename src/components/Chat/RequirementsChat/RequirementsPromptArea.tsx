@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 //import { useNavigate } from 'react-router-dom';
 import NewSequentialChatModal from '@/components/Chat/NewSequentialChatModal';
 import { ChatType, Role, SequentialStepType, ChatCardState, ExecutionStatus } from '@/utils/types/chat.types';
-
+import PromptCard from './RequirementsPromptCard';
 
 interface PromptItem {
   id: string;
@@ -219,71 +219,20 @@ const RequirementsPromptArea: React.FC<RequirementsPromptAreaProps> = ({
         onCreateChat={handleCreateNewChat}
       />
       {/* Prompt List */}
+      {/* Prompt List */}
       <ScrollArea className="h-[calc(100vh-5rem)]">
         <div className="p-4 space-y-4">
           {items.map((item, index) => (
-            <Card key={item.id} className="relative group">
-              <CardContent className="p-4">
-                {/* Prompt Content */}
-                <div className="mb-2 whitespace-pre-wrap">
-                  {item.content}
-                </div>
-
-                {/* Metadata and Actions */}
-                <div className="flex items-center justify-between text-sm text-gray-500 mt-2">
-                  <span>{formatDate(item.createdAt)}</span>
-                  <div className="flex items-center gap-2">
-                    {/* Move Actions */}
-                    {onMoveItem && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          disabled={index === 0}
-                          onClick={() => onMoveItem(item.id, 'up')}
-                        >
-                          <ArrowUp className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          disabled={index === items.length - 1}
-                          onClick={() => onMoveItem(item.id, 'down')}
-                        >
-                          <ArrowDown className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-
-                    {/* Copy Action */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => handleCopy(item.id, item.content)}
-                    >
-                      {copySuccess === item.id ? (
-                        <Check className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-
-                    {/* Remove Action */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => onRemoveItem(item.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <PromptCard
+              key={item.id}
+              item={item}
+              index={index}
+              isLast={index === items.length - 1}
+              onCopy={handleCopy}
+              onRemove={onRemoveItem}
+              onMove={onMoveItem}
+              copySuccess={copySuccess}
+            />
           ))}
 
           {items.length === 0 && (
