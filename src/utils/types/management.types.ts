@@ -10,11 +10,11 @@ import { ChatType } from './chat.types';
  * @enum {string}
  */
 export enum ChatStatus {
-  ACTIVE = 'active',
-  ARCHIVED = 'archived',
-  COMPLETED = 'completed',
-  DRAFT = 'draft',
-  DELETED = 'deleted'
+	ACTIVE = 'active',
+	ARCHIVED = 'archived',
+	COMPLETED = 'completed',
+	DRAFT = 'draft',
+	DELETED = 'deleted'
 }
 
 /**
@@ -22,14 +22,14 @@ export enum ChatStatus {
  * @interface
  */
 export interface ChatManagementItem {
-  id: string;
-  title: string;
-  type: ChatType;
-  lastModified: Date;
-  status: ChatStatus;
-  summary: string;
-  createdAt: Date;
-  updatedAt: Date;
+	id: string;
+	title: string;
+	type: ChatType;
+	lastModified: Date;
+	status: ChatStatus;
+	summary: string;
+	createdAt: Date;
+	updatedAt: Date;
 }
 
 /**
@@ -37,8 +37,8 @@ export interface ChatManagementItem {
  * @extends ChatManagementItem
  */
 export interface BaseChatItem extends ChatManagementItem {
-  type: ChatType.BASE;
-  messageCount: number;
+	type: ChatType.BASE;
+	messageCount: number;
 }
 
 /**
@@ -46,9 +46,9 @@ export interface BaseChatItem extends ChatManagementItem {
  * @extends ChatManagementItem
  */
 export interface SequentialChatItem extends ChatManagementItem {
-  type: ChatType.SEQUENTIAL;
-  stepCount: number;
-  completedSteps: number;
+	type: ChatType.SEQUENTIAL;
+	stepCount: number;
+	completedSteps: number;
 }
 
 /**
@@ -56,8 +56,8 @@ export interface SequentialChatItem extends ChatManagementItem {
  * @extends ChatManagementItem
  */
 export interface RequirementsChatItem extends ChatManagementItem {
-  type: ChatType.REQUIREMENTS;
-  requirementsCount: number;
+	type: ChatType.REQUIREMENTS;
+	requirementsCount: number;
 }
 
 // Sort and Filter Types
@@ -66,10 +66,10 @@ export interface RequirementsChatItem extends ChatManagementItem {
  * @enum {string}
  */
 export enum SortField {
-  TITLE = 'title',
-  CREATED_DATE = 'createdAt',
-  MODIFIED_DATE = 'lastModified',
-  STATUS = 'status'
+	TITLE = 'title',
+	CREATED_DATE = 'createdAt',
+	MODIFIED_DATE = 'lastModified',
+	STATUS = 'status'
 }
 
 /**
@@ -77,8 +77,8 @@ export enum SortField {
  * @enum {string}
  */
 export enum SortDirection {
-  ASC = 'asc',
-  DESC = 'desc'
+	ASC = 'asc',
+	DESC = 'desc'
 }
 
 /**
@@ -86,8 +86,8 @@ export enum SortDirection {
  * @interface
  */
 export interface SortConfig {
-  field: SortField;
-  direction: SortDirection;
+	field: SortField;
+	direction: SortDirection;
 }
 
 /**
@@ -95,13 +95,13 @@ export interface SortConfig {
  * @interface
  */
 export interface FilterCriteria {
-  types?: ChatType[];
-  status?: ChatStatus[];
-  dateRange?: {
-    start?: Date;
-    end?: Date;
-  };
-  searchTerm?: string;
+	types?: ChatType[];
+	status?: ChatStatus[];
+	dateRange?: {
+		start?: Date;
+		end?: Date;
+	};
+	searchTerm?: string;
 }
 
 // Action Types
@@ -110,11 +110,11 @@ export interface FilterCriteria {
  * @interface
  */
 export interface SaveActionParams {
-  id: string;
-  title?: string;
-  summary?: string;
-  saveToFile?: boolean;
-  fileName?: string;
+	id: string;
+	title?: string;
+	summary?: string;
+	saveToFile?: boolean;
+	fileName?: string;
 }
 
 /**
@@ -122,9 +122,9 @@ export interface SaveActionParams {
  * @interface
  */
 export interface StatusUpdateParams {
-  id: string;
-  newStatus: ChatStatus;
-  comment?: string;
+	id: string;
+	newStatus: ChatStatus;
+	comment?: string;
 }
 
 /**
@@ -132,8 +132,8 @@ export interface StatusUpdateParams {
  * @interface
  */
 export interface DeleteActionParams {
-  id: string;
-  permanent: boolean;
+	id: string;
+	permanent: boolean;
 }
 
 // Component Props
@@ -142,12 +142,12 @@ export interface DeleteActionParams {
  * @interface
  */
 export interface ManagementCardProps {
-  item: ChatManagementItem;
-  onSave: (params: SaveActionParams) => Promise<void>;
-  onCopy: (id: string) => Promise<void>;
-  onDelete: (params: DeleteActionParams) => Promise<void>;
-  onStatusUpdate: (params: StatusUpdateParams) => Promise<void>;
-  className?: string;
+	item: ChatManagementItem;
+	onSave: (params: SaveActionParams) => Promise<void>;
+	onCopy: (id: string) => Promise<void>;
+	onDelete: (params: DeleteActionParams) => Promise<void>;
+	onStatusUpdate: (params: StatusUpdateParams) => Promise<void>;
+	className?: string;
 }
 
 /**
@@ -155,14 +155,14 @@ export interface ManagementCardProps {
  * @interface
  */
 export interface ChatListViewProps {
-  items: ChatManagementItem[];
-  sort: SortConfig;
-  filter: FilterCriteria;
-  onSortChange: (newSort: SortConfig) => void;
-  onFilterChange: (newFilter: FilterCriteria) => void;
-  onItemSelect: (id: string) => void;
-  loading?: boolean;
-  error?: string;
+	items: ChatManagementItem[];
+	sort: SortConfig;
+	filter: FilterCriteria;
+	onSortChange: (newSort: SortConfig) => void;
+	onFilterChange: (newFilter: FilterCriteria) => void;
+	onItemSelect: (id: string) => void;
+	loading?: boolean;
+	error?: string;
 }
 
 /**
@@ -170,10 +170,10 @@ export interface ChatListViewProps {
  * @interface
  */
 export interface FilterProps {
-  criteria: FilterCriteria;
-  onChange: (newCriteria: FilterCriteria) => void;
-  availableTypes: ChatType[];
-  availableStatuses: ChatStatus[];
+	criteria: FilterCriteria;
+	onChange: (newCriteria: FilterCriteria) => void;
+	availableTypes: ChatType[];
+	availableStatuses: ChatStatus[];
 }
 
 /**
@@ -181,9 +181,9 @@ export interface FilterProps {
  * @interface
  */
 export interface SortProps {
-  config: SortConfig;
-  onChange: (newConfig: SortConfig) => void;
-  availableFields: SortField[];
+	config: SortConfig;
+	onChange: (newConfig: SortConfig) => void;
+	availableFields: SortField[];
 }
 
 // List States and Actions
@@ -192,14 +192,14 @@ export interface SortProps {
  * @interface
  */
 export interface ListViewState {
-  items: ChatManagementItem[];
-  loading: boolean;
-  error?: string;
-  sort: SortConfig;
-  filter: FilterCriteria;
-  selectedItems: string[];
-  page: number;
-  totalPages: number;
+	items: ChatManagementItem[];
+	loading: boolean;
+	error?: string;
+	sort: SortConfig;
+	filter: FilterCriteria;
+	selectedItems: string[];
+	page: number;
+	totalPages: number;
 }
 
 /**
@@ -213,11 +213,11 @@ export type BatchActionHandler = (ids: string[]) => Promise<void>;
  * @interface
  */
 export interface ListViewActions {
-  onRefresh: () => Promise<void>;
-  onPageChange: (newPage: number) => void;
-  onBatchDelete: BatchActionHandler;
-  onBatchArchive: BatchActionHandler;
-  onBatchExport: BatchActionHandler;
+	onRefresh: () => Promise<void>;
+	onPageChange: (newPage: number) => void;
+	onBatchDelete: BatchActionHandler;
+	onBatchArchive: BatchActionHandler;
+	onBatchExport: BatchActionHandler;
 }
 
 // Database Types
@@ -226,13 +226,13 @@ export interface ListViewActions {
  * @interface
  */
 export interface ChatDatabaseRecord extends ChatManagementItem {
-  content: string;
-  settings: Record<string, unknown>;
-  metadata: {
-    version: string;
-    lastAccessed: Date;
-    accessCount: number;
-  };
+	content: string;
+	settings: Record<string, unknown>;
+	metadata: {
+		version: string;
+		lastAccessed: Date;
+		accessCount: number;
+	};
 }
 
 /**
@@ -240,11 +240,11 @@ export interface ChatDatabaseRecord extends ChatManagementItem {
  * @interface
  */
 export interface ChatQueryOptions {
-  sort?: SortConfig;
-  filter?: FilterCriteria;
-  page?: number;
-  limit?: number;
-  includeDeleted?: boolean;
+	sort?: SortConfig;
+	filter?: FilterCriteria;
+	page?: number;
+	limit?: number;
+	includeDeleted?: boolean;
 }
 
 /**
@@ -252,7 +252,7 @@ export interface ChatQueryOptions {
  * @interface
  */
 export interface DatabaseOperationResult {
-  success: boolean;
-  error?: string;
-  affectedIds?: string[];
+	success: boolean;
+	error?: string;
+	affectedIds?: string[];
 }

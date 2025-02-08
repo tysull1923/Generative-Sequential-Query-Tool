@@ -7,62 +7,62 @@ const MIN_PANEL_WIDTH = 300;
 const MAX_PANEL_WIDTH = 1200;
 
 export const useSequentialUI = () => {
-  const [uiState, setUiState] = useState<UIPanelState>({
-    leftPanelWidth: window.innerWidth / 3,
-    isResizing: false
-  });
+	const [uiState, setUiState] = useState<UIPanelState>({
+		leftPanelWidth: window.innerWidth / 3,
+		isResizing: false
+	});
 
-  const resizeHandleRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+	const resizeHandleRef = useRef<HTMLDivElement>(null);
+	const containerRef = useRef<HTMLDivElement>(null);
+	const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleResize = useCallback((e: MouseEvent) => {
-    if (!uiState.isResizing || !containerRef.current) return;
-    
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const newWidth = e.clientX - containerRect.left;
-    const constrainedWidth = Math.max(
-      MIN_PANEL_WIDTH,
-      Math.min(MAX_PANEL_WIDTH, newWidth)
-    );
-    
-    setUiState(prev => ({ ...prev, leftPanelWidth: constrainedWidth }));
-  }, [uiState.isResizing]);
+	const handleResize = useCallback((e: MouseEvent) => {
+		if (!uiState.isResizing || !containerRef.current) return;
 
-  const handleResizeStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setUiState(prev => ({ ...prev, isResizing: true }));
-    document.body.style.cursor = 'ew-resize';
-    document.body.style.userSelect = 'none';
-  };
+		const containerRect = containerRef.current.getBoundingClientRect();
+		const newWidth = e.clientX - containerRect.left;
+		const constrainedWidth = Math.max(
+			MIN_PANEL_WIDTH,
+			Math.min(MAX_PANEL_WIDTH, newWidth)
+		);
 
-  const handleResizeEnd = () => {
-    setUiState(prev => ({ ...prev, isResizing: false }));
-    document.body.style.cursor = 'default';
-    document.body.style.userSelect = 'auto';
-  };
+		setUiState(prev => ({ ...prev, leftPanelWidth: constrainedWidth }));
+	}, [uiState.isResizing]);
 
-  useEffect(() => {
-    if (uiState.isResizing) {
-      window.addEventListener('mousemove', handleResize);
-      window.addEventListener('mouseup', handleResizeEnd);
-    }
-    return () => {
-      window.removeEventListener('mousemove', handleResize);
-      window.removeEventListener('mouseup', handleResizeEnd);
-    };
-  }, [uiState.isResizing, handleResize]);
+	const handleResizeStart = (e: React.MouseEvent) => {
+		e.preventDefault();
+		setUiState(prev => ({ ...prev, isResizing: true }));
+		document.body.style.cursor = 'ew-resize';
+		document.body.style.userSelect = 'none';
+	};
 
-  return {
-    uiState,
-    refs: {
-      resizeHandleRef,
-      containerRef,
-      chatContainerRef
-    },
-    handlers: {
-      handleResizeStart,
-      handleResizeEnd
-    }
-  };
+	const handleResizeEnd = () => {
+		setUiState(prev => ({ ...prev, isResizing: false }));
+		document.body.style.cursor = 'default';
+		document.body.style.userSelect = 'auto';
+	};
+
+	useEffect(() => {
+		if (uiState.isResizing) {
+			window.addEventListener('mousemove', handleResize);
+			window.addEventListener('mouseup', handleResizeEnd);
+		}
+		return () => {
+			window.removeEventListener('mousemove', handleResize);
+			window.removeEventListener('mouseup', handleResizeEnd);
+		};
+	}, [uiState.isResizing, handleResize]);
+
+	return {
+		uiState,
+		refs: {
+			resizeHandleRef,
+			containerRef,
+			chatContainerRef
+		},
+		handlers: {
+			handleResizeStart,
+			handleResizeEnd
+		}
+	};
 };

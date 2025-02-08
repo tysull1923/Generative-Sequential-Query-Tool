@@ -9,365 +9,365 @@ import { BrowserCache } from '../cache/BrowserCache';
 // ==================== Types & Interfaces ====================
 
 export interface MessageDocument {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: Date;
-  metadata?: Record<string, any>;
+	role: 'user' | 'assistant' | 'system';
+	content: string;
+	timestamp: Date;
+	metadata?: Record<string, any>;
 }
 
 
 export interface ChatFilter {
-  userId?: string;
-  type?: 'base' | 'sequential' | 'requirements';
-  status?: 'active' | 'archived' | 'deleted';
-  startDate?: Date;
-  endDate?: Date;
-  tags?: string[];
-  search?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+	userId?: string;
+	type?: 'base' | 'sequential' | 'requirements';
+	status?: 'active' | 'archived' | 'deleted';
+	startDate?: Date;
+	endDate?: Date;
+	tags?: string[];
+	search?: string;
+	page?: number;
+	limit?: number;
+	sortBy?: string;
+	sortOrder?: 'asc' | 'desc';
 }
 
 export interface ChatServiceOptions {
-  cacheEnabled?: boolean;
-  cacheTTL?: number;
-  batchSize?: number;
+	cacheEnabled?: boolean;
+	cacheTTL?: number;
+	batchSize?: number;
 }
 
 export class ChatServiceError extends Error {
-  constructor(
-    message: string,
-    public code: string,
-    public isOperational: boolean = true
-  ) {
-    super(message);
-    this.name = 'ChatServiceError';
-  }
+	constructor(
+		message: string,
+		public code: string,
+		public isOperational: boolean = true
+	) {
+		super(message);
+		this.name = 'ChatServiceError';
+	}
 }
 
 // ==================== Service Implementation ====================
 
 export class ChatService {
-  private static instance: ChatService;
-  private dbService: DatabaseService;
-  private cache: BrowserCache;
-  private readonly options: Required<ChatServiceOptions>;
+	private static instance: ChatService;
+	private dbService: DatabaseService;
+	private cache: BrowserCache;
+	private readonly options: Required<ChatServiceOptions>;
 
-  private constructor(options: ChatServiceOptions = {}) {
-    this.dbService = DatabaseService.getInstance();
-    this.options = {
-      cacheEnabled: options.cacheEnabled ?? true,
-      cacheTTL: options.cacheTTL ?? 300, // 5 minutes
-      batchSize: options.batchSize ?? 100
-    };
-    this.cache = new BrowserCache({
-      stdTTL: this.options.cacheTTL,
-    });
-  }
+	private constructor(options: ChatServiceOptions = {}) {
+		this.dbService = DatabaseService.getInstance();
+		this.options = {
+			cacheEnabled: options.cacheEnabled ?? true,
+			cacheTTL: options.cacheTTL ?? 300, // 5 minutes
+			batchSize: options.batchSize ?? 100
+		};
+		this.cache = new BrowserCache({
+			stdTTL: this.options.cacheTTL,
+		});
+	}
 
-  public static getInstance(options?: ChatServiceOptions): ChatService {
-    if (!ChatService.instance) {
-      ChatService.instance = new ChatService(options);
-    }
-    return ChatService.instance;
-  }
+	public static getInstance(options?: ChatServiceOptions): ChatService {
+		if (!ChatService.instance) {
+			ChatService.instance = new ChatService(options);
+		}
+		return ChatService.instance;
+	}
 
-  // ==================== CRUD Operations ====================
+	// ==================== CRUD Operations ====================
 
-  public async createChat(chat: ChatDocument): Promise<string> {
-    try {
-      const session = await mongoose.startSession();
-      session.startTransaction();
+	public async createChat(chat: ChatDocument): Promise<string> {
+		try {
+			const session = await mongoose.startSession();
+			session.startTransaction();
 
-      try {
-        const newChat = new Chat(chat);
-        await newChat.validate();
-        await newChat.save({ session });
+			try {
+				const newChat = new Chat(chat);
+				await newChat.validate();
+				await newChat.save({ session });
 
-        await session.commitTransaction();
-        
-        if (this.options.cacheEnabled) {
-          this.cache.set(newChat._id.toString(), newChat);
-        }
+				await session.commitTransaction();
 
-        return newChat._id.toString();
-      } catch (error) {
-        await session.abortTransaction();
-        throw error;
-      } finally {
-        session.endSession();
-      }
-    } catch (error) {
-      throw this.handleError(error, 'Error creating chat');
-    }
-  }
+				if (this.options.cacheEnabled) {
+					this.cache.set(newChat._id.toString(), newChat);
+				}
 
-  public async getChat(id: string): Promise<ChatDocument> {
-    try {
-      if (this.options.cacheEnabled) {
-        const cachedChat = this.cache.get<ChatDocument>(id);
-        if (cachedChat) {
-          return cachedChat;
-        }
-      }
+				return newChat._id.toString();
+			} catch (error) {
+				await session.abortTransaction();
+				throw error;
+			} finally {
+				session.endSession();
+			}
+		} catch (error) {
+			throw this.handleError(error, 'Error creating chat');
+		}
+	}
 
-      const chat = await Chat.findById(id).exec();
-      if (!chat) {
-        throw new ChatServiceError('Chat not found', 'CHAT_NOT_FOUND');
-      }
+	public async getChat(id: string): Promise<ChatDocument> {
+		try {
+			if (this.options.cacheEnabled) {
+				const cachedChat = this.cache.get<ChatDocument>(id);
+				if (cachedChat) {
+					return cachedChat;
+				}
+			}
 
-      if (this.options.cacheEnabled) {
-        this.cache.set(id, chat);
-      }
+			const chat = await Chat.findById(id).exec();
+			if (!chat) {
+				throw new ChatServiceError('Chat not found', 'CHAT_NOT_FOUND');
+			}
 
-      return chat;
-    } catch (error) {
-      throw this.handleError(error, 'Error retrieving chat');
-    }
-  }
+			if (this.options.cacheEnabled) {
+				this.cache.set(id, chat);
+			}
 
-  public async updateChat(id: string, update: Partial<ChatDocument>): Promise<void> {
-    try {
-      const session = await mongoose.startSession();
-      session.startTransaction();
+			return chat;
+		} catch (error) {
+			throw this.handleError(error, 'Error retrieving chat');
+		}
+	}
 
-      try {
-        const chat = await Chat.findById(id).session(session);
-        if (!chat) {
-          throw new ChatServiceError('Chat not found', 'CHAT_NOT_FOUND');
-        }
+	public async updateChat(id: string, update: Partial<ChatDocument>): Promise<void> {
+		try {
+			const session = await mongoose.startSession();
+			session.startTransaction();
 
-        Object.assign(chat, update);
-        await chat.validate();
-        await chat.save({ session });
+			try {
+				const chat = await Chat.findById(id).session(session);
+				if (!chat) {
+					throw new ChatServiceError('Chat not found', 'CHAT_NOT_FOUND');
+				}
 
-        await session.commitTransaction();
+				Object.assign(chat, update);
+				await chat.validate();
+				await chat.save({ session });
 
-        if (this.options.cacheEnabled) {
-          this.cache.set(id, chat);
-        }
-      } catch (error) {
-        await session.abortTransaction();
-        throw error;
-      } finally {
-        session.endSession();
-      }
-    } catch (error) {
-      throw this.handleError(error, 'Error updating chat');
-    }
-  }
+				await session.commitTransaction();
 
-  public async deleteChat(id: string): Promise<void> {
-    try {
-      const session = await mongoose.startSession();
-      session.startTransaction();
+				if (this.options.cacheEnabled) {
+					this.cache.set(id, chat);
+				}
+			} catch (error) {
+				await session.abortTransaction();
+				throw error;
+			} finally {
+				session.endSession();
+			}
+		} catch (error) {
+			throw this.handleError(error, 'Error updating chat');
+		}
+	}
 
-      try {
-        const result = await Chat.findByIdAndDelete(id).session(session);
-        if (!result) {
-          throw new ChatServiceError('Chat not found', 'CHAT_NOT_FOUND');
-        }
+	public async deleteChat(id: string): Promise<void> {
+		try {
+			const session = await mongoose.startSession();
+			session.startTransaction();
 
-        await session.commitTransaction();
+			try {
+				const result = await Chat.findByIdAndDelete(id).session(session);
+				if (!result) {
+					throw new ChatServiceError('Chat not found', 'CHAT_NOT_FOUND');
+				}
 
-        if (this.options.cacheEnabled) {
-          this.cache.del(id);
-        }
-      } catch (error) {
-        await session.abortTransaction();
-        throw error;
-      } finally {
-        session.endSession();
-      }
-    } catch (error) {
-      throw this.handleError(error, 'Error deleting chat');
-    }
-  }
+				await session.commitTransaction();
 
-  public async listChats(filter: ChatFilter): Promise<ChatDocument[]> {
-    try {
-      const query = this.buildQuery(filter);
-      const sort = this.buildSort(filter);
-      const { skip, limit } = this.buildPagination(filter);
+				if (this.options.cacheEnabled) {
+					this.cache.del(id);
+				}
+			} catch (error) {
+				await session.abortTransaction();
+				throw error;
+			} finally {
+				session.endSession();
+			}
+		} catch (error) {
+			throw this.handleError(error, 'Error deleting chat');
+		}
+	}
 
-      const chats = await Chat.find(query)
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .exec();
+	public async listChats(filter: ChatFilter): Promise<ChatDocument[]> {
+		try {
+			const query = this.buildQuery(filter);
+			const sort = this.buildSort(filter);
+			const { skip, limit } = this.buildPagination(filter);
 
-      return chats;
-    } catch (error) {
-      throw this.handleError(error, 'Error listing chats');
-    }
-  }
+			const chats = await Chat.find(query)
+				.sort(sort)
+				.skip(skip)
+				.limit(limit)
+				.exec();
 
-  public async addMessage(chatId: string, message: MessageDocument): Promise<void> {
-    try {
-      const session = await mongoose.startSession();
-      session.startTransaction();
+			return chats;
+		} catch (error) {
+			throw this.handleError(error, 'Error listing chats');
+		}
+	}
 
-      try {
-        const chat = await Chat.findById(chatId).session(session);
-        if (!chat) {
-          throw new ChatServiceError('Chat not found', 'CHAT_NOT_FOUND');
-        }
+	public async addMessage(chatId: string, message: MessageDocument): Promise<void> {
+		try {
+			const session = await mongoose.startSession();
+			session.startTransaction();
 
-        chat.messages.push(message);
-        await chat.save({ session });
+			try {
+				const chat = await Chat.findById(chatId).session(session);
+				if (!chat) {
+					throw new ChatServiceError('Chat not found', 'CHAT_NOT_FOUND');
+				}
 
-        await session.commitTransaction();
+				chat.messages.push(message);
+				await chat.save({ session });
 
-        if (this.options.cacheEnabled) {
-          this.cache.set(chatId, chat);
-        }
-      } catch (error) {
-        await session.abortTransaction();
-        throw error;
-      } finally {
-        session.endSession();
-      }
-    } catch (error) {
-      throw this.handleError(error, 'Error adding message');
-    }
-  }
+				await session.commitTransaction();
 
-  // ==================== Bulk Operations ====================
+				if (this.options.cacheEnabled) {
+					this.cache.set(chatId, chat);
+				}
+			} catch (error) {
+				await session.abortTransaction();
+				throw error;
+			} finally {
+				session.endSession();
+			}
+		} catch (error) {
+			throw this.handleError(error, 'Error adding message');
+		}
+	}
 
-  public async bulkCreateChats(chats: ChatDocument[]): Promise<string[]> {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+	// ==================== Bulk Operations ====================
 
-    try {
-      const chatIds: string[] = [];
-      const batches = this.splitIntoBatches(chats, this.options.batchSize);
+	public async bulkCreateChats(chats: ChatDocument[]): Promise<string[]> {
+		const session = await mongoose.startSession();
+		session.startTransaction();
 
-      for (const batch of batches) {
-        const result = await Chat.insertMany(batch, { session });
-        chatIds.push(...result.map(chat => chat._id.toString()));
-      }
+		try {
+			const chatIds: string[] = [];
+			const batches = this.splitIntoBatches(chats, this.options.batchSize);
 
-      await session.commitTransaction();
-      return chatIds;
-    } catch (error) {
-      await session.abortTransaction();
-      throw this.handleError(error, 'Error in bulk chat creation');
-    } finally {
-      session.endSession();
-    }
-  }
+			for (const batch of batches) {
+				const result = await Chat.insertMany(batch, { session });
+				chatIds.push(...result.map(chat => chat._id.toString()));
+			}
 
-  // ==================== Search & Aggregation ====================
+			await session.commitTransaction();
+			return chatIds;
+		} catch (error) {
+			await session.abortTransaction();
+			throw this.handleError(error, 'Error in bulk chat creation');
+		} finally {
+			session.endSession();
+		}
+	}
 
-  public async searchChats(query: string, filter: ChatFilter = {}): Promise<ChatDocument[]> {
-    try {
-      const searchQuery = {
-        $text: { $search: query },
-        ...this.buildQuery(filter)
-      };
+	// ==================== Search & Aggregation ====================
 
-      return await Chat.find(searchQuery)
-        .sort({ score: { $meta: 'textScore' } })
-        .exec();
-    } catch (error) {
-      throw this.handleError(error, 'Error searching chats');
-    }
-  }
+	public async searchChats(query: string, filter: ChatFilter = {}): Promise<ChatDocument[]> {
+		try {
+			const searchQuery = {
+				$text: { $search: query },
+				...this.buildQuery(filter)
+			};
 
-  public async aggregateChats(pipeline: any[]): Promise<any[]> {
-    try {
-      return await Chat.aggregate(pipeline).exec();
-    } catch (error) {
-      throw this.handleError(error, 'Error in chat aggregation');
-    }
-  }
+			return await Chat.find(searchQuery)
+				.sort({ score: { $meta: 'textScore' } })
+				.exec();
+		} catch (error) {
+			throw this.handleError(error, 'Error searching chats');
+		}
+	}
 
-  // ==================== Helper Methods ====================
+	public async aggregateChats(pipeline: any[]): Promise<any[]> {
+		try {
+			return await Chat.aggregate(pipeline).exec();
+		} catch (error) {
+			throw this.handleError(error, 'Error in chat aggregation');
+		}
+	}
 
-  private buildQuery(filter: ChatFilter): any {
-    const query: any = {};
+	// ==================== Helper Methods ====================
 
-    if (filter.userId) query.userId = filter.userId;
-    if (filter.type) query.type = filter.type;
-    if (filter.status) query['metadata.status'] = filter.status;
-    if (filter.tags?.length) query['metadata.tags'] = { $all: filter.tags };
+	private buildQuery(filter: ChatFilter): any {
+		const query: any = {};
 
-    if (filter.startDate || filter.endDate) {
-      query['metadata.created'] = {};
-      if (filter.startDate) query['metadata.created'].$gte = filter.startDate;
-      if (filter.endDate) query['metadata.created'].$lte = filter.endDate;
-    }
+		if (filter.userId) query.userId = filter.userId;
+		if (filter.type) query.type = filter.type;
+		if (filter.status) query['metadata.status'] = filter.status;
+		if (filter.tags?.length) query['metadata.tags'] = { $all: filter.tags };
 
-    return query;
-  }
+		if (filter.startDate || filter.endDate) {
+			query['metadata.created'] = {};
+			if (filter.startDate) query['metadata.created'].$gte = filter.startDate;
+			if (filter.endDate) query['metadata.created'].$lte = filter.endDate;
+		}
 
-  private buildSort(filter: ChatFilter): any {
-    const sort: any = {};
-    
-    if (filter.sortBy) {
-      sort[filter.sortBy] = filter.sortOrder === 'desc' ? -1 : 1;
-    } else {
-      sort['metadata.created'] = -1; // Default sort by creation date
-    }
+		return query;
+	}
 
-    return sort;
-  }
+	private buildSort(filter: ChatFilter): any {
+		const sort: any = {};
 
-  private buildPagination(filter: ChatFilter): { skip: number; limit: number } {
-    const page = Math.max(1, filter.page || 1);
-    const limit = Math.min(100, filter.limit || 10);
-    const skip = (page - 1) * limit;
+		if (filter.sortBy) {
+			sort[filter.sortBy] = filter.sortOrder === 'desc' ? -1 : 1;
+		} else {
+			sort['metadata.created'] = -1; // Default sort by creation date
+		}
 
-    return { skip, limit };
-  }
+		return sort;
+	}
 
-  private splitIntoBatches<T>(items: T[], batchSize: number): T[][] {
-    const batches: T[][] = [];
-    for (let i = 0; i < items.length; i += batchSize) {
-      batches.push(items.slice(i, i + batchSize));
-    }
-    return batches;
-  }
+	private buildPagination(filter: ChatFilter): { skip: number; limit: number } {
+		const page = Math.max(1, filter.page || 1);
+		const limit = Math.min(100, filter.limit || 10);
+		const skip = (page - 1) * limit;
 
-  private handleError(error: any, context: string): ChatServiceError {
-    if (error instanceof ChatServiceError) {
-      return error;
-    }
+		return { skip, limit };
+	}
 
-    if (error.name === 'ValidationError') {
-      return new ChatServiceError(
-        `Validation error: ${error.message}`,
-        'VALIDATION_ERROR'
-      );
-    }
+	private splitIntoBatches<T>(items: T[], batchSize: number): T[][] {
+		const batches: T[][] = [];
+		for (let i = 0; i < items.length; i += batchSize) {
+			batches.push(items.slice(i, i + batchSize));
+		}
+		return batches;
+	}
 
-    if (error.name === 'MongoError') {
-      if (error.code === 11000) {
-        return new ChatServiceError(
-          'Duplicate key error',
-          'DUPLICATE_KEY_ERROR'
-        );
-      }
-    }
+	private handleError(error: any, context: string): ChatServiceError {
+		if (error instanceof ChatServiceError) {
+			return error;
+		}
 
-    return new ChatServiceError(
-      `${context}: ${error.message}`,
-      'INTERNAL_ERROR',
-      false
-    );
-  }
+		if (error.name === 'ValidationError') {
+			return new ChatServiceError(
+				`Validation error: ${error.message}`,
+				'VALIDATION_ERROR'
+			);
+		}
 
-  // ==================== Cache Management ====================
+		if (error.name === 'MongoError') {
+			if (error.code === 11000) {
+				return new ChatServiceError(
+					'Duplicate key error',
+					'DUPLICATE_KEY_ERROR'
+				);
+			}
+		}
 
-  public clearCache(): void {
-    this.cache.flushAll();
-  }
+		return new ChatServiceError(
+			`${context}: ${error.message}`,
+			'INTERNAL_ERROR',
+			false
+		);
+	}
 
-  public invalidateChatCache(chatId: string): void {
-    this.cache.del(chatId);
-  }
+	// ==================== Cache Management ====================
+
+	public clearCache(): void {
+		this.cache.flushAll();
+	}
+
+	public invalidateChatCache(chatId: string): void {
+		this.cache.del(chatId);
+	}
 }
 
 // ==================== Usage Example ====================
@@ -376,61 +376,61 @@ export class ChatService {
 // Example usage:
 async function main() {
   const chatService = ChatService.getInstance({
-    cacheEnabled: true,
-    cacheTTL: 300,
-    batchSize: 100
+	cacheEnabled: true,
+	cacheTTL: 300,
+	batchSize: 100
   });
 
   // Create a new chat
   const chatId = await chatService.createChat({
-    type: 'base',
-    title: 'Test Chat',
-    messages: [],
-    settings: {
-      temperature: 0.7,
-      model: 'gpt-4'
-    },
-    metadata: {
-      created: new Date(),
-      modified: new Date(),
-      status: 'active',
-      tags: ['test']
-    },
-    userId: 'user123'
+	type: 'base',
+	title: 'Test Chat',
+	messages: [],
+	settings: {
+	  temperature: 0.7,
+	  model: 'gpt-4'
+	},
+	metadata: {
+	  created: new Date(),
+	  modified: new Date(),
+	  status: 'active',
+	  tags: ['test']
+	},
+	userId: 'user123'
   });
 
   // Add a message
   await chatService.addMessage(chatId, {
-    role: 'user',
-    content: 'Hello!',
-    timestamp: new Date()
+	role: 'user',
+	content: 'Hello!',
+	timestamp: new Date()
   });
 
   // List chats with filtering
   const chats = await chatService.listChats({
-    userId: 'user123',
-    type: 'base',
-    status: 'active',
-    page: 1,
-    limit: 10,
-    sortBy: 'metadata.created',
-    sortOrder: 'desc'
+	userId: 'user123',
+	type: 'base',
+	status: 'active',
+	page: 1,
+	limit: 10,
+	sortBy: 'metadata.created',
+	sortOrder: 'desc'
   });
 
   // Search chats
   const searchResults = await chatService.searchChats('query', {
-    userId: 'user123',
-    status: 'active'
+	userId: 'user123',
+	status: 'active'
   });
 
   // Perform aggregation
   const stats = await chatService.aggregateChats([
-    { $match: { userId: 'user123' } },
-    { $group: { 
-      _id: '$type',
-      count: { $sum: 1 },
-      avgMessages: { $avg: { $size: '$messages' } }
-    }}
+	{ $match: { userId: 'user123' } },
+	{ $group: { 
+	  _id: '$type',
+	  count: { $sum: 1 },
+	  avgMessages: { $avg: { $size: '$messages' } }
+	}}
   ]);
 }
 */

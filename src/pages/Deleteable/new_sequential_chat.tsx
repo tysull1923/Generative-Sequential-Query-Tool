@@ -155,7 +155,7 @@ const NewChatPage = () => {
 		<div className="min-h-screen flex flex-col">
 			{/* Top Banner */}
 			<Header />
-			
+
 			<ChatBanner
 				chatType={ChatType.BASE}
 				title={title}
@@ -167,13 +167,13 @@ const NewChatPage = () => {
 				{/* Left Panel - Requests (1/3 width) */}
 				<div className="w-1/3 border-r p-4 bg-background overflow-y-auto">
 					<div className="space-y-4">
-					<SequentialPromptsPlayPause
-						onAddStep={(type) => {/* Handle step addition */ }}
-						//onPlay={handlePlay}
-						onPlay={handlePlay}
-						onPause={() => setIsProcessing(false)}
-						isPlaying={isProcessing}
-					/>
+						<SequentialPromptsPlayPause
+							onAddStep={(type) => {/* Handle step addition */ }}
+							//onPlay={handlePlay}
+							onPlay={handlePlay}
+							onPause={() => setIsProcessing(false)}
+							isPlaying={isProcessing}
+						/>
 						{/* Add System Context Button */}
 						{!showSystemContext && (
 							<Button

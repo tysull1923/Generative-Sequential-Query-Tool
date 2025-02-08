@@ -19,54 +19,54 @@ import NewChatDropdown from './NewChatDropDown';
  * - className: Optional CSS class for styling.
  */
 const MainBanner: React.FC<MainBannerProps> = ({
-  onNewChat,
-  onManageChats,
-  onOpenSettings,
-  className = '',
+	onNewChat,
+	onManageChats,
+	onOpenSettings,
+	className = '',
 }) => {
-  const navigate = useNavigate();
+	const navigate = useNavigate();
 
-  // State for managing dropdown visibility
-  const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
-  const [isManageMenuOpen, setIsManageMenuOpen] = useState(false);
-  const [isDashboardMenuOpen, setIsDashboardMenuOpen] = useState(false);
+	// State for managing dropdown visibility
+	const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
+	const [isManageMenuOpen, setIsManageMenuOpen] = useState(false);
+	const [isDashboardMenuOpen, setIsDashboardMenuOpen] = useState(false);
 
-  // Handlers for dropdown actions
-  const handleNewChat = useCallback(
-    (type: ChatType) => {
-      setIsNewMenuOpen(false);
-      onNewChat(type);
-    },
-    [onNewChat]
-  );
+	// Handlers for dropdown actions
+	const handleNewChat = useCallback(
+		(type: ChatType) => {
+			setIsNewMenuOpen(false);
+			onNewChat(type);
+		},
+		[onNewChat]
+	);
 
-  const handleManageChats = useCallback(
-    (type: ChatType) => {
-      setIsManageMenuOpen(false);
-      onManageChats(type);
-    },
-    [onManageChats]
-  );
+	const handleManageChats = useCallback(
+		(type: ChatType) => {
+			setIsManageMenuOpen(false);
+			onManageChats(type);
+		},
+		[onManageChats]
+	);
 
-  const handleDashboardNavigation = useCallback(
-    (path: string) => {
-      setIsDashboardMenuOpen(false);
-      navigate(path);
-    },
-    [navigate]
-  );
+	const handleDashboardNavigation = useCallback(
+		(path: string) => {
+			setIsDashboardMenuOpen(false);
+			navigate(path);
+		},
+		[navigate]
+	);
 
-  return (
-    <div className={`w-full bg-white shadow-sm border-b border-gray-200 ${className}`}>
-      <div className="bg-gray-800 text-white py-4 px-6 shadow-lg">
-        <div className="flex items-center justify-between h-16">
-          {/* Left section with dropdowns */}
-          
-          <div className="flex items-center space-x-4">
-            {/* New Dropdown */}
-            <NewChatDropdown 
-            onNewChat= {handleNewChat}/>
-            {/* <div className="relative">
+	return (
+		<div className={`w-full bg-white shadow-sm border-b border-gray-200 ${className}`}>
+			<div className="bg-gray-800 text-white py-4 px-6 shadow-lg">
+				<div className="flex items-center justify-between h-16">
+					{/* Left section with dropdowns */}
+
+					<div className="flex items-center space-x-4">
+						{/* New Dropdown */}
+						<NewChatDropdown
+							onNewChat={handleNewChat} />
+						{/* <div className="relative">
               <Dropdown
                 trigger={
                   <Button
@@ -97,11 +97,11 @@ const MainBanner: React.FC<MainBannerProps> = ({
                 ]}
               />
             </div>  */}
-            
 
-            {/* Removing from home page right now due to workflow and schedulers don't exist */}
-            {/* Manage Chats Dropdown */}
-            {/* <div className="relative">
+
+						{/* Removing from home page right now due to workflow and schedulers don't exist */}
+						{/* Manage Chats Dropdown */}
+						{/* <div className="relative">
               <Dropdown
                 trigger={
                   <Button
@@ -127,8 +127,8 @@ const MainBanner: React.FC<MainBannerProps> = ({
               />
             </div> */}
 
-            {/* Dashboards Dropdown */}
-            {/* <div className="relative">
+						{/* Dashboards Dropdown */}
+						{/* <div className="relative">
               <Dropdown
                 trigger={
                   <Button
@@ -149,11 +149,11 @@ const MainBanner: React.FC<MainBannerProps> = ({
                 ]}
               />
             </div> */}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 };
 
 export default MainBanner;

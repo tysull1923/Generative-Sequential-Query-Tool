@@ -22,33 +22,33 @@ app.use(cors());
 
 // Chat Schema
 const chatSchema = new mongoose.Schema({
-  title: String,
-  type: String,
-  settings: {
-    temperature: Number,
-    chatType: String,
-    systemContext: String,
-    savingParams: {
-      saveToApplication: Boolean,
-      saveToFile: Boolean,
-      summary: String
-    }
-  },
-  messages: [{
-    id: { type: String, required: true },
-    role: { type: String, required: true },
-    type: { type: String, required: true },
-    content: { type: String, default: '' },
-    status: { type: String, required: true },
-    response: {
-      provider: { type: String },
-      content: { type: String, default: '' }
-    },
-    number: { type: Number, required: true }
-  }],
-  executionStatus: String,
-  lastModified: { type: Date, default: Date.now },
-  createdAt: { type: Date, default: Date.now }
+	title: String,
+	type: String,
+	settings: {
+		temperature: Number,
+		chatType: String,
+		systemContext: String,
+		savingParams: {
+			saveToApplication: Boolean,
+			saveToFile: Boolean,
+			summary: String
+		}
+	},
+	messages: [{
+		id: { type: String, required: true },
+		role: { type: String, required: true },
+		type: { type: String, required: true },
+		content: { type: String, default: '' },
+		status: { type: String, required: true },
+		response: {
+			provider: { type: String },
+			content: { type: String, default: '' }
+		},
+		number: { type: Number, required: true }
+	}],
+	executionStatus: String,
+	lastModified: { type: Date, default: Date.now },
+	createdAt: { type: Date, default: Date.now }
 });
 
 // Create the Chat model
@@ -58,142 +58,142 @@ const Chat = mongoose.model('Chat', chatSchema);
 console.log('Attempting to connect to MongoDB...');
 
 mongoose.connect('mongodb://127.0.0.1:27017/gsqt_db', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-  family: 4 // Use IPv4, skip trying IPv6
+	useNewUrlParser: true,
+	useUnifiedTopology: true,
+	serverSelectionTimeoutMS: 5000,
+	socketTimeoutMS: 45000,
+	family: 4 // Use IPv4, skip trying IPv6
 })
-.then(() => {
-  console.log('Successfully connected to MongoDB.');
-})
-.catch((error) => {
-  console.error('MongoDB connection error:', error);
-  process.exit(1); // Exit if can't connect to database
-});
+	.then(() => {
+		console.log('Successfully connected to MongoDB.');
+	})
+	.catch((error) => {
+		console.error('MongoDB connection error:', error);
+		process.exit(1); // Exit if can't connect to database
+	});
 
 // Debug middleware
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  next();
+	console.log(`${req.method} ${req.path}`);
+	next();
 });
 
 // Routes
 app.post('/api/chats', async (req, res) => {
-  try {
-    console.log('Creating new chat...');
-    const chatData = req.body;
-    console.log('Received data:', JSON.stringify(chatData, null, 2));
-    
-    const newChat = new Chat(chatData);
-    const savedChat = await newChat.save();
-    
-    console.log('Chat saved successfully with ID:', savedChat._id);
-    res.status(201).json(savedChat);
-  } catch (error) {
-    console.error('Error saving chat:', error);
-    res.status(500).json({ 
-      error: error.message,
-      details: error.toString()
-    });
-  }
+	try {
+		console.log('Creating new chat...');
+		const chatData = req.body;
+		console.log('Received data:', JSON.stringify(chatData, null, 2));
+
+		const newChat = new Chat(chatData);
+		const savedChat = await newChat.save();
+
+		console.log('Chat saved successfully with ID:', savedChat._id);
+		res.status(201).json(savedChat);
+	} catch (error) {
+		console.error('Error saving chat:', error);
+		res.status(500).json({
+			error: error.message,
+			details: error.toString()
+		});
+	}
 });
 
 app.get('/api/chats', async (req, res) => {
-  try {
-    const chats = await Chat.find().sort({ createdAt: -1 });
-    res.json(chats);
-  } catch (error) {
-    console.error('Error fetching chats:', error);
-    res.status(500).json({ error: error.message });
-  }
+	try {
+		const chats = await Chat.find().sort({ createdAt: -1 });
+		res.json(chats);
+	} catch (error) {
+		console.error('Error fetching chats:', error);
+		res.status(500).json({ error: error.message });
+	}
 });
 
 app.get('/api/chats/:id', async (req, res) => {
-  try {
-    const chat = await Chat.findById(req.params.id);
-    if (!chat) {
-      return res.status(404).json({ error: 'Chat not found' });
-    }
-    res.json(chat);
-  } catch (error) {
-    console.error('Error fetching chat:', error);
-    res.status(500).json({ error: error.message });
-  }
+	try {
+		const chat = await Chat.findById(req.params.id);
+		if (!chat) {
+			return res.status(404).json({ error: 'Chat not found' });
+		}
+		res.json(chat);
+	} catch (error) {
+		console.error('Error fetching chat:', error);
+		res.status(500).json({ error: error.message });
+	}
 });
 
 app.put('/api/chats/:id', async (req, res) => {
-  try {
-    const updatedChat = await Chat.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!updatedChat) {
-      return res.status(404).json({ error: 'Chat not found' });
-    }
-    res.json(updatedChat);
-  } catch (error) {
-    console.error('Error updating chat:', error);
-    res.status(500).json({ error: error.message });
-  }
+	try {
+		const updatedChat = await Chat.findByIdAndUpdate(
+			req.params.id,
+			req.body,
+			{ new: true, runValidators: true }
+		);
+		if (!updatedChat) {
+			return res.status(404).json({ error: 'Chat not found' });
+		}
+		res.json(updatedChat);
+	} catch (error) {
+		console.error('Error updating chat:', error);
+		res.status(500).json({ error: error.message });
+	}
 });
 app.post('/api/chats/:id/copy', async (req, res) => {
-  try {
-    console.log('Copying chat:', req.params.id);
-    // Find the original chat
-    const originalChat = await Chat.findById(req.params.id);
-    if (!originalChat) {
-      return res.status(404).json({ error: 'Chat not found' });
-    }
+	try {
+		console.log('Copying chat:', req.params.id);
+		// Find the original chat
+		const originalChat = await Chat.findById(req.params.id);
+		if (!originalChat) {
+			return res.status(404).json({ error: 'Chat not found' });
+		}
 
-    // Create a new chat document based on the original
-    const chatData = originalChat.toObject();
-    delete chatData._id; // Remove the original ID
-    
-    // Modify the title and timestamps
-    chatData.title = `${chatData.title || 'Untitled Chat'} (Copy)`;
-    chatData.createdAt = new Date();
-    chatData.lastModified = new Date();
+		// Create a new chat document based on the original
+		const chatData = originalChat.toObject();
+		delete chatData._id; // Remove the original ID
 
-    // Create the new chat
-    const newChat = new Chat(chatData);
-    const savedChat = await newChat.save();
-    
-    console.log('Chat copied successfully with ID:', savedChat._id);
-    res.status(201).json(savedChat);
-  } catch (error) {
-    console.error('Error copying chat:', error);
-    res.status(500).json({ error: error.message });
-  }
+		// Modify the title and timestamps
+		chatData.title = `${chatData.title || 'Untitled Chat'} (Copy)`;
+		chatData.createdAt = new Date();
+		chatData.lastModified = new Date();
+
+		// Create the new chat
+		const newChat = new Chat(chatData);
+		const savedChat = await newChat.save();
+
+		console.log('Chat copied successfully with ID:', savedChat._id);
+		res.status(201).json(savedChat);
+	} catch (error) {
+		console.error('Error copying chat:', error);
+		res.status(500).json({ error: error.message });
+	}
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ 
-    error: err.message,
-    details: err.toString()
-  });
+	console.error('Unhandled error:', err);
+	res.status(500).json({
+		error: err.message,
+		details: err.toString()
+	});
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`API endpoint: http://localhost:${PORT}/api`);
+	console.log(`Server running on port ${PORT}`);
+	console.log(`API endpoint: http://localhost:${PORT}/api`);
 });
 
 app.delete('/api/chats/:id', async (req, res) => {
-  try {
-    const deletedChat = await Chat.findByIdAndDelete(req.params.id);
-    if (!deletedChat) {
-      return res.status(404).json({ error: 'Chat not found' });
-    }
-    res.status(204).send();
-  } catch (error) {
-    console.error('Error deleting chat:', error);
-    res.status(500).json({ error: error.message });
-  }
+	try {
+		const deletedChat = await Chat.findByIdAndDelete(req.params.id);
+		if (!deletedChat) {
+			return res.status(404).json({ error: 'Chat not found' });
+		}
+		res.status(204).send();
+	} catch (error) {
+		console.error('Error deleting chat:', error);
+		res.status(500).json({ error: error.message });
+	}
 });
 
 // const app = express();

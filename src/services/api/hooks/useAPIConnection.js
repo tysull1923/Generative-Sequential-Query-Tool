@@ -3,26 +3,26 @@ import { openAIService } from '../services/api/implementations/openai';
 import { anthropicService } from '../services/api/implementations/anthropic';
 
 export const useApiConnection = (selectedAPI) => {
-  const [status, setStatus] = useState('disconnected');
+	const [status, setStatus] = useState('disconnected');
 
-  useEffect(() => {
-    const checkConnection = async () => {
-      const apiKey = localStorage.getItem(
-        selectedAPI === 'OpenAI' ? 'OPENAI_API_KEY' : 'CLAUDE_API_KEY'
-      );
-      
-      if (!apiKey) {
-        setStatus('disconnected');
-        return;
-      }
+	useEffect(() => {
+		const checkConnection = async () => {
+			const apiKey = localStorage.getItem(
+				selectedAPI === 'OpenAI' ? 'OPENAI_API_KEY' : 'CLAUDE_API_KEY'
+			);
 
-      const service = selectedAPI === 'OpenAI' ? openAIService : anthropicService;
-      const isConnected = await service.checkConnection(apiKey);
-      setStatus(isConnected ? 'connected' : 'disconnected');
-    };
+			if (!apiKey) {
+				setStatus('disconnected');
+				return;
+			}
 
-    checkConnection();
-  }, [selectedAPI]);
+			const service = selectedAPI === 'OpenAI' ? openAIService : anthropicService;
+			const isConnected = await service.checkConnection(apiKey);
+			setStatus(isConnected ? 'connected' : 'disconnected');
+		};
 
-  return status;
+		checkConnection();
+	}, [selectedAPI]);
+
+	return status;
 };
