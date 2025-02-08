@@ -2,9 +2,9 @@ import Header from '@/components/Banner/MainBanner/MainHeader';
 import { useState } from 'react';
 import { AlertCircle, CheckCircle2, EyeOff, Eye } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { openAIService } from '../services/api/implementations/openAI';
-import { anthropicService } from '../services/api/implementations/anthropic';
-import { API_CONFIG } from '../services/api/interfaces/api-config';
+import { openAIService } from '@/services/api/implementations/openAI';
+import { anthropicService } from '@/services/api/implementations/anthropic';
+import { API_CONFIG } from '@/services/api/interfaces/api-config';
 import { LlmModelType } from '@/utils/types/ai-models';
 import { cn } from '@/lib/utils';
 

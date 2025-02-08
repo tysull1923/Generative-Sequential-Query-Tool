@@ -19,9 +19,9 @@ import {
 
 // You'll need to create these components
 import ProjectHeader from '@/components/Banner/ProjectBanner/ProjectHeader';
-import KnowledgeBasePanel from '@/components/KnowledgeBasePanel';
-import ProjectChats from '@/components/ProjectChats';
-import RAGSettingsModal from '@/components/RAGSettingsModal';
+import KnowledgeBasePanel from '@/components/features/project/KnowledgeBasePanel';
+import ProjectChats from '@/components/features/project/projectchats/ProjectChats';
+import RAGSettingsModal from '@/components/features/project/RagSettings/RagSettingsModal';
 
 interface ProjectProps {
 	// Add any props if needed
