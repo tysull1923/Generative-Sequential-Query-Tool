@@ -3,11 +3,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAPI } from '@/context/APIContext';
 import { useLangChainService } from '@/services/api/langchain/langChainApiService';
-import Header from "@/components/Banner/MainBanner/MainHeader";
 import ChatBanner from '@/components/Banner/ChatBanner/ChatBanner';
 import BaseChat from '@/components/Chat/BasicChat/BaseChatMainPage';
 import SequentialChat from '@/components/Chat/Sequential/SequentialChatMainPage';
+import RequirementsChat from '@/components/Chat/RequirementsChat/RequirementsChatMainPage';
 import SystemContextModal from '@/components/features/SystemsContext/SystemContextModal';
+
 import {
   ChatType,
   ChatSettings,
@@ -15,9 +16,10 @@ import {
   ChatResponse,
   Role,
   ExecutionStatus,
-  ChatCardState
+  ChatCardState,
+  SequentialStepType
 } from '@/utils/types/chat.types';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ChatApiService } from '@/services/database/chatDatabaseApiService';
 
 const DEFAULT_SETTINGS: ChatSettings = {
@@ -34,11 +36,17 @@ const ChatPage: React.FC = () => {
   //Database stuff
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  const initialSettings = {
+    ...DEFAULT_SETTINGS,
+    chatType: location.state?.selectedChatType || DEFAULT_SETTINGS.chatType
+  };
   const chatService = ChatApiService.getInstance();
   const [ isSaving, setIsSaving ] = useState(false);
   // Common state
   const [title, setTitle] = useState("New Chat");
-  const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<ChatSettings>(initialSettings);
   const [requests, setRequests] = useState<ChatRequest[]>([]);
   const [systemContext, setSystemContext] = useState<string>('');
   const [isSystemContextModalOpen, setIsSystemContextModalOpen] = useState(false);
@@ -54,6 +62,7 @@ const ChatPage: React.FC = () => {
     processRequests, 
     isProcessing, 
     setIsProcessing,
+    initializeHistory,
     checkOllamaConnection 
   } = useLangChainService(
     systemContext,
@@ -61,51 +70,158 @@ const ChatPage: React.FC = () => {
   );
 
   // Initialize requests if empty
-  useEffect(() => {
+  // useEffect(() => {
     
-    if (requests.length === 0) {
-      setRequests([{
-        id: '1',
-        role: Role.USER,
-        type: settings.chatType,
-        content: '',
-        status: ChatCardState.READY,
-        response: chatResponse,
-        number: 1
-      }]);
-    }
-  }, [settings.chatType]);
+  //   if (requests.length === 0) {
+  //     setRequests([{
+  //       id: '1',
+  //       role: Role.USER,
+  //       type: settings.chatType,
+  //       content: '',
+  //       status: ChatCardState.READY,
+  //       response: chatResponse,
+  //       number: 1
+  //     }]);
+  //   }
+  // }, [settings.chatType]);
 
+  //Put back!
+  // useEffect(() => {
+  //   if (requests.length === 0) {
+  //     const newRequest: ChatRequest = {
+  //           id: Date.now().toString(),
+  //           role: Role.USER,
+  //           type: settings.chatType,
+  //           step: SequentialStepType.MESSAGE,
+  //           content: '',
+  //           status: ChatCardState.READY,
+  //           number: requests.length + 1
+  //         };
+      
+  //     setRequests([newRequest]);
+  //     // setRequests([{
+  //     //   id: Date.now().toString(),
+  //     //   role: Role.USER,
+  //     //   type: settings.chatType,
+  //     //   step: SequentialStepType.MESSAGE,
+  //     //   content: '',
+  //     //   status: ChatCardState.READY,
+  //     //   number: requests.length + 1
+  //     // }]);
+  //   }
+  // }, [settings.chatType]);
+  // response: {
+        //   provider: Role.ASSISTANT,
+        //   content: ''
+        // },
 
   // Load existing chat if ID is provided
-  useEffect(() => {
-    const loadExistingChat = async () => {
-      const chatId = location.state?.chatId;
-      if (chatId) {
-        try {
-          const chatData = await chatService.getChat(chatId);
-          setTitle(chatData.title);
-          setSettings(chatData.settings);
-          setRequests(chatData.messages || []);
-          setSystemContext(chatData.settings.systemContext || '');
-        } catch (error) {
-          console.error('Error loading chat:', error);
-          // Handle error appropriately
-        }
-      }
-    };
+  // useEffect(() => {
+  //   const loadExistingChat = async () => {
+  //     const chatId = location.state?.chatId;
+  //     if (chatId) {
+  //       try {
+  //         const chatData = await chatService.getChat(chatId);
+  //         setTitle(chatData.title);
+  //         setSettings(chatData.settings);
+  //         setRequests(chatData.messages || []);
+  //         setSystemContext(chatData.settings.systemContext || '');
+  //       } catch (error) {
+  //         console.error('Error loading chat:', error);
+  //         // Handle error appropriately
+  //       }
+  //     }
+  //   };
 
-    loadExistingChat();
-  }, [location.state?.chatId]);
+  //   loadExistingChat();
+  // }, [location.state?.chatId]);
+
+  // useEffect(() => {
+  //   const loadExistingChat = async () => {
+  //     const chatId = location.state?.chatId;
+  //     if (chatId) {
+  //       try {
+  //         const chatData = await chatService.getChat(chatId);
+  //         setTitle(chatData.title);
+  //         setSettings(chatData.settings);
+  //         setSystemContext(chatData.settings.systemContext || '');
+          
+  //         // Initialize message history in LangChain service
+  //         initializeHistory(chatData.messages || [], chatData.settings.systemContext);
+          
+  //         // Set requests state
+  //         setRequests(chatData.messages || []);
+          
+  //       } catch (error) {
+  //         console.error('Error loading chat:', error);
+  //         setError('Failed to load chat history. Please try again.');
+  //       }
+  //     }
+  //   };
+  
+  //   loadExistingChat();
+  // }, [location.state?.chatId]);
+
+  // Update the initialization effect
+  useEffect(() => {
+    // Check for state in URL parameters first
+    const stateParam = searchParams.get('state');
+    if (stateParam) {
+      try {
+        const urlState = JSON.parse(decodeURIComponent(stateParam));
+        setTitle(urlState.initialTitle || "New Chat");
+        setSettings({
+          ...DEFAULT_SETTINGS,
+          chatType: urlState.selectedChatType || DEFAULT_SETTINGS.chatType
+        });
+        if (urlState.initialRequests) {
+          setRequests(urlState.initialRequests);
+        }
+        return;
+      } catch (error) {
+        console.error('Error parsing URL state:', error);
+      }
+    }
+
+    // Fallback to location state if no URL parameters
+    if (location.state?.initialRequests) {
+      setRequests(location.state.initialRequests);
+      if (location.state.initialTitle) {
+        setTitle(location.state.initialTitle);
+      }
+      return;
+    }
+
+    // Default initialization
+    if (requests.length === 0) {
+      const newRequest: ChatRequest = {
+        id: Date.now().toString(),
+        role: Role.USER,
+        type: settings.chatType,
+        step: SequentialStepType.MESSAGE,
+        content: '',
+        status: ChatCardState.READY,
+        number: 1
+      };
+      setRequests([newRequest]);
+    }
+  }, [settings.chatType, searchParams]);
+
+  // System Context handlers
+  const handleSetSystemContext = (content: string) => {
+    console.log("System Context Called in ChatPage");
+    setSystemContext(content);
+  };
 
   // Process requests handler
   const handleProcessRequests = async (requestP?: string | ChatRequest[]) => {
     setError(null);
+
     if (settings.chatType === ChatType.SEQUENTIAL){
       try{
         
           const requestsToProcess = requestP;
-          const processedRequests = await processRequests(requestsToProcess, selectedAPI);
+          const processedRequests = await processRequests(requestsToProcess, selectedAPI, 0, systemContext);
         
           setRequests(prev => {
             return prev.map(req => {
@@ -124,16 +240,16 @@ const ChatPage: React.FC = () => {
         setIsProcessing(false);
       }
     }
-    if (settings.chatType === ChatType.BASE && typeof requestP === "string"){
+    if (settings.chatType === ChatType.BASE || settings.chatType === ChatType.REQUIREMENTS && typeof requestP === "string"){
       try {
         setIsProcessing(true);
         setExecutionStatus(ExecutionStatus.RUNNING);
-        
+        console.log("System Context Caught" + systemContext);
         const requestsToProcess = requestP
           ? [requests.find(r => r.id === requestP)!]
           : requests;
           console.log("Testin:" + requestP);
-        const processedRequests = await processRequests(requestsToProcess, selectedAPI);
+        const processedRequests = await processRequests(requestsToProcess, selectedAPI, 0, systemContext);
         
         setRequests(prev => {
           return prev.map(req => {
@@ -234,6 +350,26 @@ const handleSave = async () => {
       },
       number: req.number
     }));
+    // const formattedRequests = requests.map(req => {
+    //   const formatted = {
+    //     id: req.id,
+    //     role: req.role,
+    //     type: req.type,
+    //     content: req.content || '',
+    //     status: req.status,
+    //     number: req.number
+    //   };
+      
+    //   // Only add response if it exists
+    //   if (req.response) {
+    //     formatted.response = {
+    //       provider: req.response.provider,
+    //       content: req.response.content
+    //     };
+    //   }
+      
+    //   return formatted;
+    // });
 
     const chatData = {
       title: title || 'Untitled Chat',
@@ -290,6 +426,8 @@ const handleSave = async () => {
     switch (settings.chatType) {
       case ChatType.SEQUENTIAL:
         return <SequentialChat {...commonProps} />;
+      case ChatType.REQUIREMENTS:
+        return <RequirementsChat {...commonProps} />;
       case ChatType.BASE:
       default:
         return <BaseChat {...commonProps} />;
@@ -297,9 +435,7 @@ const handleSave = async () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
+    <> 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
           <strong className="font-bold">Error: </strong>
@@ -318,7 +454,7 @@ const handleSave = async () => {
         onClose={() => setIsSystemContextModalOpen(false)}
         content={systemContext}
         onSave={(content) => {
-          setSystemContext(content);
+          handleSetSystemContext(content);
           setIsSystemContextModalOpen(false);
         }}
         onDelete={() => {
@@ -340,7 +476,7 @@ const handleSave = async () => {
       <main className="flex-1 flex overflow-hidden">
         {renderChatComponent()}
       </main>
-    </div>
+    </>
   );
 };
 

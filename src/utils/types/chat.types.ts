@@ -67,6 +67,7 @@ export interface ChatResponse {
  */
 export interface ChatDocument {
   id: string;
+  _id: string;
   title: string;
   type: ChatType;
   settings: ChatSettings;
@@ -211,6 +212,22 @@ export interface ChatSavingParams {
   summary?: string;
   fileName?: string;
 }
+
+export interface PromptItem {
+  id: string;
+  content: string;
+  sourceRequest: string;
+  createdAt: Date;
+}
+
+export interface PanelDimensions {
+  width: number;
+  minWidth: number;
+  maxWidth: number;
+}
+
+// Add other specific types as needed
+
 
 // /**
 //  * @fileoverview Core type definitions for the GSQT chat system

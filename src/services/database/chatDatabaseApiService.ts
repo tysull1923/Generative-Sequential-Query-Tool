@@ -55,6 +55,14 @@ export class ChatApiService {
       throw this.handleError(error);
     }
   }
+  async copyChat(id: string): Promise<string> {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/chats/${id}/copy`);
+      return response.data._id;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
 
   private handleError(error: any): Error {
     console.error('API Error:', error.response?.data || error);
@@ -63,6 +71,15 @@ export class ChatApiService {
     }
     return error;
   }
+
+  // Add this method to the ChatApiService class
+  async deleteChat(id: string): Promise<void> {
+    try {
+      await axios.delete(`${API_BASE_URL}/chats/${id}`);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+}
 }
 
 

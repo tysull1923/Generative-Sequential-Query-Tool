@@ -134,7 +134,7 @@ export enum ChatType {
     onNewChat: (type: ChatType) => void;
     
     /** Callback for managing existing chats */
-    onManageChats: (type: ChatType) => void;
+    onManageChats?: (type: ChatType) => void;
     
     /** Callback for opening settings */
     onOpenSettings: () => void;

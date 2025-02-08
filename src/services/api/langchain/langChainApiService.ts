@@ -5,7 +5,7 @@ import { Ollama } from "@langchain/ollama";
 import { BaseMessage, SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
-import { ChatRequest, ChatCardState, ChatResponse, Role, SequentialStepType } from '@/utils/types/chat.types';
+import { ChatRequest, ChatCardState, ChatResponse, Role, SequentialStepType, ChatType } from '@/utils/types/chat.types';
 import { 
   ApiProvider, 
   ApiConfig, 
@@ -47,6 +47,55 @@ export const useLangChainService = (
       setIsConnected(false);
       console.error('Ollama connection failed:', error);
       return { connected: false, error };
+    }
+  };
+  const checkOpenAIConnection = async (apiKey: string) => {
+    try {
+      const model = new ChatOpenAI({
+        modelName: "gpt-3.5-turbo",
+        temperature: 0.7,
+        openAIApiKey: apiKey
+      });
+      
+      // Test the connection with a simple request
+      await model.invoke([new HumanMessage({ content: "test" })]);
+      
+      return { 
+        connected: true, 
+        provider: ApiProvider.OPENAI,
+        error: null 
+      };
+    } catch (error) {
+      return { 
+        connected: false, 
+        provider: ApiProvider.OPENAI,
+        error: error.message 
+      };
+    }
+  };
+  
+  const checkClaudeConnection = async (apiKey: string) => {
+    try {
+      const model = new ChatAnthropic({
+        modelName: "claude-3-sonnet-20240229",
+        temperature: 0.7,
+        anthropicApiKey: apiKey
+      });
+      
+      // Test the connection with a simple request
+      await model.invoke([new HumanMessage({ content: "test" })]);
+      
+      return { 
+        connected: true, 
+        provider: ApiProvider.CLAUDE,
+        error: null 
+      };
+    } catch (error) {
+      return { 
+        connected: false, 
+        provider: ApiProvider.CLAUDE,
+        error: error.message 
+      };
     }
   };
 
@@ -118,83 +167,124 @@ export const useLangChainService = (
     }
   };
 
+  const convertStoredMessageToLangChain = (message: ChatRequest): BaseMessage => {
+    console.log("Got here" + message.role);
+
+    switch (message.role) {
+      case Role.SYSTEM:
+        return new SystemMessage({ content: message.content });
+      case Role.ASSISTANT:
+        return new AIMessage({ content: message.response?.content || '' });
+      case Role.USER:
+      default:
+        return new HumanMessage({ content: message.content });
+    }
+  };
+  
+  const initializeHistory = (messages: ChatRequest[], context?: string) => {
+    let history: BaseMessage[] = [];
+    
+    // Add system context if provided
+    if (context) {
+      console.log("Yes Context");
+      history.push(new SystemMessage({ content: context }));
+    }
+    
+    // Convert existing messages to LangChain format
+    messages.forEach(message => {
+      // Add user message
+      if (message.content) {
+        history.push(convertStoredMessageToLangChain(message));
+      }
+      // Add assistant response if it exists
+      if (message.response?.content) {
+        history.push(new AIMessage({ content: message.response.content }));
+      }
+    });
+    
+    setMessageHistory(history);
+    return history;
+  };
+
   const processRequests = async (
-    requests: ChatRequest[], 
+    requests: ChatRequest[] | string,
     selectedAPI: ApiProvider,
-    delay = 0
+    delay = 0,
+    context?: string
   ) => {
     console.log('Processing requests with history:', messageHistory);
     setIsProcessing(true);
   
     try {
-      // Get available API and config
-      console.log("getting API");
       const { api, config } = await getAvailableAPI();
       const activeAPI = selectedAPI || api;
       
-      // Create or update model
       let activeModel = currentModel;
       if (!activeModel || currentModel?.constructor.name !== activeAPI) {
         activeModel = createModel({ ...config, provider: activeAPI });
         setCurrentModel(activeModel);
-        console.log("model Created");
       }
-
+  
       if (!activeModel) {
         throw new Error('Failed to initialize language model');
       }
-
-      // Initialize message history with system context if provided
+  
+      // Use existing message history
       let currentHistory = [...messageHistory];
-      if (systemContext && currentHistory.length === 0) {
-        const systemMsg = new SystemMessage({ content: systemContext });
-        currentHistory = [systemMsg];
+  
+      // Handle single request case (string)
+      // if (typeof requests === 'string') {
+      //   const message = new HumanMessage({ content: requests });
+      //   currentHistory.push(message);
+  
+      //   const response = await activeModel.invoke(currentHistory);
+      //   const aiMessage = new AIMessage({ content: response.toString() });
+      //   currentHistory.push(aiMessage);
+        
+      //   setMessageHistory(currentHistory);
+      //   return [{
+      //     id: Date.now().toString(),
+      //     role: Role.USER,
+      //     type: ChatType.BASE,
+      //     content: requests,
+      //     status: ChatCardState.COMPLETE,
+      //     response: {
+      //       provider: Role.ASSISTANT,
+      //       content: response.toString(),
+      //     },
+      //     number: currentHistory.length / 2
+      //   }];
+      // }
+      // Add system context if provided
+      if (context) {
+        console.log("Yes Context");
+        currentHistory.push(new SystemMessage({ content: context }));
       }
-
-      // Process each request sequentially
+      // Process multiple requests
       for (const request of requests) {
-        console.log("start handling requests");
-        // // Handle Pause Step
-        // if (request.step === SequentialStepType.PAUSE && request.isPaused) {
-        //   request.status = ChatCardState.COMPLETE;
-        //   // Exit the processing loop - will resume from next request when restarted
-        //   break;
-        // }
-
-        // // Handle Delay Step
-        // if (request.step === SequentialStepType.DELAY) {
-        //   await new Promise(resolve => setTimeout(resolve, 15000)); // 15 seconds delay
-        //   request.status = ChatCardState.COMPLETE;
-        //   continue; // Skip to next request
-        // }
-
-        // Only process message steps
-        if (request.step === SequentialStepType.MESSAGE) {
-          console.log("At process Message STEP");
-          // Convert request to LangChain message
+        console.log("Processing Request");
+        console.log(request.step);
+        console.log(request.number);
+        
+        if (request.step === SequentialStepType.MESSAGE || request.number === 1) {
+          console.log("Request is Message");
           const message = new HumanMessage({ content: request.content });
-          currentHistory = [...currentHistory, message];
-
-          // if (delay > 0) {
-          //   await new Promise(resolve => setTimeout(resolve, delay));
-          // }
-
+          currentHistory.push(message);
+  
           try {
             console.log("Trying to invoke model");
             const response = await activeModel.invoke(currentHistory);
+            console.log("Model Invoked with history");
             const aiMessage = new AIMessage({ content: response.toString() });
             currentHistory.push(aiMessage);
             
-            // Update request with response
             request.response = {
               provider: Role.ASSISTANT,
               content: response.toString(),
               langChainMessage: aiMessage
             };
             request.status = ChatCardState.COMPLETE;
-            console.log("Complete");
             request.langChainMessage = message;
-
           } catch (error) {
             console.error(`Error processing request with ${activeAPI}:`, error);
             request.status = ChatCardState.ERROR;
@@ -207,6 +297,114 @@ export const useLangChainService = (
           }
         }
       }
+  
+      setMessageHistory(currentHistory);
+      return requests;
+  
+    } catch (error) {
+      console.error('LangChain request failed:', error);
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+
+
+
+  //Recently Worked 
+  // const processRequests = async (
+  //   requests: ChatRequest[], 
+  //   selectedAPI: ApiProvider,
+  //   delay = 0
+  // ) => {
+  //   console.log('Processing requests with history:', messageHistory);
+  //   setIsProcessing(true);
+  
+  //   try {
+  //     // Get available API and config
+  //     console.log("getting API");
+  //     const { api, config } = await getAvailableAPI();
+  //     const activeAPI = selectedAPI || api;
+      
+  //     // Create or update model
+  //     let activeModel = currentModel;
+  //     if (!activeModel || currentModel?.constructor.name !== activeAPI) {
+  //       activeModel = createModel({ ...config, provider: activeAPI });
+  //       setCurrentModel(activeModel);
+  //       console.log("model Created");
+  //     }
+
+  //     if (!activeModel) {
+  //       throw new Error('Failed to initialize language model');
+  //     }
+
+  //     // Initialize message history with system context if provided
+  //     let currentHistory = [...messageHistory];
+  //     if (systemContext && currentHistory.length === 0) {
+  //       const systemMsg = new SystemMessage({ content: systemContext });
+  //       currentHistory = [systemMsg];
+  //     }
+
+  //     // Process each request sequentially
+  //     for (const request of requests) {
+  //       console.log("start handling requests");
+  //       // // Handle Pause Step
+  //       // if (request.step === SequentialStepType.PAUSE && request.isPaused) {
+  //       //   request.status = ChatCardState.COMPLETE;
+  //       //   // Exit the processing loop - will resume from next request when restarted
+  //       //   break;
+  //       // }
+
+  //       // // Handle Delay Step
+  //       // if (request.step === SequentialStepType.DELAY) {
+  //       //   await new Promise(resolve => setTimeout(resolve, 15000)); // 15 seconds delay
+  //       //   request.status = ChatCardState.COMPLETE;
+  //       //   continue; // Skip to next request
+  //       // }
+
+  //       // Only process message steps
+  //       if (request.step === SequentialStepType.MESSAGE) {
+  //         console.log("At process Message STEP");
+  //         // Convert request to LangChain message
+  //         const message = new HumanMessage({ content: request.content });
+  //         currentHistory = [...currentHistory, message];
+
+  //         // if (delay > 0) {
+  //         //   await new Promise(resolve => setTimeout(resolve, delay));
+  //         // }
+
+  //         try {
+  //           console.log("Trying to invoke model");
+  //           const response = await activeModel.invoke(currentHistory);
+  //           const aiMessage = new AIMessage({ content: response.toString() });
+  //           currentHistory.push(aiMessage);
+            
+  //           // Update request with response
+  //           request.response = {
+  //             provider: Role.ASSISTANT,
+  //             content: response.toString(),
+  //             langChainMessage: aiMessage
+  //           };
+  //           request.status = ChatCardState.COMPLETE;
+  //           console.log("Complete");
+  //           request.langChainMessage = message;
+
+  //         } catch (error) {
+  //           console.error(`Error processing request with ${activeAPI}:`, error);
+  //           request.status = ChatCardState.ERROR;
+  //           request.response = {
+  //             provider: Role.ASSISTANT,
+  //             content: `Error: ${error.message}`,
+  //             responseType: { type: 'error', message: error.message, code: 'PROCESSING_ERROR' }
+  //           };
+  //           throw error;
+  //         }
+  //       }
+  //     }
+
+
+
 
       // Process each request sequentially
       // for (const request of requests) {
@@ -244,16 +442,17 @@ export const useLangChainService = (
       //   }
       // }
 
-      setMessageHistory(currentHistory);
-      return requests;
+  //need to fix in top part
+  //     setMessageHistory(currentHistory);
+  //     return requests;
 
-    } catch (error) {
-      console.error('LangChain request failed:', error);
-      throw error;
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  //   } catch (error) {
+  //     console.error('LangChain request failed:', error);
+  //     throw error;
+  //   } finally {
+  //     setIsProcessing(false);
+  //   }
+  // };
 
   const resetHistory = () => {
     setMessageHistory([]);
@@ -275,6 +474,78 @@ export const useLangChainService = (
     }
     return null;
   };
+  
+  const checkConnection = async (provider?: ApiProvider) => {
+    try {
+      // If no provider specified, check the one based on configuration
+      if (!provider) {
+        const { api } = await getAvailableAPI();
+        provider = api;
+      }
+  
+      switch (provider) {
+        case ApiProvider.OPENAI: {
+          const apiKey = import.meta.env.VITE_OPENAI_API_KEY;// || localStorage.getItem('OPENAI_API_KEY');
+          
+          if (!apiKey) {
+            return { 
+              connected: false, 
+              provider: ApiProvider.OPENAI,
+              error: 'No API key found' 
+            };
+          }
+          return await checkOpenAIConnection(apiKey);
+        }
+  
+        case ApiProvider.CLAUDE: {
+          const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem('ANTHROPIC_API_KEY');
+          if (!apiKey) {
+            return { 
+              connected: false, 
+              provider: ApiProvider.CLAUDE,
+              error: 'No API key found' 
+            };
+          }
+          return await checkClaudeConnection(apiKey);
+        }
+  
+        case ApiProvider.OLLAMA: {
+          try {
+            const response = await fetch(`${ollamaConfig?.baseUrl || "http://localhost:11434"}/api/version`);
+            if (!response.ok) {
+              throw new Error('Failed to connect to Ollama');
+            }
+            const data = await response.json();
+            return { 
+              connected: true, 
+              provider: ApiProvider.OLLAMA,
+              version: data.version,
+              error: null 
+            };
+          } catch (error) {
+            return { 
+              connected: false, 
+              provider: ApiProvider.OLLAMA,
+              error: error.message 
+            };
+          }
+        }
+  
+        default:
+          return { 
+            connected: false, 
+            provider: provider,
+            error: `Unsupported provider: ${provider}` 
+          };
+      }
+    } catch (error) {
+      return { 
+        connected: false, 
+        provider: provider,
+        error: error.message 
+      };
+    }
+  };
 
   return {
     processRequests,
@@ -283,9 +554,10 @@ export const useLangChainService = (
     messageHistory,
     resetHistory,
     getModelInfo,
-    checkConnection: checkOllamaConnection,
+    checkConnection,
     isConnected,
-    currentModel
+    currentModel,
+    initializeHistory
   };
 };
 
