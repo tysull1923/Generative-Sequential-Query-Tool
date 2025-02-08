@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Dropdown } from '@/components/shared/Dropdown';
 import { Button } from '@/components/shared/Button';
 import { Menu } from 'lucide-react';
-import { ChatType, MainBannerProps } from '@/pages/Home/HomePage.types';
+import { ChatType } from '@/utils/types/chat.types';
+import { MainBannerProps } from '@/pages/Home/HomePage.types';
 import NewChatDropdown from './NewChatDropDown';
 
 /**
@@ -64,7 +65,7 @@ const MainBanner: React.FC<MainBannerProps> = ({
           <div className="flex items-center space-x-4">
             {/* New Dropdown */}
             <NewChatDropdown 
-            onNewChat= {onNewChat}/>
+            onNewChat= {handleNewChat}/>
             {/* <div className="relative">
               <Dropdown
                 trigger={
@@ -96,9 +97,11 @@ const MainBanner: React.FC<MainBannerProps> = ({
                 ]}
               />
             </div>  */}
+            
 
+            {/* Removing from home page right now due to workflow and schedulers don't exist */}
             {/* Manage Chats Dropdown */}
-            <div className="relative">
+            {/* <div className="relative">
               <Dropdown
                 trigger={
                   <Button
@@ -122,10 +125,10 @@ const MainBanner: React.FC<MainBannerProps> = ({
                   { label: 'Manage All', onClick: () => navigate('/manage/all') },
                 ]}
               />
-            </div>
+            </div> */}
 
             {/* Dashboards Dropdown */}
-            <div className="relative">
+            {/* <div className="relative">
               <Dropdown
                 trigger={
                   <Button
@@ -145,7 +148,7 @@ const MainBanner: React.FC<MainBannerProps> = ({
                   { label: 'Scheduler Dashboard', onClick: () => handleDashboardNavigation('/dashboards/scheduler') },
                 ]}
               />
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

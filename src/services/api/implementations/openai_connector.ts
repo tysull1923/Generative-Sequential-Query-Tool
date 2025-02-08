@@ -16,7 +16,7 @@ export const openAIService = {
     }
   },
 
-  async sendChat(messages: any, apiKey: ApiConfig['apiKey']) {
+  async sendChat(messages: any, apiKey: ApiConfig['apiKey'] | undefined) {
     if (!messages || !messages.length || !apiKey) {
       throw new Error('Invalid request parameters');
     }
