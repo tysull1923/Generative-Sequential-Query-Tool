@@ -47,7 +47,7 @@ function HomePage() {
 	};
 
 	const handleDeleteChat = async (chatId: string) => {
-		try {
+		try { 
 			await chatService.deleteChat(chatId);
 			setChats(chats.filter(chat => chat._id !== chatId));
 			setDeleteChat(undefined);
