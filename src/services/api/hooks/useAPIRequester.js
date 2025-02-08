@@ -3,48 +3,48 @@ import { openAIService } from '../services/api/implementations/openai';
 import { anthropicService } from '../services/api/implementations/anthropic';
 
 export const useApiRequests = (systemContext) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [conversationHistory, setConversationHistory] = useState([]);
+	const [isProcessing, setIsProcessing] = useState(false);
+	const [conversationHistory, setConversationHistory] = useState([]);
 
-  const processRequests = async (requests, selectedAPI, delay = 0) => {
-    console.log('Starting with history:', conversationHistory);
-    setIsProcessing(true);
+	const processRequests = async (requests, selectedAPI, delay = 0) => {
+		console.log('Starting with history:', conversationHistory);
+		setIsProcessing(true);
 
-    try {
-      const service = openAIService;
-        //selectedAPI === 'OpenAI' ? openAIService : anthropicService;
-        // const apiKey = localStorage.getItem(
-        //   selectedAPI === 'OpenAI' ? 'OPENAI_API_KEY' : 'CLAUDE_API_KEY'
-        // ) || import.meta.env.VITE_OPENAI_API_KEY;
-    
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      console.log('Got API key:', apiKey ? 'Yes' : 'No');
-      const updatedHistory = systemContext 
-      ? [{ role: 'system', content: systemContext }] 
-      : [];
-      //const updatedHistory = [...conversationHistory];
-      for (const request of requests) {
-        if (request.type === 'chat') {
-          updatedHistory.push({ role: 'user', content: request.content });
-          const response = await service.sendChat(updatedHistory, apiKey);
-          const assistantMessage = response.choices[0].message;
-          updatedHistory.push(assistantMessage);
-          request.response = assistantMessage.content;
-          request.status = 'completed';
-        }
-      }
+		try {
+			const service = openAIService;
+			//selectedAPI === 'OpenAI' ? openAIService : anthropicService;
+			// const apiKey = localStorage.getItem(
+			//   selectedAPI === 'OpenAI' ? 'OPENAI_API_KEY' : 'CLAUDE_API_KEY'
+			// ) || import.meta.env.VITE_OPENAI_API_KEY;
 
-      setConversationHistory(updatedHistory);
-      console.log(updatedHistory);
-      return requests;
+			const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+			console.log('Got API key:', apiKey ? 'Yes' : 'No');
+			const updatedHistory = systemContext
+				? [{ role: 'system', content: systemContext }]
+				: [];
+			//const updatedHistory = [...conversationHistory];
+			for (const request of requests) {
+				if (request.type === 'chat') {
+					updatedHistory.push({ role: 'user', content: request.content });
+					const response = await service.sendChat(updatedHistory, apiKey);
+					const assistantMessage = response.choices[0].message;
+					updatedHistory.push(assistantMessage);
+					request.response = assistantMessage.content;
+					request.status = 'completed';
+				}
+			}
 
-    } catch (error) {
-      console.error('Request failed:', error);
-      throw error;
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+			setConversationHistory(updatedHistory);
+			console.log(updatedHistory);
+			return requests;
 
-  return { processRequests, isProcessing, setIsProcessing, conversationHistory };
+		} catch (error) {
+			console.error('Request failed:', error);
+			throw error;
+		} finally {
+			setIsProcessing(false);
+		}
+	};
+
+	return { processRequests, isProcessing, setIsProcessing, conversationHistory };
 };

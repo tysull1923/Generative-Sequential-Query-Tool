@@ -9,5 +9,5 @@ import { twMerge } from 'tailwind-merge';
  * cn('px-2 py-1', className, isActive && 'bg-blue-500')
  */
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+	return twMerge(clsx(inputs));
 }
