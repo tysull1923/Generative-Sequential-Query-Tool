@@ -207,14 +207,21 @@ const ChatPage: React.FC = () => {
     }
   }, [settings.chatType, searchParams]);
 
+  // System Context handlers
+  const handleSetSystemContext = (content: string) => {
+    console.log("System Context Called in ChatPage");
+    setSystemContext(content);
+  };
+
   // Process requests handler
   const handleProcessRequests = async (requestP?: string | ChatRequest[]) => {
     setError(null);
+
     if (settings.chatType === ChatType.SEQUENTIAL){
       try{
         
           const requestsToProcess = requestP;
-          const processedRequests = await processRequests(requestsToProcess, selectedAPI);
+          const processedRequests = await processRequests(requestsToProcess, selectedAPI, 0, systemContext);
         
           setRequests(prev => {
             return prev.map(req => {
@@ -237,12 +244,12 @@ const ChatPage: React.FC = () => {
       try {
         setIsProcessing(true);
         setExecutionStatus(ExecutionStatus.RUNNING);
-        
+        console.log("System Context Caught" + systemContext);
         const requestsToProcess = requestP
           ? [requests.find(r => r.id === requestP)!]
           : requests;
           console.log("Testin:" + requestP);
-        const processedRequests = await processRequests(requestsToProcess, selectedAPI);
+        const processedRequests = await processRequests(requestsToProcess, selectedAPI, 0, systemContext);
         
         setRequests(prev => {
           return prev.map(req => {
@@ -447,7 +454,7 @@ const handleSave = async () => {
         onClose={() => setIsSystemContextModalOpen(false)}
         content={systemContext}
         onSave={(content) => {
-          setSystemContext(content);
+          handleSetSystemContext(content);
           setIsSystemContextModalOpen(false);
         }}
         onDelete={() => {

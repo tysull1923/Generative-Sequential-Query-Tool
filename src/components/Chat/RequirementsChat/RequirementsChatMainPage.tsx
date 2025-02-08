@@ -196,7 +196,18 @@ const RequirementsChat: React.FC<RequirementsChatProps> = ({
                 </Button>
                 </div>
             )}
-        
+            {/* New Message Area */}
+            {(!requests.length || requests[requests.length - 1].status !== ChatCardState.READY) && (
+              <div className="p-4 border-t w-full">
+                <Button
+                  onClick={addNewRequest}
+                  className="w-full py-8 text-gray-500 hover:text-gray-700"
+                  variant="ghost"
+                >
+                  Type a new message...
+                </Button>
+              </div>
+            )}
 
             {/* Current Request/Response */}
             {requests.length > 0 && requests[requests.length - 1].status === ChatCardState.READY && (
@@ -225,18 +236,7 @@ const RequirementsChat: React.FC<RequirementsChatProps> = ({
             )}
           </div>
 
-          {/* New Message Area */}
-          {(!requests.length || requests[requests.length - 1].status !== ChatCardState.READY) && (
-            <div className="p-4 border-t w-full">
-              <Button
-                onClick={addNewRequest}
-                className="w-full py-8 text-gray-500 hover:text-gray-700"
-                variant="ghost"
-              >
-                Type a new message...
-              </Button>
-            </div>
-          )}
+          
 
           {/* Start Prompt Area Button */}
           {/* {!showPromptArea && (

@@ -168,6 +168,8 @@ export const useLangChainService = (
   };
 
   const convertStoredMessageToLangChain = (message: ChatRequest): BaseMessage => {
+    console.log("Got here" + message.role);
+
     switch (message.role) {
       case Role.SYSTEM:
         return new SystemMessage({ content: message.content });
@@ -184,6 +186,7 @@ export const useLangChainService = (
     
     // Add system context if provided
     if (context) {
+      console.log("Yes Context");
       history.push(new SystemMessage({ content: context }));
     }
     
@@ -206,7 +209,8 @@ export const useLangChainService = (
   const processRequests = async (
     requests: ChatRequest[] | string,
     selectedAPI: ApiProvider,
-    delay = 0
+    delay = 0,
+    context?: string
   ) => {
     console.log('Processing requests with history:', messageHistory);
     setIsProcessing(true);
@@ -251,7 +255,11 @@ export const useLangChainService = (
       //     number: currentHistory.length / 2
       //   }];
       // }
-
+      // Add system context if provided
+      if (context) {
+        console.log("Yes Context");
+        currentHistory.push(new SystemMessage({ content: context }));
+      }
       // Process multiple requests
       for (const request of requests) {
         console.log("Processing Request");
