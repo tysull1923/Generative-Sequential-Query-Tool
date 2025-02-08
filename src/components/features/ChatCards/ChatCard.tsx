@@ -159,6 +159,7 @@ const ChatCard: React.FC<ChatCardProps> = ({
             
             {/* Control buttons next to status for basic chat */}
             {chatType === ChatType.BASE && <ControlButtons />}
+            {chatType === ChatType.REQUIREMENTS && <ControlButtons/>}
             
             {status === 'completed' && (
               <span className="text-sm text-gray-500">

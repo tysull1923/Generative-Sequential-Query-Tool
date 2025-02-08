@@ -1,5 +1,5 @@
 // src/components/SystemContext/SystemContextModal.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,6 +10,7 @@ import {
   DialogFooter,
 } from '@/components/shared/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { set } from 'mongoose';
 
 interface SystemContextModalProps {
   isOpen: boolean;
@@ -17,8 +18,6 @@ interface SystemContextModalProps {
   content: string;
   onSave: (content: string) => void;
   onDelete: () => void;
-  temporaryContent: string;
-  setTemporaryContent: (content: string) => void;
 }
 
 const SystemContextModal: React.FC<SystemContextModalProps> = ({
@@ -26,11 +25,16 @@ const SystemContextModal: React.FC<SystemContextModalProps> = ({
   onClose,
   content,
   onSave,
-  onDelete,
-  temporaryContent,
-  setTemporaryContent,
+  onDelete
 }) => {
+  const [temporaryContent, setTemporaryContent] = React.useState(content);
+  
+  useEffect(() => {
+    setTemporaryContent(content);
+  }, [content]);
+
   const handleSave = () => {
+    console.log(temporaryContent);
     onSave(temporaryContent);
     onClose();
   };
@@ -39,6 +43,11 @@ const SystemContextModal: React.FC<SystemContextModalProps> = ({
     setTemporaryContent(content);
     onClose();
   };
+
+  const handleDelete= () => {
+    onDelete();
+    setTemporaryContent('');
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -70,10 +79,7 @@ const SystemContextModal: React.FC<SystemContextModalProps> = ({
             {content && (
               <Button
                 variant="destructive"
-                onClick={() => {
-                  onDelete();
-                  onClose();
-                }}
+                onClick={handleDelete}
               >
                 Delete
               </Button>

@@ -3,37 +3,24 @@ import { useState, useEffect, useCallback } from 'react';
 import { ApiProvider } from '@/services/api/interfaces/api.types';
 import { useLangChainService } from '@/services/api/langchain/langChainApiService';
 
+
+
 export const useAPIStatus = (selectedAPI: ApiProvider) => {
   const [status, setStatus] = useState<boolean>(false);
   const [isChecking, setIsChecking] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Initialize langChainService with empty system context
-  const { checkConnection, getModelInfo } = useLangChainService("");
+  const { checkConnection } = useLangChainService("");
 
   const checkAPIStatus = useCallback(async () => {
     setIsChecking(true);
     setError(null);
     
     try {
-      switch (selectedAPI) {
-        case ApiProvider.OLLAMA: {
-          const status = await checkConnection();
-          setStatus(status.connected);
-          break;
-        }
-        case ApiProvider.OPENAI: {
-          const apiKey = localStorage.getItem('OPENAI_API_KEY');
-          setStatus(!!apiKey);
-          break;
-        }
-        case ApiProvider.CLAUDE: {
-          const apiKey = localStorage.getItem('ANTHROPIC_API_KEY');
-          setStatus(!!apiKey);
-          break;
-        }
-        default:
-          setStatus(false);
+      const connectionStatus = await checkConnection(selectedAPI);
+      setStatus(connectionStatus.connected);
+      if (!connectionStatus.connected && connectionStatus.error) {
+        setError(connectionStatus.error);
       }
     } catch (err) {
       setError(err.message);
@@ -43,7 +30,6 @@ export const useAPIStatus = (selectedAPI: ApiProvider) => {
     }
   }, [selectedAPI, checkConnection]);
 
-  // Check status on mount and when selectedAPI changes
   useEffect(() => {
     checkAPIStatus();
   }, [selectedAPI, checkAPIStatus]);
@@ -55,6 +41,58 @@ export const useAPIStatus = (selectedAPI: ApiProvider) => {
     checkStatus: checkAPIStatus
   };
 };
+// export const useAPIStatus = (selectedAPI: ApiProvider) => {
+//   const [status, setStatus] = useState<boolean>(false);
+//   const [isChecking, setIsChecking] = useState<boolean>(false);
+//   const [error, setError] = useState<string | null>(null);
+  
+//   // Initialize langChainService with empty system context
+//   const { checkConnection, getModelInfo } = useLangChainService("");
+
+//   const checkAPIStatus = useCallback(async () => {
+//     setIsChecking(true);
+//     setError(null);
+    
+//     try {
+//       switch (selectedAPI) {
+//         case ApiProvider.OLLAMA: {
+//           const status = await checkConnection();
+//           setStatus(status.connected);
+//           break;
+//         }
+//         case ApiProvider.OPENAI: {
+//           const apiKey = import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('OPENAI_API_KEY');
+//           setStatus(!!apiKey);
+//           break;
+//         }
+//         case ApiProvider.CLAUDE: {
+//           const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem('ANTHROPIC_API_KEY');
+//           setStatus(!!apiKey);
+//           break;
+//         }
+//         default:
+//           setStatus(false);
+//       }
+//     } catch (err) {
+//       setError(err.message);
+//       setStatus(false);
+//     } finally {
+//       setIsChecking(false);
+//     }
+//   }, [selectedAPI, checkConnection]);
+
+//   // Check status on mount and when selectedAPI changes
+//   useEffect(() => {
+//     checkAPIStatus();
+//   }, [selectedAPI, checkAPIStatus]);
+
+//   return {
+//     status,
+//     isChecking,
+//     error,
+//     checkStatus: checkAPIStatus
+//   };
+// };
 
 // import { useState, useEffect } from 'react';
 // import { validateOpenAIKey, validateClaudeKey } from '@/services/api/utils/apiKeyValidator';
