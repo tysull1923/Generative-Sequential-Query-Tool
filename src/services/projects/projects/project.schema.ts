@@ -1,7 +1,7 @@
 // src/server/models/project.schema.ts
 
 import mongoose, { Schema, Document } from 'mongoose';
-import { ProjectStatus, RAGSettings } from '../../src/utils/types/project.types';
+import { ProjectStatus, RAGSettings } from '../../../utils/types/project.types';
 
 
 // Knowledge Document Schema

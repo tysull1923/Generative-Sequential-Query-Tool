@@ -61,9 +61,9 @@ export interface KnowledgeDocument {
 }
 
 /**
- * Project Document interface
+ * Project interface
  */
-export interface ProjectDocument {
+export interface Project {
 	id: string;
 	title: string;
 	description: string;
@@ -101,9 +101,9 @@ export interface RAGQueryResult {
 /**
  * Project Service Response
  */
-export interface ProjectServiceResponse {
+export interface ProjectServiceResponse<T = any> {
 	success: boolean;
-	data?: any;
+	data?: T;
 	error?: string;
 }
 
@@ -111,8 +111,8 @@ export interface ProjectServiceResponse {
  * Project Context Provider interface
  */
 export interface ProjectContextType {
-	currentProject: ProjectDocument | null;
-	setCurrentProject: (project: ProjectDocument) => void;
+	currentProject: Project | null;
+	setCurrentProject: (project: Project) => void;
 	queryKnowledgeBase: (query: string) => Promise<RAGQueryResult>;
 	addDocument: (doc: KnowledgeDocument) => Promise<ProjectServiceResponse>;
 	updateDocument: (docId: string, updates: Partial<KnowledgeDocument>) => Promise<ProjectServiceResponse>;
@@ -121,3 +121,52 @@ export interface ProjectContextType {
 	removeChat: (chatId: string) => Promise<ProjectServiceResponse>;
 	updateSettings: (settings: Partial<RAGSettings>) => Promise<ProjectServiceResponse>;
 }
+
+/**
+ * Input types for API operations
+ */
+export interface CreateProjectInput {
+	title: string;
+	description: string;
+	status?: ProjectStatus;
+	metadata?: {
+		tags?: string[];
+		category?: string;
+		[key: string]: any;
+	};
+}
+
+export interface UpdateProjectInput {
+	title?: string;
+	description?: string;
+	status?: ProjectStatus;
+	metadata?: {
+		tags?: string[];
+		category?: string;
+		[key: string]: any;
+	};
+}
+
+export interface ProjectQueryParams {
+	status?: ProjectStatus;
+	tags?: string[];
+	category?: string;
+}
+
+export interface AddDocumentInput extends Omit<KnowledgeDocument, 'id' | 'addedAt' | 'lastUpdated' | 'chunks'> {
+	chunks?: Omit<KnowledgeDocument['chunks'][0], 'id'>[];
+}
+
+export interface UpdateRAGSettingsInput extends Partial<RAGSettings> { }
+
+export interface AddChatInput {
+	chatId: string;
+	includeInRAG?: boolean;
+}
+
+/**
+ * Utility types for API responses
+ */
+export type ProjectListResponse = ProjectServiceResponse<Project[]>;
+export type ProjectResponse = ProjectServiceResponse<Project>;
+export type RAGQueryResponse = ProjectServiceResponse<RAGQueryResult>;

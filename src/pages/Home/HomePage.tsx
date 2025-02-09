@@ -47,15 +47,20 @@ function HomePage() {
 	};
 
 	const handleDeleteChat = async (chatId: string) => {
-		try { 
-			await chatService.deleteChat(chatId);
-			setChats(chats.filter(chat => chat._id !== chatId));
-			setDeleteChat(undefined);
+		try {
+		  setError(''); // Clear any existing errors
+		  await chatService.deleteChat(chatId);
+		  
+		  // Only update the UI if the delete was successful
+		  setChats(prevChats => prevChats.filter(chat => chat._id !== chatId));
+		  setDeleteChat(undefined); // Close the delete dialog
+		  
 		} catch (err) {
-			console.error('Error deleting chat:', err);
-			setError('Failed to delete chat. Please try again.');
+		  console.error('Error deleting chat:', err);
+		  setError(err instanceof Error ? err.message : 'Failed to delete chat. Please try again.');
+		  // Keep the dialog open if there was an error
 		}
-	};
+	  };
 
   const navigateToChat = (chatId) => {
     navigate('/chat', { state: { chatId } });

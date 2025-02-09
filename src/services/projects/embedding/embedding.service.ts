@@ -2,7 +2,7 @@
 
 import { OpenAI } from 'openai';
 import { CohereClient } from 'cohere-ai';
-import { KnowledgeDocument, RAGSettings, RAGQueryResult } from '@/types/project.types';
+import { KnowledgeDocument, RAGSettings, RAGQueryResult } from '@/utils/types/project.types';
 
 interface EmbeddingProvider {
 	getEmbedding(text: string): Promise<number[]>;

@@ -8,8 +8,8 @@ import {
 	ProjectStatus,
 	RAGSettings,
 	RAGQueryResult
-} from '../../src/utils/types/project.types';
-import { EmbeddingService } from '../../src/services/api/rag/embedding/embedding.service';
+} from '../../../utils/types/project.types';
+import { EmbeddingService } from '../../api/rag/embedding/embedding.service';
 
 export class ProjectService {
 	private static instance: ProjectService;
