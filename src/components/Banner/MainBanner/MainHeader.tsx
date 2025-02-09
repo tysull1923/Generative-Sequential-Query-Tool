@@ -8,6 +8,7 @@ import NewChatDropdown from './NewChatDropDown';
 import { MainHeaderProps, APIType } from './MainHeader.types';
 import { ChatType } from '@/utils/types/chat.types';
 import { useAPI } from '@/context/APIContext';
+import NewProjectDropdown from '@/components/Banner/MainBanner/NewProjectDropdown';
 
 const MainHeader: React.FC<MainHeaderProps> = ({ className = '' }) => {
 	// const isHomePage = location.pathname === '/';
@@ -37,6 +38,14 @@ const MainHeader: React.FC<MainHeaderProps> = ({ className = '' }) => {
 			//   navigate('/scheduler/new');
 			//   break;
 		}
+	}, [navigate]);
+
+	const handleNewProject = useCallback((type: string) => {
+		navigate('/projects/new', {
+			state: {
+				projectType: type
+			}
+		});
 	}, [navigate]);
 
 	const handleManageChats = useCallback((type: ChatType) => {
@@ -82,7 +91,9 @@ const MainHeader: React.FC<MainHeaderProps> = ({ className = '' }) => {
 						onManageChats={handleManageChats}
 						onOpenSettings={handleOpenSettings}
 					/>
+					<NewProjectDropdown onNewProject={handleNewProject} />
 
+					{/* Right section with buttons */}
 					<div className="flex items-center gap-4">
 						{/* Settings Button */}
 						<Button

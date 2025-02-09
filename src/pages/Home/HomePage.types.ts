@@ -138,6 +138,7 @@ export interface MainBannerProps {
 
 	/** Callback for opening settings */
 	onOpenSettings: () => void;
+	onNewProject: () => void;
 
 	/** Optional class name for styling */
 	className?: string;

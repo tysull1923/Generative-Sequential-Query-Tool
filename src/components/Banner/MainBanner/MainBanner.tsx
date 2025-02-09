@@ -22,6 +22,7 @@ const MainBanner: React.FC<MainBannerProps> = ({
 	onNewChat,
 	onManageChats,
 	onOpenSettings,
+	onNewProject,
 	className = '',
 }) => {
 	const navigate = useNavigate();
@@ -148,7 +149,10 @@ const MainBanner: React.FC<MainBannerProps> = ({
                   { label: 'Scheduler Dashboard', onClick: () => handleDashboardNavigation('/dashboards/scheduler') },
                 ]}
               />
+			
             </div> */}
+
+
 					</div>
 				</div>
 			</div>
