@@ -40,8 +40,8 @@ const Project: React.FC<ProjectProps> = () => {
 			try {
 				setLoading(true);
 				// TODO: Implement project service to fetch project data
-				// const projectData = await projectService.getProject(projectId);
-				// setProject(projectData);
+				//const projectData = await projectService.getProject(projectId);
+				//setProject(projectData);
 			} catch (err) {
 				setError('Failed to load project');
 				console.error('Error fetching project:', err);
