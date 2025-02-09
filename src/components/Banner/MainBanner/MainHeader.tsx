@@ -82,7 +82,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ className = '' }) => {
 						to="/"
 						className="text-2xl font-bold hover:text-primary/90 transition-colors"
 					>
-						GSQT
+						MoPa
 					</Link>
 
 					{/* Main Banner */}

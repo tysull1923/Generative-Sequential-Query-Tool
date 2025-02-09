@@ -1,65 +1,64 @@
 // src/pages/project/Project.tsx
 
+// src/pages/project/Project.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/Input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Plus, Settings, Book, MessageSquare, Database } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Book, MessageSquare, Loader2 } from 'lucide-react';
 
 import {
-	ProjectDocument,
+	Project,
 	ProjectStatus,
 	KnowledgeDocument,
 	RAGSettings,
 	ProjectChat
 } from '@/utils/types/project.types';
 
-// You'll need to create these components
 import ProjectHeader from '@/components/Banner/ProjectBanner/ProjectHeader';
-import KnowledgeBasePanel from '@/components/Project/KnowledgeBasePanel';
+import KnowledgeBasePanel from '@/components/Project/knowledgebasepanel/KnowledgeBasePanel';
 import ProjectChats from '@/components/Project/projectchats/ProjectChats';
 import RAGSettingsModal from '@/components/Project/RagSettings/RagSettingsModal';
+import { ProjectApiService } from '@/services/database/projectDatabaseApiService';
 
-interface ProjectProps {
-	// Add any props if needed
-}
-
-const Project: React.FC<ProjectProps> = () => {
+const ProjectPage: React.FC = () => {
 	const { projectId } = useParams();
 	const navigate = useNavigate();
-	const [project, setProject] = useState<ProjectDocument | null>(null);
+	const [project, setProject] = useState<Project | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [showSettings, setShowSettings] = useState(false);
 
-	useEffect(() => {
-		const fetchProject = async () => {
-			try {
-				setLoading(true);
-				// TODO: Implement project service to fetch project data
-				//const projectData = await projectService.getProject(projectId);
-				//setProject(projectData);
-			} catch (err) {
-				setError('Failed to load project');
-				console.error('Error fetching project:', err);
-			} finally {
-				setLoading(false);
-			}
-		};
+	const projectService = ProjectApiService.getInstance();
 
+	useEffect(() => {
 		if (projectId) {
 			fetchProject();
 		}
 	}, [projectId]);
 
-	const handleUpdateProject = async (updates: Partial<ProjectDocument>) => {
+	const fetchProject = async () => {
 		try {
-			// TODO: Implement project update logic
-			// const updatedProject = await projectService.updateProject(projectId, updates);
-			// setProject(updatedProject);
+			setLoading(true);
+			setError(null);
+			const projectData = await projectService.getProject(projectId);
+			setProject(projectData);
+		} catch (err) {
+			setError('Failed to load project');
+			console.error('Error fetching project:', err);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleUpdateProject = async (updates: Partial<Project>) => {
+		if (!projectId || !project) return;
+
+		try {
+			setError(null);
+			const updatedProject = await projectService.updateProject(projectId, updates);
+			setProject(updatedProject);
 		} catch (err) {
 			setError('Failed to update project');
 			console.error('Error updating project:', err);
@@ -67,59 +66,111 @@ const Project: React.FC<ProjectProps> = () => {
 	};
 
 	const handleAddDocument = async (document: KnowledgeDocument) => {
+		if (!projectId || !project) return;
+
 		try {
-			// TODO: Implement document addition logic
-			// const response = await projectService.addDocument(projectId, document);
-			// if (response.success) {
-			//   setProject(prev => ({
-			//     ...prev!,
-			//     knowledgeBase: {
-			//       ...prev!.knowledgeBase,
-			//       documents: [...prev!.knowledgeBase.documents, document]
-			//     }
-			//   }));
-			// }
+			setError(null);
+			const updatedProject = await projectService.addDocument(projectId, document);
+			setProject(updatedProject);
 		} catch (err) {
 			setError('Failed to add document');
 			console.error('Error adding document:', err);
 		}
 	};
 
-	const handleAddChat = async (chatId: string) => {
+	const handleRemoveDocument = async (documentId: string) => {
+		if (!projectId || !project) return;
+
 		try {
-			// TODO: Implement chat addition logic
-			// const response = await projectService.addChat(projectId, chatId);
-			// if (response.success) {
-			//   const newChat: ProjectChat = {
-			//     chatId,
-			//     addedAt: new Date(),
-			//     includeInRAG: true
-			//   };
-			//   setProject(prev => ({
-			//     ...prev!,
-			//     chats: [...prev!.chats, newChat]
-			//   }));
-			// }
+			setError(null);
+			await projectService.removeDocument(projectId, documentId);
+			setProject(prev => {
+				if (!prev) return null;
+				return {
+					...prev,
+					knowledgeBase: {
+						...prev.knowledgeBase,
+						documents: prev.knowledgeBase.documents.filter(doc => doc._id !== documentId)
+					}
+				};
+			});
+		} catch (err) {
+			setError('Failed to remove document');
+			console.error('Error removing document:', err);
+		}
+	};
+
+	const handleAddChat = async (chatId: string, includeInRAG: boolean = true) => {
+		if (!projectId || !project) return;
+
+		try {
+			setError(null);
+			const updatedProject = await projectService.addChat(projectId, { chatId, includeInRAG });
+			setProject(updatedProject);
 		} catch (err) {
 			setError('Failed to add chat');
 			console.error('Error adding chat:', err);
 		}
 	};
 
+	const handleRemoveChat = async (chatId: string) => {
+		if (!projectId || !project) return;
+
+		try {
+			setError(null);
+			await projectService.removeChat(projectId, chatId);
+			setProject(prev => {
+				if (!prev) return null;
+				return {
+					...prev,
+					chats: prev.chats.filter(chat => chat.chatId !== chatId)
+				};
+			});
+		} catch (err) {
+			setError('Failed to remove chat');
+			console.error('Error removing chat:', err);
+		}
+	};
+
+	const handleUpdateRAGSettings = async (settings: RAGSettings) => {
+		if (!projectId || !project) return;
+
+		try {
+			setError(null);
+			const updatedProject = await projectService.updateRAGSettings(projectId, settings);
+			setProject(updatedProject);
+		} catch (err) {
+			setError('Failed to update RAG settings');
+			console.error('Error updating RAG settings:', err);
+		}
+	};
+
 	if (loading) {
-		return <div>Loading project...</div>;
+		return (
+			<div className="flex items-center justify-center min-h-screen">
+				<Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+			</div>
+		);
 	}
 
 	if (error) {
 		return (
-			<Alert variant="destructive">
-				<AlertDescription>{error}</AlertDescription>
-			</Alert>
+			<div className="container mx-auto px-4 py-8">
+				<Alert variant="destructive">
+					<AlertDescription>{error}</AlertDescription>
+				</Alert>
+			</div>
 		);
 	}
 
 	if (!project) {
-		return <div>Project not found</div>;
+		return (
+			<div className="container mx-auto px-4 py-8">
+				<Alert>
+					<AlertDescription>Project not found</AlertDescription>
+				</Alert>
+			</div>
+		);
 	}
 
 	return (
@@ -132,7 +183,7 @@ const Project: React.FC<ProjectProps> = () => {
 			/>
 
 			<main className="container mx-auto px-4 py-6">
-				<Tabs defaultValue="knowledge">
+				<Tabs defaultValue="knowledge" className="space-y-6">
 					<TabsList>
 						<TabsTrigger value="knowledge" className="flex items-center gap-2">
 							<Book className="h-4 w-4" />
@@ -144,18 +195,20 @@ const Project: React.FC<ProjectProps> = () => {
 						</TabsTrigger>
 					</TabsList>
 
-					<TabsContent value="knowledge" className="mt-6">
+					<TabsContent value="knowledge">
 						<KnowledgeBasePanel
 							documents={project.knowledgeBase.documents}
 							onAddDocument={handleAddDocument}
+							onRemoveDocument={handleRemoveDocument}
 							settings={project.knowledgeBase.settings}
 						/>
 					</TabsContent>
 
-					<TabsContent value="chats" className="mt-6">
+					<TabsContent value="chats">
 						<ProjectChats
 							chats={project.chats}
 							onAddChat={handleAddChat}
+							onRemoveChat={handleRemoveChat}
 						/>
 					</TabsContent>
 				</Tabs>
@@ -163,20 +216,14 @@ const Project: React.FC<ProjectProps> = () => {
 
 			{showSettings && (
 				<RAGSettingsModal
-					settings={project.knowledgeBase.settings}
-					onUpdateSettings={(settings) => {
-						handleUpdateProject({
-							knowledgeBase: {
-								...project.knowledgeBase,
-								settings
-							}
-						});
-					}}
+					isOpen={showSettings}
 					onClose={() => setShowSettings(false)}
+					settings={project.knowledgeBase.settings}
+					onUpdateSettings={handleUpdateRAGSettings}
 				/>
 			)}
 		</div>
 	);
 };
 
-export default Project;
+export default ProjectPage;
