@@ -1,4 +1,5 @@
 // src/pages/project/Project.tsx
+// src/pages/project/Project.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -26,6 +27,7 @@ import ProjectChats from '@/components/Project/projectchats/ProjectChats';
 import RAGSettingsModal from '@/components/Project/RagSettings/RagSettingsModal';
 import { ProjectApiService } from '@/services/database/projectDatabaseApiService';
 import { ChatApiService } from '@/services/database/chatDatabaseApiService';
+import { KnowledgeDocumentApiService } from '@/services/database/knowledgeDocumentApiService';
 
 const ProjectPage: React.FC = () => {
 	const { projectId } = useParams();
@@ -37,6 +39,7 @@ const ProjectPage: React.FC = () => {
 
 	const projectService = ProjectApiService.getInstance();
 	const chatService = ChatApiService.getInstance();
+	const documentService = KnowledgeDocumentApiService.getInstance();
 
 	useEffect(() => {
 		if (projectId) {
@@ -50,26 +53,35 @@ const ProjectPage: React.FC = () => {
 			setError(null);
 			const projectData = await projectService.getProject(projectId);
 
-			// Fetch full chat details for each chat in the project
-			const updatedChats = await Promise.all(
-				projectData.chats.map(async (projectChat) => {
-					try {
-						const chatDetails = await chatService.getChat(projectChat.chatId);
-						return {
-							...projectChat,
-							chat: chatDetails
-						};
-					} catch (err) {
-						console.error(`Error fetching chat ${projectChat.chatId}:`, err);
-						return projectChat;
-					}
-				})
-			);
+			// Check if projectData has chats before mapping
+			if (projectData && projectData.chats) {
+				// Fetch full chat details for each chat in the project
+				const updatedChats = await Promise.all(
+					projectData.chats.map(async (projectChat) => {
+						try {
+							const chatDetails = await chatService.getChat(projectChat.chatId);
+							return {
+								...projectChat,
+								chat: chatDetails
+							};
+						} catch (err) {
+							console.error(`Error fetching chat ${projectChat.chatId}:`, err);
+							return projectChat;
+						}
+					})
+				);
 
-			setProject({
-				...projectData,
-				chats: updatedChats
-			});
+				setProject({
+					...projectData,
+					chats: updatedChats
+				});
+			} else {
+				// If no chats exist, set project with empty chats array
+				setProject({
+					...projectData,
+					chats: []
+				});
+			}
 		} catch (err) {
 			setError('Failed to load project');
 			console.error('Error fetching project:', err);
@@ -96,7 +108,17 @@ const ProjectPage: React.FC = () => {
 
 		try {
 			setError(null);
-			const updatedProject = await projectService.addDocument(projectId, document);
+
+			// First, create the document in its own collection
+			const createdDoc = await documentService.createDocument(projectId, document);
+
+			// Then, update the project with the document reference
+			const updatedProject = await projectService.addDocument(projectId, {
+				id: createdDoc.id,
+				title: createdDoc.title,
+				source: createdDoc.source
+			});
+
 			setProject(updatedProject);
 		} catch (err) {
 			setError('Failed to add document');
@@ -109,7 +131,14 @@ const ProjectPage: React.FC = () => {
 
 		try {
 			setError(null);
+
+			// First, remove the document reference from the project
 			await projectService.removeDocument(projectId, documentId);
+
+			// Then delete the actual document
+			await documentService.deleteDocument(documentId);
+
+			// Update local state
 			setProject(prev => {
 				if (!prev) return null;
 				return {
@@ -123,6 +152,19 @@ const ProjectPage: React.FC = () => {
 		} catch (err) {
 			setError('Failed to remove document');
 			console.error('Error removing document:', err);
+		}
+	};
+
+	const handleReindexDocument = async (documentId: string) => {
+		if (!projectId || !project) return;
+
+		try {
+			setError(null);
+			await documentService.reindexDocument(projectId, documentId);
+			await fetchProject(); // Refresh project to get updated embeddings
+		} catch (err) {
+			setError('Failed to reindex document');
+			console.error('Error reindexing document:', err);
 		}
 	};
 
@@ -282,9 +324,11 @@ const ProjectPage: React.FC = () => {
 
 					<TabsContent value="knowledge">
 						<KnowledgeBasePanel
+							projectId={project._id}
 							documents={project.knowledgeBase.documents}
 							onAddDocument={handleAddDocument}
 							onRemoveDocument={handleRemoveDocument}
+							onReindexDocument={handleReindexDocument}
 							settings={project.knowledgeBase.settings}
 						/>
 					</TabsContent>
@@ -314,8 +358,6 @@ const ProjectPage: React.FC = () => {
 };
 
 export default ProjectPage;
-
-
 
 
 

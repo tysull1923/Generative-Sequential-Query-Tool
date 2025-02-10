@@ -5,13 +5,14 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import chatRoutes from './routes/chat.routes.js';
 import projectRoutes from './routes/project.routes.js';
+import knowledgeDocumentRoutes from './routes/knowledgeDocument.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+// Middleware with increased limits
+app.use(bodyParser.json({ limit: '100mb' }));
+app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
 app.use(cors());
 
 // Debug middleware
@@ -28,7 +29,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/gsqt_db', {
 	useUnifiedTopology: true,
 	serverSelectionTimeoutMS: 5000,
 	socketTimeoutMS: 45000,
-	family: 4 // Use IPv4, skip trying IPv6
+	family: 4
 })
 	.then(() => {
 		console.log('Successfully connected to MongoDB.');
@@ -39,8 +40,9 @@ mongoose.connect('mongodb://127.0.0.1:27017/gsqt_db', {
 	});
 
 // Routes
-app.use('/api', chatRoutes);  // Chat routes
-app.use('/api/projects', projectRoutes);  // Project routes
+app.use('/api/chats', chatRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/knowledge', knowledgeDocumentRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -56,8 +58,8 @@ app.use((err, req, res, next) => {
 	console.error('Unhandled error:', err);
 	res.status(500).json({
 		success: false,
-		error: err.message,
-		details: err.toString()
+		error: err.message || 'Internal Server Error',
+		details: process.env.NODE_ENV === 'development' ? err.toString() : undefined
 	});
 });
 
@@ -70,14 +72,13 @@ app.use((req, res) => {
 	});
 });
 
-// Start server
 app.listen(PORT, () => {
 	console.log(`Server running on port ${PORT}`);
 	console.log(`API endpoint: http://localhost:${PORT}/api`);
 	console.log(`Health check: http://localhost:${PORT}/health`);
 });
 
-// Graceful shutdown
+// Graceful shutdown handlers
 process.on('SIGTERM', () => {
 	console.log('SIGTERM received. Shutting down gracefully...');
 	mongoose.connection.close(false).then(() => {

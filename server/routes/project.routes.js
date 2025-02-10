@@ -1,44 +1,55 @@
-// 
 // server/routes/project.routes.js
 import express from 'express';
 import mongoose from 'mongoose';
 import { Project } from '../models/project.model.js';
+import { KnowledgeDocument } from '../models/knowledgeDocument.model.js';
 
 const router = express.Router();
 
-// Get all projects with populated chat data
+// Create a new project
+router.post('/', async (req, res) => {
+	try {
+		const project = await Project.create({
+			...req.body,
+			knowledgeBase: {
+				documents: [],
+				settings: {
+					chunkSize: 1000,
+					chunkOverlap: 200,
+					embedding: {
+						model: 'default',
+						dimensions: 1536
+					},
+					similarity: {
+						threshold: 0.7,
+						maxResults: 5
+					}
+				}
+			}
+		});
+
+		res.status(201).json({
+			success: true,
+			data: project
+		});
+	} catch (error) {
+		console.error('Error creating project:', error);
+		res.status(500).json({
+			success: false,
+			error: error.message
+		});
+	}
+});
+
+// Get all projects
 router.get('/', async (req, res) => {
 	try {
-		const { status, tags, category } = req.query;
-		const query = {};
-
-		if (status) query.status = status;
-		if (tags) query['metadata.tags'] = { $in: tags.split(',') };
-		if (category) query['metadata.category'] = category;
-
-		const projects = await Project.find(query)
-			.populate({
-				path: 'chats.chatId',
-				model: 'Chat',
-				select: 'title settings type projectInfo createdAt lastModified'
-			})
+		const projects = await Project.find({})
 			.sort({ lastModified: -1 });
-
-		// Transform the populated data to match the expected format
-		const transformedProjects = projects.map(project => {
-			const projectObj = project.toObject();
-			projectObj.chats = projectObj.chats.map(chat => ({
-				chatId: chat.chatId._id,
-				addedAt: chat.addedAt,
-				includeInRAG: chat.includeInRAG,
-				chat: chat.chatId // This contains the populated chat data
-			}));
-			return projectObj;
-		});
 
 		res.json({
 			success: true,
-			data: transformedProjects
+			data: projects
 		});
 	} catch (error) {
 		console.error('Error listing projects:', error);
@@ -49,15 +60,11 @@ router.get('/', async (req, res) => {
 	}
 });
 
-// Get a specific project with populated chat data
+// Get a specific project
 router.get('/:id', async (req, res) => {
 	try {
 		const project = await Project.findById(req.params.id)
-			.populate({
-				path: 'chats.chatId',
-				model: 'Chat',
-				select: 'title settings type projectInfo createdAt lastModified'
-			});
+			.populate('knowledgeBase.documents');
 
 		if (!project) {
 			return res.status(404).json({
@@ -66,18 +73,9 @@ router.get('/:id', async (req, res) => {
 			});
 		}
 
-		// Transform the populated data to match the expected format
-		const transformedProject = project.toObject();
-		transformedProject.chats = transformedProject.chats.map(chat => ({
-			chatId: chat.chatId._id,
-			addedAt: chat.addedAt,
-			includeInRAG: chat.includeInRAG,
-			chat: chat.chatId // This contains the populated chat data
-		}));
-
 		res.json({
 			success: true,
-			data: transformedProject
+			data: project
 		});
 	} catch (error) {
 		console.error('Error getting project:', error);
@@ -88,8 +86,78 @@ router.get('/:id', async (req, res) => {
 	}
 });
 
-// Add chat to project
-router.post('/:id/chats/:chatId', async (req, res) => {
+// Update a project
+router.put('/:id', async (req, res) => {
+	try {
+		const project = await Project.findByIdAndUpdate(
+			req.params.id,
+			{
+				...req.body,
+				lastModified: new Date()
+			},
+			{ new: true, runValidators: true }
+		);
+
+		if (!project) {
+			return res.status(404).json({
+				success: false,
+				error: 'Project not found'
+			});
+		}
+
+		res.json({
+			success: true,
+			data: project
+		});
+	} catch (error) {
+		console.error('Error updating project:', error);
+		res.status(500).json({
+			success: false,
+			error: error.message
+		});
+	}
+});
+
+// Delete a project
+router.delete('/:id', async (req, res) => {
+	const session = await mongoose.startSession();
+	session.startTransaction();
+
+	try {
+		const project = await Project.findById(req.params.id).session(session);
+		if (!project) {
+			await session.abortTransaction();
+			return res.status(404).json({
+				success: false,
+				error: 'Project not found'
+			});
+		}
+
+		// Delete associated knowledge documents
+		await KnowledgeDocument.deleteMany(
+			{ projectId: project._id },
+			{ session }
+		);
+
+		// Delete the project
+		await project.deleteOne({ session });
+
+		await session.commitTransaction();
+		res.status(204).send();
+	} catch (error) {
+		await session.abortTransaction();
+		console.error('Error deleting project:', error);
+		res.status(500).json({
+			success: false,
+			error: error.message
+		});
+	} finally {
+		session.endSession();
+	}
+});
+
+// Add document reference to project
+router.post('/:id/documents/:documentId', async (req, res) => {
 	try {
 		const project = await Project.findById(req.params.id);
 		if (!project) {
@@ -99,53 +167,15 @@ router.post('/:id/chats/:chatId', async (req, res) => {
 			});
 		}
 
-		// Convert chatId to ObjectId
-		const chatId = new mongoose.Types.ObjectId(req.params.chatId);
-
-		// Check if chat already exists in project
-		const existingChat = project.chats.find(chat =>
-			chat.chatId.toString() === chatId.toString()
-		);
-
-		if (existingChat) {
-			return res.status(400).json({
-				success: false,
-				error: 'Chat already exists in project'
-			});
-		}
-
-		// Add new chat reference
-		project.chats.push({
-			chatId: chatId,
-			addedAt: new Date(),
-			includeInRAG: req.body.includeInRAG ?? true
-		});
-
+		project.knowledgeBase.documents.push(req.params.documentId);
 		await project.save();
 
-		// Fetch the updated project with populated chat data
-		const updatedProject = await Project.findById(project._id)
-			.populate({
-				path: 'chats.chatId',
-				model: 'Chat',
-				select: 'title settings type projectInfo createdAt lastModified'
-			});
-
-		// Transform the populated data
-		const transformedProject = updatedProject.toObject();
-		transformedProject.chats = transformedProject.chats.map(chat => ({
-			chatId: chat.chatId._id,
-			addedAt: chat.addedAt,
-			includeInRAG: chat.includeInRAG,
-			chat: chat.chatId
-		}));
-
-		res.status(201).json({
+		res.json({
 			success: true,
-			data: transformedProject
+			data: project
 		});
 	} catch (error) {
-		console.error('Error adding chat:', error);
+		console.error('Error adding document to project:', error);
 		res.status(500).json({
 			success: false,
 			error: error.message
@@ -153,6 +183,62 @@ router.post('/:id/chats/:chatId', async (req, res) => {
 	}
 });
 
+// Remove document reference from project
+router.delete('/:id/documents/:documentId', async (req, res) => {
+	try {
+		const project = await Project.findById(req.params.id);
+		if (!project) {
+			return res.status(404).json({
+				success: false,
+				error: 'Project not found'
+			});
+		}
+
+		project.knowledgeBase.documents = project.knowledgeBase.documents
+			.filter(id => id.toString() !== req.params.documentId);
+		await project.save();
+
+		res.status(204).send();
+	} catch (error) {
+		console.error('Error removing document from project:', error);
+		res.status(500).json({
+			success: false,
+			error: error.message
+		});
+	}
+});
+
+// Update RAG settings
+router.put('/:id/rag-settings', async (req, res) => {
+	try {
+		const project = await Project.findById(req.params.id);
+		if (!project) {
+			return res.status(404).json({
+				success: false,
+				error: 'Project not found'
+			});
+		}
+
+		project.knowledgeBase.settings = {
+			...project.knowledgeBase.settings,
+			...req.body
+		};
+		await project.save();
+
+		res.json({
+			success: true,
+			data: project
+		});
+	} catch (error) {
+		console.error('Error updating RAG settings:', error);
+		res.status(500).json({
+			success: false,
+			error: error.message
+		});
+	}
+});
+
+export default router;
 
 
 

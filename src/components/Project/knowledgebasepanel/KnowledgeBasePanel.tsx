@@ -1,32 +1,9 @@
 // src/components/Project/KnowledgeBase/KnowledgeBasePanel.tsx
-
+// src/components/Project/KnowledgeBase/KnowledgeBasePanel.tsx
 import React, { useState } from 'react';
-import {
-	Plus,
-	Search,
-	FileText,
-	Trash2,
-	ExternalLink,
-	RefreshCw,
-	ChevronDown
-} from 'lucide-react';
-import { format } from 'date-fns';
+import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -36,26 +13,27 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-} from '@/components/ui/Alert-dialog';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/Alert-dialog";
 import { Progress } from '@/components/ui/progress';
+import KnowledgeCard from '@/components/features/KnowledgeCard/KnowledgeCard';
 import { KnowledgeDocument, RAGSettings } from '@/utils/types/project.types';
+import { KnowledgeDocumentApiService } from '@/services/database/knowledgeDocumentApiService';
 
 interface KnowledgeBasePanelProps {
+	projectId: string;
 	documents: KnowledgeDocument[];
 	onAddDocument: (doc: KnowledgeDocument) => Promise<void>;
 	onRemoveDocument?: (docId: string) => Promise<void>;
-	onUpdateDocument?: (docId: string, updates: Partial<KnowledgeDocument>) => Promise<void>;
 	onReindexDocument?: (docId: string) => Promise<void>;
 	settings: RAGSettings;
 	className?: string;
 }
 
 const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
+	projectId,
 	documents,
 	onAddDocument,
 	onRemoveDocument,
-	onUpdateDocument,
 	onReindexDocument,
 	settings,
 	className = ''
@@ -65,6 +43,7 @@ const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 	const [uploadProgress, setUploadProgress] = useState(0);
 	const [selectedDoc, setSelectedDoc] = useState<KnowledgeDocument | null>(null);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
 	// Filter documents based on search query
 	const filteredDocuments = documents.filter(doc =>
@@ -78,9 +57,10 @@ const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 
 		setIsUploading(true);
 		setUploadProgress(0);
+		setError(null);
 
 		try {
-			// Simulate upload progress
+			// Simulate initial upload progress
 			const interval = setInterval(() => {
 				setUploadProgress(prev => {
 					if (prev >= 90) {
@@ -91,27 +71,18 @@ const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 				});
 			}, 500);
 
-			// Process each file
-			for (const file of files) {
-				const reader = new FileReader();
-				reader.onload = async (e) => {
-					const content = e.target?.result as string;
+			const documentService = KnowledgeDocumentApiService.getInstance();
 
-					const newDoc: KnowledgeDocument = {
-						id: crypto.randomUUID(),
-						title: file.name,
-						content,
-						source: 'upload',
-						addedAt: new Date(),
-						lastUpdated: new Date()
-					};
+			// Upload all files at once
+			const uploadedDocs = await documentService.uploadDocuments(projectId, Array.from(files));
 
-					await onAddDocument(newDoc);
-				};
-				reader.readAsText(file);
+			// Add each document to the project
+			for (const doc of uploadedDocs) {
+				await onAddDocument(doc);
 			}
 
 			// Complete upload
+			clearInterval(interval);
 			setUploadProgress(100);
 			setTimeout(() => {
 				setIsUploading(false);
@@ -120,19 +91,20 @@ const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 
 		} catch (error) {
 			console.error('Error uploading files:', error);
+			setError('Failed to upload documents');
 			setIsUploading(false);
 			setUploadProgress(0);
 		}
 	};
-
-	const handleDeleteDocument = async () => {
-		if (selectedDoc && onRemoveDocument) {
+	const handleDeleteDocument = async (docId: string) => {
+		if (onRemoveDocument) {
 			try {
-				await onRemoveDocument(selectedDoc.id);
+				await onRemoveDocument(docId);
 				setShowDeleteDialog(false);
 				setSelectedDoc(null);
 			} catch (error) {
 				console.error('Error deleting document:', error);
+				setError('Failed to delete document');
 			}
 		}
 	};
@@ -143,7 +115,7 @@ const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 			<div className="flex items-center justify-between">
 				<div className="flex-1 mr-4">
 					<Input
-						placeholder="Search documents..."
+						placeholder="Search knowledge base..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 						className="max-w-md"
@@ -171,6 +143,13 @@ const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 				</div>
 			</div>
 
+			{/* Error Alert */}
+			{error && (
+				<Alert variant="destructive" className="mt-4">
+					<AlertDescription>{error}</AlertDescription>
+				</Alert>
+			)}
+
 			{/* Upload Progress */}
 			{isUploading && (
 				<div className="space-y-2">
@@ -182,67 +161,24 @@ const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 				</div>
 			)}
 
-			{/* Documents Grid */}
+			{/* Knowledge Documents Grid */}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 				{filteredDocuments.map((doc) => (
-					<Card key={doc.id} className="flex flex-col">
-						<CardHeader>
-							<div className="flex justify-between items-start">
-								<div className="space-y-1">
-									<CardTitle className="text-lg flex items-center gap-2">
-										<FileText className="h-4 w-4" />
-										{doc.title}
-									</CardTitle>
-									<CardDescription>
-										Added {format(new Date(doc.addedAt), 'MMM d, yyyy')}
-									</CardDescription>
-								</div>
-								<DropdownMenu>
-									<DropdownMenuTrigger asChild>
-										<Button variant="ghost" size="sm">
-											<ChevronDown className="h-4 w-4" />
-										</Button>
-									</DropdownMenuTrigger>
-									<DropdownMenuContent align="end">
-										<DropdownMenuItem onClick={() => window.open(`/documents/${doc.id}`)}>
-											<ExternalLink className="h-4 w-4 mr-2" />
-											View Document
-										</DropdownMenuItem>
-										{onReindexDocument && (
-											<DropdownMenuItem onClick={() => onReindexDocument(doc.id)}>
-												<RefreshCw className="h-4 w-4 mr-2" />
-												Reindex
-											</DropdownMenuItem>
-										)}
-										<DropdownMenuItem
-											className="text-red-600"
-											onClick={() => {
-												setSelectedDoc(doc);
-												setShowDeleteDialog(true);
-											}}
-										>
-											<Trash2 className="h-4 w-4 mr-2" />
-											Delete
-										</DropdownMenuItem>
-									</DropdownMenuContent>
-								</DropdownMenu>
-							</div>
-						</CardHeader>
-						<CardContent>
-							<div className="flex flex-wrap gap-2">
-								<Badge variant="secondary">
-									{doc.chunks?.length || 0} chunks
-								</Badge>
-								<Badge variant="secondary">
-									{doc.source}
-								</Badge>
-							</div>
-						</CardContent>
-						<CardFooter className="text-sm text-gray-500 mt-auto">
-							Last updated {format(new Date(doc.lastUpdated), 'MMM d, yyyy')}
-						</CardFooter>
-					</Card>
+					<KnowledgeCard
+						key={doc.id}
+						document={doc}
+						onDelete={() => {
+							setSelectedDoc(doc);
+							setShowDeleteDialog(true);
+						}}
+						onReindex={onReindexDocument ? () => onReindexDocument(doc.id) : undefined}
+					/>
 				))}
+				{filteredDocuments.length === 0 && !isUploading && (
+					<div className="col-span-full text-center py-8">
+						<p className="text-gray-500">No documents found. Add documents to get started!</p>
+					</div>
+				)}
 			</div>
 
 			{/* Delete Confirmation Dialog */}
@@ -263,7 +199,7 @@ const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 					<AlertDialogFooter>
 						<AlertDialogCancel>Cancel</AlertDialogCancel>
 						<AlertDialogAction
-							onClick={handleDeleteDocument}
+							onClick={() => selectedDoc && handleDeleteDocument(selectedDoc.id)}
 							className="bg-red-600 hover:bg-red-700"
 						>
 							Delete

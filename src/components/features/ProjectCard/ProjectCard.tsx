@@ -1,4 +1,3 @@
-// src/components/features/ProjectCard/ProjectCard.tsx
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, FileText } from 'lucide-react';
@@ -39,9 +38,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 		if ((e.target as HTMLElement).closest('button')) {
 			return;
 		}
-		console.log('Card clicked, project:', project); // Debug log
 		onClick();
 	};
+
+	// Safely get document and chat counts
+	const documentCount = project.knowledgeBase?.documents?.length ?? 0;
+	const chatCount = project.chats?.length ?? 0;
 
 	return (
 		<Card
@@ -73,11 +75,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 				<div className="flex items-center gap-4 text-sm text-gray-500">
 					<div className="flex items-center gap-1">
 						<FileText className="h-4 w-4" />
-						<span>{project.knowledgeBase.documents.length} documents</span>
+						<span>{documentCount} documents</span>
 					</div>
 					<span>•</span>
 					<div>
-						{project.chats.length} chats
+						{chatCount} chats
 					</div>
 				</div>
 			</CardContent>

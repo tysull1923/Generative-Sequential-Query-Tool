@@ -70,7 +70,30 @@ export class ProjectApiService {
 	// Create a new project
 	async createProject(data: CreateProjectInput): Promise<Project> {
 		try {
-			const response = await axios.post<ApiResponse<Project>>(API_BASE_URL, data);
+			// Include default values for new projects
+			const projectData = {
+				...data,
+				chats: [],
+				knowledgeBase: {
+					documents: [],
+					settings: {
+						chunkSize: 1000,
+						chunkOverlap: 200,
+						embedding: {
+							model: 'default',
+							dimensions: 1536
+						},
+						similarity: {
+							threshold: 0.7,
+							maxResults: 5
+						}
+					}
+				},
+				createdAt: new Date(),
+				lastModified: new Date()
+			};
+
+			const response = await axios.post<ApiResponse<Project>>(API_BASE_URL, projectData);
 
 			if (!response.data.success || !response.data.data) {
 				throw new Error(response.data.error || 'Failed to create project');
@@ -117,15 +140,15 @@ export class ProjectApiService {
 	}
 
 	// Add document to project
-	async addDocument(projectId: string, document: AddDocumentInput): Promise<Project> {
+	async addDocument(projectId: string, documentRef: { id: string; title: string; source: string }): Promise<Project> {
 		try {
 			const response = await axios.post<ApiResponse<Project>>(
-				`${API_BASE_URL}/${projectId}/documents`,
-				document
+				`${API_BASE_URL}/${projectId}/documents/${documentRef.id}`,
+				documentRef
 			);
 
 			if (!response.data.success || !response.data.data) {
-				throw new Error(response.data.error || 'Failed to add document');
+				throw new Error(response.data.error || 'Failed to add document reference');
 			}
 
 			return response.data.data;
@@ -134,7 +157,7 @@ export class ProjectApiService {
 		}
 	}
 
-	// Remove document from project
+	// Remove document reference from project
 	async removeDocument(projectId: string, documentId: string): Promise<void> {
 		try {
 			const response = await axios.delete<ApiResponse<void>>(
@@ -142,7 +165,7 @@ export class ProjectApiService {
 			);
 
 			if (response.status !== 200 && response.status !== 204) {
-				throw new Error('Failed to remove document');
+				throw new Error('Failed to remove document reference');
 			}
 		} catch (error) {
 			throw this.handleError(error);

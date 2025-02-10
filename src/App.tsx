@@ -10,6 +10,7 @@ import './styles/globals.css';
 import ChatPage from './pages/chats/chat';
 import { APIProvider } from './context/APIContext';
 import { Toaster } from "@/components/ui/toaster"
+import KnowledgeEditPage from '@/pages/knowledge/KnowledgeEditingPage';
 //import { DatabaseProvider } from './context/DatabaseContext';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
 						{/*<Route path="/new-chat" element={<NewChatPage />} /> */}
 						<Route path="/chat/*" element={<ChatPage />} />
 						<Route path="/project/:projectId" element={<Project />} />
+						<Route path="/knowledge/:id" element={<KnowledgeEditPage />} />
 						{/* <Route path="/settings" element={<SettingsPage />} /> */}
 						<Route path="/settings" element={<SettingsPage />} />
 					</Routes>

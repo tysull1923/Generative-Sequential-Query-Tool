@@ -62,7 +62,10 @@ const ProjectChats: React.FC<ProjectChatsProps> = ({
 		try {
 			// Get the project to access its chat list
 			const project = await projectService.getProject(projectId);
-			const projectChatIds = new Set(project.chats.map(chat => chat.chatId));
+
+			// Ensure project has chats array
+			const projectChats = project?.chats || [];
+			const projectChatIds = new Set(projectChats.map(chat => chat.chatId));
 
 			// Get all chats
 			const allChats = await chatService.listChats();
@@ -70,21 +73,21 @@ const ProjectChats: React.FC<ProjectChatsProps> = ({
 			// Find chats that either:
 			// 1. Have this project's ID in their projectInfo
 			// 2. Are listed in the project's chats array
-			const projectChats = allChats.filter(chat =>
+			const projectRelatedChats = allChats.filter(chat =>
 				chat.projectInfo?.projectId === projectId ||
 				projectChatIds.has(chat._id)
 			);
 
 			// Add RAG status from project's chat list
-			const chatsWithRAGStatus = projectChats.map(chat => {
-				const projectChat = project.chats.find(pc => pc.chatId === chat._id);
+			const chatsWithRAGStatus = projectRelatedChats.map(chat => {
+				const projectChat = projectChats.find(pc => pc.chatId === chat._id);
 				return {
 					...chat,
 					projectInfo: {
 						...chat.projectInfo,
 						projectId,
 						projectTitle: project.title,
-						includeInRAG: projectChat?.includeInRAG || false
+						includeInRAG: projectChat?.includeInRAG ?? false
 					}
 				};
 			});
@@ -92,6 +95,8 @@ const ProjectChats: React.FC<ProjectChatsProps> = ({
 			setChats(chatsWithRAGStatus);
 		} catch (error) {
 			console.error('Error fetching chats:', error);
+			// Set empty array on error to prevent undefined errors
+			setChats([]);
 		} finally {
 			setLoading(false);
 		}
@@ -99,8 +104,8 @@ const ProjectChats: React.FC<ProjectChatsProps> = ({
 
 	// Filter chats based on search and type
 	const filteredChats = chats.filter(chat => {
-		const matchesSearch = chat.title.toLowerCase().includes(searchQuery.toLowerCase());
-		const matchesType = filterType === 'all' || chat.type === filterType;
+		const matchesSearch = chat?.title?.toLowerCase()?.includes(searchQuery.toLowerCase()) ?? false;
+		const matchesType = filterType === 'all' || chat?.type === filterType;
 		return matchesSearch && matchesType;
 	});
 

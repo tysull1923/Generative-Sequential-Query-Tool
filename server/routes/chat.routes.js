@@ -14,7 +14,7 @@ const handleRouteError = (res, error, message = 'An error occurred') => {
 };
 
 // Create a new chat
-router.post('/chats', async (req, res) => {
+router.post('/', async (req, res) => {
 	try {
 		console.log('Creating new chat...');
 		const chatData = req.body;
@@ -32,7 +32,7 @@ router.post('/chats', async (req, res) => {
 });
 
 // Get all chats
-router.get('/chats', async (req, res) => {
+router.get('/', async (req, res) => {
 	try {
 		const chats = await Chat.find().sort({ createdAt: -1 });
 		res.json({
@@ -45,7 +45,7 @@ router.get('/chats', async (req, res) => {
 });
 
 // Get a specific chat
-router.get('/chats/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
 	try {
 		const chat = await Chat.findById(req.params.id);
 		if (!chat) {
@@ -64,7 +64,7 @@ router.get('/chats/:id', async (req, res) => {
 });
 
 // Update a chat
-router.put('/chats/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
 	try {
 		const updatedChat = await Chat.findByIdAndUpdate(
 			req.params.id,
@@ -87,7 +87,7 @@ router.put('/chats/:id', async (req, res) => {
 });
 
 // Copy a chat
-router.post('/chats/:id/copy', async (req, res) => {
+router.post('/:id/copy', async (req, res) => {
 	try {
 		const originalChat = await Chat.findById(req.params.id);
 		if (!originalChat) {
@@ -117,7 +117,7 @@ router.post('/chats/:id/copy', async (req, res) => {
 });
 
 // Delete a chat
-router.delete('/chats/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
 	try {
 		const deletedChat = await Chat.findByIdAndDelete(req.params.id);
 		if (!deletedChat) {
@@ -126,7 +126,6 @@ router.delete('/chats/:id', async (req, res) => {
 				error: 'Chat not found'
 			});
 		}
-		// Send 200 status with success response instead of 204
 		res.status(200).json({
 			success: true,
 			data: { id: req.params.id }
