@@ -133,16 +133,17 @@ const ChatPage: React.FC = () => {
 
 // ... rest of your chat component code
 
-	// Use handleChatCreated after successfully creating a new chat
-	const onSaveChat = async () => {
-		try {
-			const newChatId = await chatService.saveChat(chatData);
-			await handleChatCreated(newChatId);
-			// ... handle any other post-save logic
-		} catch (error) {
-			console.error('Error saving chat:', error);
-		}
-	};
+	// // Use handleChatCreated after successfully creating a new chat
+	// const onSaveChat = async () => {
+	// 	try {
+	// 		const newChatId = await chatService.saveChat(chatData);
+	// 		await handleChatCreated(newChatId);
+	// 		// ... handle any other post-save logic
+	// 	} catch (error) {
+	// 		console.error('Error saving chat:', error);
+	// 	}
+	// };
+	
 
 
   const handleProcessRequests = async (requestP?: string | ChatRequest[]) => {

@@ -1,7 +1,6 @@
 // src/components/Project/ProjectChats/ProjectChats.tsx
-
 // src/components/Project/ProjectChats/ProjectChats.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageSquarePlus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
@@ -29,61 +28,139 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/Alert-dialog';
 
-import ChatHistoryCard from '@/components/features/ChatHistory/HistoricalChatCard';
-import { ProjectChat } from '@/utils/types/project.types';
-import { ChatType } from '@/utils/types/chat.types';
 import { ChatApiService } from '@/services/database/chatDatabaseApiService';
+import { ProjectApiService } from '@/services/database/projectDatabaseApiService';
+import ChatHistoryCard from '@/components/features/ChatHistory/HistoricalChatCard';
+import { ChatType } from '@/utils/types/chat.types';
 
 interface ProjectChatsProps {
-	chats: ProjectChat[];
-	onAddChat: (chatId: string, includeInRAG?: boolean) => Promise<void>;
-	onRemoveChat?: (chatId: string) => Promise<void>;
-	onNewChat: (type: ChatType) => void;
 	projectId: string;
 	className?: string;
+	onNewChat: (type: ChatType) => void;
 }
 
 const ProjectChats: React.FC<ProjectChatsProps> = ({
-	chats,
-	onAddChat,
-	onRemoveChat,
-	onNewChat,
 	projectId,
-	className = ''
+	className = '',
+	onNewChat
 }) => {
+	const [chats, setChats] = useState<any[]>([]);
+	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [filterType, setFilterType] = useState<ChatType | 'all'>('all');
-	const [selectedChat, setSelectedChat] = useState<ProjectChat | null>(null);
+	const [selectedChat, setSelectedChat] = useState<any | null>(null);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
 	const chatService = ChatApiService.getInstance();
+	const projectService = ProjectApiService.getInstance();
+
+	useEffect(() => {
+		fetchProjectChats();
+	}, [projectId]);
+
+	const fetchProjectChats = async () => {
+		try {
+			// Get the project to access its chat list
+			const project = await projectService.getProject(projectId);
+			const projectChatIds = new Set(project.chats.map(chat => chat.chatId));
+
+			// Get all chats
+			const allChats = await chatService.listChats();
+
+			// Find chats that either:
+			// 1. Have this project's ID in their projectInfo
+			// 2. Are listed in the project's chats array
+			const projectChats = allChats.filter(chat =>
+				chat.projectInfo?.projectId === projectId ||
+				projectChatIds.has(chat._id)
+			);
+
+			// Add RAG status from project's chat list
+			const chatsWithRAGStatus = projectChats.map(chat => {
+				const projectChat = project.chats.find(pc => pc.chatId === chat._id);
+				return {
+					...chat,
+					projectInfo: {
+						...chat.projectInfo,
+						projectId,
+						projectTitle: project.title,
+						includeInRAG: projectChat?.includeInRAG || false
+					}
+				};
+			});
+
+			setChats(chatsWithRAGStatus);
+		} catch (error) {
+			console.error('Error fetching chats:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	// Filter chats based on search and type
 	const filteredChats = chats.filter(chat => {
-		if (!chat.chat) return false; // Skip if no chat data
-		const matchesSearch = chat.chat.title.toLowerCase().includes(searchQuery.toLowerCase());
-		const matchesType = filterType === 'all' || chat.chat.type === filterType;
+		const matchesSearch = chat.title.toLowerCase().includes(searchQuery.toLowerCase());
+		const matchesType = filterType === 'all' || chat.type === filterType;
 		return matchesSearch && matchesType;
 	});
 
 	const handleDeleteChat = async () => {
-		if (selectedChat && onRemoveChat) {
-			try {
-				await onRemoveChat(selectedChat.chatId);
-				setShowDeleteDialog(false);
-				setSelectedChat(null);
-			} catch (error) {
-				console.error('Error deleting chat:', error);
-			}
+		if (!selectedChat) return;
+
+		try {
+			// Remove chat from project
+			await projectService.removeChat(projectId, selectedChat._id);
+
+			// Update the chat to remove project association
+			await chatService.updateChat(selectedChat._id, {
+				projectInfo: null
+			});
+
+			setChats(prevChats => prevChats.filter(chat => chat._id !== selectedChat._id));
+			setShowDeleteDialog(false);
+			setSelectedChat(null);
+		} catch (error) {
+			console.error('Error removing chat from project:', error);
 		}
 	};
 
 	const handleCopyChat = async (chatId: string) => {
 		try {
+			// Copy the chat
 			const copiedChatId = await chatService.copyChat(chatId);
-			await onAddChat(copiedChatId, true);
+
+			// Add the new chat to the project
+			await projectService.addChat(projectId, {
+				chatId: copiedChatId,
+				includeInRAG: false // Default to not included in RAG
+			});
+
+			// Refresh the chat list
+			fetchProjectChats();
 		} catch (error) {
 			console.error('Error copying chat:', error);
+		}
+	};
+
+	const handleToggleRAG = async (chatId: string, includeInRAG: boolean) => {
+		try {
+			await projectService.updateChat(projectId, chatId, { includeInRAG });
+
+			// Update local state
+			setChats(prevChats => prevChats.map(chat => {
+				if (chat._id === chatId) {
+					return {
+						...chat,
+						projectInfo: {
+							...chat.projectInfo,
+							includeInRAG
+						}
+					};
+				}
+				return chat;
+			}));
+		} catch (error) {
+			console.error('Error updating RAG status:', error);
 		}
 	};
 
@@ -135,36 +212,21 @@ const ProjectChats: React.FC<ProjectChatsProps> = ({
 				</DropdownMenu>
 			</div>
 
-			{/* Debug output to check chat data */}
-			<div className="text-sm text-gray-500">
-				{console.log('Filtered Chats:', filteredChats)}
-			</div>
-
 			{/* Chats Grid */}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-				{filteredChats.map((projectChat) => (
-					projectChat.chat && (
-						<ChatHistoryCard
-							key={projectChat.chatId}
-							chat={{
-								_id: projectChat.chatId,
-								title: projectChat.chat.title,
-								settings: projectChat.chat.settings,
-								createdAt: projectChat.addedAt.toString(),
-								projectInfo: {
-									projectId,
-									projectTitle: projectChat.chat.projectInfo?.projectTitle || ''
-								}
-							}}
-							onDelete={() => {
-								setSelectedChat(projectChat);
-								setShowDeleteDialog(true);
-							}}
-							onCopy={() => handleCopyChat(projectChat.chatId)}
-						/>
-					)
+				{filteredChats.map((chat) => (
+					<ChatHistoryCard
+						key={chat._id}
+						chat={chat}
+						onDelete={() => {
+							setSelectedChat(chat);
+							setShowDeleteDialog(true);
+						}}
+						onCopy={() => handleCopyChat(chat._id)}
+						onToggleRAG={handleToggleRAG}
+					/>
 				))}
-				{filteredChats.length === 0 && (
+				{filteredChats.length === 0 && !loading && (
 					<div className="col-span-full text-center py-8">
 						<p className="text-gray-500">No chats found. Create a new chat to get started!</p>
 					</div>
@@ -183,7 +245,7 @@ const ProjectChats: React.FC<ProjectChatsProps> = ({
 					<AlertDialogHeader>
 						<AlertDialogTitle>Remove Chat from Project</AlertDialogTitle>
 						<AlertDialogDescription>
-							Are you sure you want to remove "{selectedChat?.chat?.title || 'this chat'}" from the project?
+							Are you sure you want to remove "{selectedChat?.title || 'this chat'}" from the project?
 							The chat will still be available in your chat history.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
@@ -203,8 +265,6 @@ const ProjectChats: React.FC<ProjectChatsProps> = ({
 };
 
 export default ProjectChats;
-
-
 
 
 

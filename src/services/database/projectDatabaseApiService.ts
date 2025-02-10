@@ -168,6 +168,25 @@ export class ProjectApiService {
 	}
 
 	// Add chat to project
+	// async addChat(projectId: string, chatData: AddChatInput): Promise<Project> {
+	// 	try {
+	// 		const response = await axios.post<ApiResponse<Project>>(
+	// 			`${API_BASE_URL}/${projectId}/chats/${chatData.chatId}`,
+	// 			{ includeInRAG: chatData.includeInRAG }
+	// 		);
+
+	// 		if (!response.data.success || !response.data.data) {
+	// 			throw new Error(response.data.error || 'Failed to add chat');
+	// 		}
+
+	// 		return response.data.data;
+	// 	} catch (error) {
+	// 		throw this.handleError(error);
+	// 	}
+	// }
+
+
+
 	async addChat(projectId: string, chatData: AddChatInput): Promise<Project> {
 		try {
 			const response = await axios.post<ApiResponse<Project>>(
@@ -179,9 +198,30 @@ export class ProjectApiService {
 				throw new Error(response.data.error || 'Failed to add chat');
 			}
 
-			return response.data.data;
+			// Fetch the full chat details after adding to project
+			const chatDetails = await this.getChatDetails(chatData.chatId);
+
+			// Update the project data with the full chat details
+			const updatedProject = response.data.data;
+			updatedProject.chats = updatedProject.chats.map(chat =>
+				chat.chatId === chatData.chatId
+					? { ...chat, chat: chatDetails }
+					: chat
+			);
+
+			return updatedProject;
 		} catch (error) {
 			throw this.handleError(error);
+		}
+	}
+
+	private async getChatDetails(chatId: string): Promise<any> {
+		try {
+			const response = await axios.get(`${API_BASE_URL}/chats/${chatId}`);
+			return response.data.data;
+		} catch (error) {
+			console.error('Error fetching chat details:', error);
+			return null;
 		}
 	}
 
