@@ -62,6 +62,11 @@ export interface ChatResponse {
   langChainMessage?: AIMessage;
 }
 
+export interface ChatProjectInfo {
+	projectId: string;
+	projectTitle: string;
+  }
+
 /**
  * Chat Document with LangChain message history
  */
@@ -77,6 +82,7 @@ export interface ChatDocument {
   steps?: ChatStep[];
   lastModified: Date;
   createdAt: Date;
+  projectInfo?: ChatProjectInfo; // Add this field
 }
 
 /**

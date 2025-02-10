@@ -1,4 +1,5 @@
 // server/models/chat.model.js
+// server/models/chat.model.js
 import mongoose from 'mongoose';
 
 const chatSchema = new mongoose.Schema({
@@ -55,6 +56,11 @@ const chatSchema = new mongoose.Schema({
 		duration: Number,
 		message: mongoose.Schema.Types.Mixed
 	}],
+	// Add project info
+	projectInfo: {
+		projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
+		projectTitle: String
+	},
 	lastModified: { type: Date, default: Date.now },
 	createdAt: { type: Date, default: Date.now }
 });
@@ -64,6 +70,7 @@ chatSchema.index({ createdAt: -1 });
 chatSchema.index({ lastModified: -1 });
 chatSchema.index({ type: 1 });
 chatSchema.index({ 'settings.chatType': 1 });
+chatSchema.index({ 'projectInfo.projectId': 1 }); // Add index for project lookups
 
 export const Chat = mongoose.model('Chat', chatSchema);
 export default Chat;

@@ -23,7 +23,7 @@ function App() {
 						{/* <Route path="/chat" element={<ChatPage />} /> */}
 						{/* <Route path="/base-chat" element={<BaseChat />} /> */}
 						{/*<Route path="/new-chat" element={<NewChatPage />} /> */}
-						<Route path="/chat" element={<ChatPage />} />
+						<Route path="/chat/*" element={<ChatPage />} />
 						<Route path="/project/:projectId" element={<Project />} />
 						{/* <Route path="/settings" element={<SettingsPage />} /> */}
 						<Route path="/settings" element={<SettingsPage />} />

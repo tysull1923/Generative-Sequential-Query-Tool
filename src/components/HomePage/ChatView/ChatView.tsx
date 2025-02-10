@@ -1,4 +1,4 @@
-// src/pages/home/components/views/ChatView/ChatView.tsx
+// src/components/HomePage/ChatView.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,19 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/Alert-dialog";
-import { ChatViewProps, ChatViewState } from './ChatView.types';
+import { ChatType, Role, SequentialStepType, ChatCardState } from '@/utils/types/chat.types';
 import { cn } from '@/lib/utils';
+
+interface ChatViewProps {
+	className?: string;
+}
+
+interface ChatViewState {
+	chats: any[];
+	loading: boolean;
+	error: string;
+	deleteChat?: any;
+}
 
 export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
 	const navigate = useNavigate();
@@ -29,7 +40,6 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
 
 	const chatService = ChatApiService.getInstance();
 
-	// Fetch chats on component mount
 	useEffect(() => {
 		fetchChats();
 	}, []);
@@ -81,6 +91,37 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
 		}
 	};
 
+	const handleNewChat = () => {
+		// Create initial request for new chat
+		const initialRequest = {
+			id: Date.now().toString(),
+			role: Role.USER,
+			type: ChatType.BASE,
+			step: SequentialStepType.MESSAGE,
+			content: '',
+			status: ChatCardState.READY,
+			number: 1
+		};
+
+		navigate('/chat', {
+			state: {
+				existingChat: false,
+				selectedChatType: ChatType.BASE,
+				initialTitle: 'New Chat',
+				initialRequests: [initialRequest],
+				settings: {
+					temperature: 0.7,
+					chatType: ChatType.BASE,
+					savingParams: {
+						saveToApplication: true,
+						saveToFile: false,
+						summary: ''
+					}
+				}
+			}
+		});
+	};
+
 	if (state.loading) {
 		return (
 			<div className={cn("flex items-center justify-center h-64", className)}>
@@ -93,7 +134,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
 		<div className={cn("space-y-6", className)}>
 			<div className="flex justify-between items-center">
 				<h1 className="text-2xl font-bold">Your Chats</h1>
-				<Button onClick={() => navigate('/chat')} className="flex items-center" size="lg">
+				<Button onClick={handleNewChat} className="flex items-center" size="lg">
 					<MessageSquarePlus className="mr-2 h-4 w-4" />
 					New Chat
 				</Button>
@@ -110,10 +151,15 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
 					<ChatHistoryCard
 						key={chat._id}
 						chat={chat}
-						onDelete={(chatId) => setState(prev => ({ ...prev, deleteChat: chat }))}
+						onDelete={() => setState(prev => ({ ...prev, deleteChat: chat }))}
 						onCopy={handleCopyChat}
 					/>
 				))}
+				{state.chats.length === 0 && !state.loading && (
+					<div className="col-span-full text-center py-8">
+						<p className="text-gray-500">No chats found. Create a new chat to get started!</p>
+					</div>
+				)}
 			</div>
 
 			<AlertDialog
