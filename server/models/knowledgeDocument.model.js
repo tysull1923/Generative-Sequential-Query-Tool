@@ -1,70 +1,115 @@
 // server/models/knowledgeDocument.model.js
-// server/models/knowledgeDocument.model.js
-import mongoose from "mongoose"
-
-const chunkSchema = new mongoose.Schema({
-	content: { type: String, required: true },
-	embedding: [Number],
-	metadata: {
-		start: Number,
-		end: Number,
-		source: String,
-	},
-})
+import mongoose from 'mongoose';
 
 const knowledgeDocumentSchema = new mongoose.Schema({
 	title: {
 		type: String,
 		required: true,
-		trim: true,
+		trim: true
 	},
 	content: {
 		type: String,
-		required: function () {
-			return !this.contentUrl
-		},
-	},
-	contentUrl: {
-		type: String,
-		required: function () {
-			return !this.content
-		},
+		required: true
 	},
 	source: {
 		type: String,
-		required: true,
+		required: true
 	},
 	projectId: {
 		type: mongoose.Schema.Types.ObjectId,
-		ref: "Project",
-		required: true,
+		ref: 'Project',
+		required: true
 	},
-	includeInRAG: {
-		type: Boolean,
-		default: true,
-	},
-	chunks: [chunkSchema],
 	metadata: {
-		type: Map,
-		of: mongoose.Schema.Types.Mixed,
-		default: () => new Map(),
+		fileType: String,
+		fileSize: Number,
+		extension: String
 	},
 	addedAt: {
 		type: Date,
-		default: Date.now,
+		default: Date.now
 	},
 	lastUpdated: {
 		type: Date,
-		default: Date.now,
-	},
-})
+		default: Date.now
+	}
+});
 
-knowledgeDocumentSchema.pre("save", function (next) {
-	this.lastUpdated = new Date()
-	next()
-})
+// Update lastUpdated timestamp on save
+knowledgeDocumentSchema.pre('save', function (next) {
+	this.lastUpdated = new Date();
+	next();
+});
 
-export const KnowledgeDocument = mongoose.model("KnowledgeDocument", knowledgeDocumentSchema)
+export const KnowledgeDocument = mongoose.model('KnowledgeDocument', knowledgeDocumentSchema);
+
+// // server/models/knowledgeDocument.model.js
+// // server/models/knowledgeDocument.model.js
+// import mongoose from "mongoose"
+
+// const chunkSchema = new mongoose.Schema({
+// 	content: { type: String, required: true },
+// 	embedding: [Number],
+// 	metadata: {
+// 		start: Number,
+// 		end: Number,
+// 		source: String,
+// 	},
+// })
+
+// const knowledgeDocumentSchema = new mongoose.Schema({
+// 	title: {
+// 		type: String,
+// 		required: true,
+// 		trim: true,
+// 	},
+// 	content: {
+// 		type: String,
+// 		required: function () {
+// 			return !this.contentUrl
+// 		},
+// 	},
+// 	contentUrl: {
+// 		type: String,
+// 		required: function () {
+// 			return !this.content
+// 		},
+// 	},
+// 	source: {
+// 		type: String,
+// 		required: true,
+// 	},
+// 	projectId: {
+// 		type: mongoose.Schema.Types.ObjectId,
+// 		ref: "Project",
+// 		required: true,
+// 	},
+// 	includeInRAG: {
+// 		type: Boolean,
+// 		default: true,
+// 	},
+// 	chunks: [chunkSchema],
+// 	metadata: {
+// 		type: Map,
+// 		of: mongoose.Schema.Types.Mixed,
+// 		default: () => new Map(),
+// 	},
+// 	addedAt: {
+// 		type: Date,
+// 		default: Date.now,
+// 	},
+// 	lastUpdated: {
+// 		type: Date,
+// 		default: Date.now,
+// 	},
+// })
+
+// knowledgeDocumentSchema.pre("save", function (next) {
+// 	this.lastUpdated = new Date()
+// 	next()
+// })
+
+// export const KnowledgeDocument = mongoose.model("KnowledgeDocument", knowledgeDocumentSchema)
 
 
 

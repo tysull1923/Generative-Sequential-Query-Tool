@@ -20,6 +20,11 @@ export interface KnowledgeDocument {
 			source: string
 		}
 	}[]
+	metadata?: {
+		fileType?: string;
+		fileSize?: number;
+		extension?: string;
+	};
 	addedAt: Date
 	lastUpdated: Date
 }

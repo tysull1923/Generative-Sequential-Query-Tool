@@ -109,23 +109,33 @@ const ProjectPage: React.FC = () => {
 		try {
 			setError(null);
 
-			// First, create the document in its own collection
-			const createdDoc = await documentService.createDocument(projectId, document);
-
-			// Then, update the project with the document reference
-			const updatedProject = await projectService.addDocument(projectId, {
-				id: createdDoc.id,
-				title: createdDoc.title,
-				source: createdDoc.source
+			// Create the document first
+			const createdDoc = await documentService.createDocument(projectId, {
+				title: document.title,
+				content: document.content,
+				source: document.source,
+				metadata: document.metadata
 			});
 
-			setProject(updatedProject);
-		} catch (err) {
-			setError('Failed to add document');
-			console.error('Error adding document:', err);
-		}
-	};
+			// Update local state with the new document
+			setProject(prev => {
+				if (!prev) return null;
+				return {
+					...prev,
+					knowledgeBase: {
+						...prev.knowledgeBase,
+						documents: [...prev.knowledgeBase.documents, createdDoc]
+					}
+				};
+			});
 
+			return createdDoc;
+		} catch (err) {
+			console.error('Error adding document:', err);
+			setError('Failed to add document');
+			throw err; // Re-throw to handle in the calling component
+		}
+	}
 	const handleRemoveDocument = async (documentId: string) => {
 		if (!projectId || !project) return;
 
