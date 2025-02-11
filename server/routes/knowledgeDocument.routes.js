@@ -99,18 +99,86 @@ router.post('/project/:projectId', async (req, res) => {
 });
 
 // Handle file uploads
-router.post('/project/:projectId/upload', upload.array('documents', 10), async (req, res) => {
-	const session = await mongoose.startSession();
-	session.startTransaction();
+// router.post('/project/:projectId/upload', upload.array('documents', 10), async (req, res) => {
+// 	const session = await mongoose.startSession();
+// 	session.startTransaction();
 
+// 	try {
+// 		// Verify project exists
+// 		const project = await Project.findById(req.params.projectId).session(session);
+// 		if (!project) {
+// 			await session.abortTransaction();
+// 			return res.status(404).json({
+// 				success: false,
+// 				error: 'Project not found'
+// 			});
+// 		}
+
+// 		const uploadedDocuments = [];
+
+// 		// Process each uploaded file
+// 		for (const file of req.files) {
+// 			const content = file.buffer.toString('utf-8');
+
+// 			// Create document with proper metadata structure
+// 			const documentData = {
+// 				title: file.originalname,
+// 				content: content,
+// 				source: 'upload',
+// 				projectId: req.params.projectId,
+// 				includeInRAG: true,
+// 				chunks: [],
+// 				metadata: {
+// 					fileType: file.mimetype,
+// 					fileSize: file.size,
+// 					uploadDate: new Date(),
+// 					contentType: file.mimetype
+// 				}
+// 			};
+
+// 			// Validate metadata before saving
+// 			const document = new KnowledgeDocument(documentData);
+// 			const validationError = document.validateSync();
+// 			if (validationError) {
+// 				throw new Error(`Document validation failed: ${validationError.message}`);
+// 			}
+
+// 			const savedDocument = await document.save({ session });
+
+// 			// Add document reference to project
+// 			project.knowledgeBase.documents.push(savedDocument._id);
+// 			uploadedDocuments.push(savedDocument);
+// 		}
+
+// 		// Save project with new document references
+// 		await project.save({ session });
+
+// 		// Commit transaction
+// 		await session.commitTransaction();
+
+// 		res.status(201).json({
+// 			success: true,
+// 			data: uploadedDocuments
+// 		});
+// 	} catch (error) {
+// 		await session.abortTransaction();
+// 		console.error('Error uploading documents:', error);
+// 		res.status(500).json({
+// 			success: false,
+// 			error: error.message
+// 		});
+// 	} finally {
+// 		session.endSession();
+// 	}
+// });
+router.post('/project/:projectId/upload', upload.array('documents', 10), async (req, res) => {
 	try {
-		// Verify project exists
-		const project = await Project.findById(req.params.projectId).session(session);
+		// Verify if project exists
+		const project = await Project.findById(req.params.projectId);
 		if (!project) {
-			await session.abortTransaction();
 			return res.status(404).json({
 				success: false,
-				error: 'Project not found'
+				error: 'Project not found',
 			});
 		}
 
@@ -118,12 +186,12 @@ router.post('/project/:projectId/upload', upload.array('documents', 10), async (
 
 		// Process each uploaded file
 		for (const file of req.files) {
-			const content = file.buffer.toString('utf-8');
+			const content = file.buffer.toString('utf-8'); // Extract file content
 
-			// Create document with proper metadata structure
-			const documentData = {
+			// Create a new document entry
+			const document = new KnowledgeDocument({
 				title: file.originalname,
-				content: content,
+				content: content, // Store extracted content
 				source: 'upload',
 				projectId: req.params.projectId,
 				includeInRAG: true,
@@ -134,41 +202,33 @@ router.post('/project/:projectId/upload', upload.array('documents', 10), async (
 					uploadDate: new Date(),
 					contentType: file.mimetype
 				}
-			};
+			});
 
-			// Validate metadata before saving
-			const document = new KnowledgeDocument(documentData);
+			// Validate and save document
 			const validationError = document.validateSync();
 			if (validationError) {
 				throw new Error(`Document validation failed: ${validationError.message}`);
 			}
 
-			const savedDocument = await document.save({ session });
+			const savedDocument = await document.save();
 
 			// Add document reference to project
 			project.knowledgeBase.documents.push(savedDocument._id);
+			await project.save();
+
 			uploadedDocuments.push(savedDocument);
 		}
 
-		// Save project with new document references
-		await project.save({ session });
-
-		// Commit transaction
-		await session.commitTransaction();
-
 		res.status(201).json({
 			success: true,
-			data: uploadedDocuments
+			data: uploadedDocuments,
 		});
 	} catch (error) {
-		await session.abortTransaction();
 		console.error('Error uploading documents:', error);
 		res.status(500).json({
 			success: false,
-			error: error.message
+			error: error.message,
 		});
-	} finally {
-		session.endSession();
 	}
 });
 

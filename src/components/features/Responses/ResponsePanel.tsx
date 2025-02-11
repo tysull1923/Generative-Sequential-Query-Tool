@@ -10,7 +10,7 @@ import {
 	DialogTitle,
 	DialogFooter,
 } from "@/components/shared/dialog";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import { Save, Copy, Check } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
@@ -258,11 +258,11 @@ export default ResponsePanel;
 //   className?: string; // Added to allow custom styling from parent
 // }
 
-// const ResponsePanel = ({ 
-//   selectedRequestId, 
-//   requests, 
+// const ResponsePanel = ({
+//   selectedRequestId,
+//   requests,
 //   onSaveResponse,
-//   className = '' 
+//   className = ''
 // }: ResponsePanelProps) => {
 //   const formatResponse = (response: string) => {
 //     const codeBlockRegex = /```(\w+)?\n([\s\S]*?)\n```/g;

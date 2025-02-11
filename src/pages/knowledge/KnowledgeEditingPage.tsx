@@ -28,8 +28,10 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2 } from 'lucide-react';
 
-import { KnowledgeDocument } from '@/utils/types/project.types';
+import { KnowledgeDocument } from '@/utils/types/KnowledgeBase.types';
 import { ProjectApiService } from '@/services/database/projectDatabaseApiService';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface KnowledgeEditPageState {
 	document?: KnowledgeDocument;
@@ -75,7 +77,7 @@ const KnowledgeEditPage: React.FC = () => {
 			setError(null);
 
 			// Update the document
-			await projectService.updateDocument(state.projectId, document.id, {
+			await projectService.updateDocument(state.projectId, document._id, {
 				...document,
 				lastUpdated: new Date()
 			});
@@ -87,6 +89,40 @@ const KnowledgeEditPage: React.FC = () => {
 		} finally {
 			setIsSaving(false);
 		}
+	};
+	const renderContent = (content: string) => {
+		const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+
+		const parts = [];
+		let lastIndex = 0;
+		let match;
+
+		while ((match = codeBlockRegex.exec(content)) !== null) {
+			const [fullMatch, lang, code] = match;
+
+			// Push text before the code block
+			if (match.index > lastIndex) {
+				parts.push(
+					<p key={lastIndex}>{content.substring(lastIndex, match.index)}</p>
+				);
+			}
+
+			// Push the code block
+			parts.push(
+				<SyntaxHighlighter key={match.index} language={lang || 'plaintext'} style={vscDarkPlus}>
+					{code}
+				</SyntaxHighlighter>
+			);
+
+			lastIndex = match.index + fullMatch.length;
+		}
+
+		// Push remaining text after last code block
+		if (lastIndex < content.length) {
+			parts.push(<p key={lastIndex}>{content.substring(lastIndex)}</p>);
+		}
+
+		return parts;
 	};
 
 	const handleReindex = async () => {
@@ -221,7 +257,7 @@ const KnowledgeEditPage: React.FC = () => {
 									/>
 								) : (
 									<div className="prose max-w-none">
-										{document.content}
+										{renderContent(document.content)}
 									</div>
 								)}
 							</ScrollArea>
