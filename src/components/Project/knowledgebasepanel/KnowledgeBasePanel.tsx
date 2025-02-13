@@ -1,5 +1,5 @@
 // src/components/Project/KnowledgeBase/KnowledgeBasePanel.tsx
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Plus, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/Input"
@@ -8,11 +8,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import KnowledgeCard from "@/components/features/KnowledgeCard/KnowledgeCard"
 import type { KnowledgeBasePanelProps, UploadState } from "./KnowledgeBasePanel.types"
 import { KnowledgeDocumentApiService } from "@/services/database/knowledgeDocumentApiService"
+import { ProjectApiService } from "@/services/database/projectDatabaseApiService"
 import { getDocument } from 'pdfjs-dist'
+import { KnowledgeDocument } from "@/utils/types/KnowledgeBase.types"
 
 const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 	projectId,
-	documents,
+	documents: initialDocuments,
 	onAddDocument,
 	onRemoveDocument,
 	onReindexDocument,
@@ -25,6 +27,28 @@ const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 		progress: 0,
 		error: null
 	})
+	const projectService = ProjectApiService.getInstance();
+	const documentService = KnowledgeDocumentApiService.getInstance();
+	const [documents, setDocuments] = useState<KnowledgeDocument[]>(initialDocuments);
+
+
+	const [filterType, setFilterType] = useState<'all'>('all');
+	useEffect(() => {
+		fetchProjectDocuments();
+	}, [projectId]);
+
+	const fetchProjectDocuments = async () => {
+		try {
+			const projectDocs = await documentService.getProjectDocuments(projectId);
+			setDocuments(projectDocs);
+		} catch (error) {
+			console.error('Error fetching documents:', error);
+			setDocuments([]);
+		}// } finally {
+		// 	setLoading(false);
+		// }
+	};
+
 
 	const processFile = async (file: File, reader: FileReader): Promise<string> => {
 		return new Promise((resolve, reject) => {
@@ -122,10 +146,17 @@ const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 	}
 
 	// Filter documents based on search
-	const filteredDocuments = documents.filter(doc =>
-		doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-		doc.source.toLowerCase().includes(searchQuery.toLowerCase())
-	)
+	// const filteredDocuments = documents.filter(doc =>
+	// 	doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+	// 	doc.source.toLowerCase().includes(searchQuery.toLowerCase())
+	// )
+
+	const filteredDocuments = documents.filter(document => {
+		console.log("filtered");
+		const matchesSearch = document?.title?.toLowerCase()?.includes(searchQuery.toLowerCase()) ?? false;
+		const matchesType = filterType === 'all';
+		return matchesSearch && matchesType;
+	});
 
 	return (
 		<div className={`space-y-6 ${className}`}>
@@ -196,6 +227,7 @@ const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 				)}
 			</div>
 		</div>
+
 	)
 }
 

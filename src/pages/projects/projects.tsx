@@ -108,7 +108,7 @@ const ProjectPage: React.FC = () => {
 
 		try {
 			setError(null);
-
+			console.log("Uploading Document");
 			// Create the document first
 			const createdDoc = await documentService.createDocument(projectId, {
 				title: document.title,

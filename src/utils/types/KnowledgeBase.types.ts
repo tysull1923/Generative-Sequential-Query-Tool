@@ -25,6 +25,7 @@ export interface KnowledgeDocument {
 		fileSize?: number;
 		extension?: string;
 	};
+	includeInRAG?: boolean
 	addedAt: Date
 	lastUpdated: Date
 }

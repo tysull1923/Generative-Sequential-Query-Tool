@@ -73,6 +73,7 @@ export class KnowledgeDocumentApiService {
 		document: Partial<KnowledgeDocument>
 	): Promise<KnowledgeDocument> {
 		try {
+			console.log("Trying to add document");
 			const response = await axios.post<ApiResponse<KnowledgeDocument>>(
 				`${API_BASE_URL}/project/${projectId}`,
 				{
@@ -81,6 +82,7 @@ export class KnowledgeDocumentApiService {
 					metadata: document.metadata || {}
 				}
 			);
+			console.log("Response: ", response.data);
 
 			if (!response.data.success || !response.data.data) {
 				throw new Error(response.data.error || 'Failed to create document');
@@ -88,6 +90,7 @@ export class KnowledgeDocumentApiService {
 
 			return response.data.data;
 		} catch (error) {
+			console.log("failed to add document");
 			throw this.handleError(error);
 		}
 	}
@@ -151,6 +154,7 @@ export class KnowledgeDocumentApiService {
 
 	// Delete a document
 	async deleteDocument(documentId: string): Promise<void> {
+		console.log("Trying to delete document: ", documentId);
 		try {
 			const response = await axios.delete<ApiResponse<void>>(
 				`${API_BASE_URL}/${documentId}`
@@ -216,6 +220,48 @@ export class KnowledgeDocumentApiService {
 
 		return new Error('An unexpected error occurred');
 	}
+	// async getProjectDocumentsWithStatus(
+	// 	projectId: string,
+	// 	filters?: { source?: string; includeInRAG?: boolean }
+	// ): Promise<KnowledgeDocument[]> {
+	// 	try {
+	// 		// Get the project to access its document list
+	// 		const project = await this.projectService.getProject(projectId);
+
+	// 		// Ensure project has documents array
+	// 		const projectDocs = project?.knowledgeBase?.documents || [];
+	// 		const projectDocIds = new Set(projectDocs.map(doc => doc.documentId));
+
+	// 		// Get all documents for this project
+	// 		const documents = await this.getProjectDocuments(projectId, filters);
+
+	// 		// Find documents that either:
+	// 		// 1. Have this project's ID
+	// 		// 2. Are listed in the project's documents array
+	// 		const projectRelatedDocs = documents.filter(doc =>
+	// 			doc.projectId === projectId ||
+	// 			projectDocIds.has(doc._id)
+	// 		);
+
+	// 		// Add RAG status from project's document list
+	// 		const docsWithRAGStatus = projectRelatedDocs.map(doc => {
+	// 			const projectDoc = projectDocs.find(pd => pd.documentId === doc._id);
+	// 			return {
+	// 				...doc,
+	// 				projectInfo: {
+	// 					...doc.projectInfo,
+	// 					projectId,
+	// 					projectTitle: project.title,
+	// 					includeInRAG: projectDoc?.includeInRAG ?? false
+	// 				}
+	// 			};
+	// 		});
+
+	// 		return docsWithRAGStatus;
+	// 	} catch (error) {
+	// 		throw this.handleError(error);
+	// 	}
+	// }
 }
 
 // // src/services/api/knowledgeDocumentApiService.ts
