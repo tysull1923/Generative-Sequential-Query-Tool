@@ -91,7 +91,6 @@ const MainHeader: React.FC<MainHeaderProps> = ({ className = '' }) => {
 						onManageChats={handleManageChats}
 						onOpenSettings={handleOpenSettings}
 					/>
-					<NewProjectDropdown onNewProject={handleNewProject} />
 
 					{/* Right section with buttons */}
 					<div className="flex items-center gap-4">
