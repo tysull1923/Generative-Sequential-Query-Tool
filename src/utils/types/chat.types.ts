@@ -10,6 +10,8 @@ import {
   MessageContent
 } from "@langchain/core/messages";
 import { ApiProvider, ApiConfig } from '@/services/api/interfaces/api.types';
+import { RAGSettings } from "./project.types";
+import { KnowledgeDocument } from "./KnowledgeBase.types";
 
 /**
  * Chat Type Enums
@@ -78,6 +80,10 @@ export interface ChatDocument {
   settings: ChatSettings;
   messages: ChatRequest[];
   messageHistory: BaseMessage[];
+  knowledgeBase: {
+		documents: KnowledgeDocument["_id"][]
+		settings: RAGSettings
+	}
   executionStatus: ExecutionStatus;
   steps?: ChatStep[];
   lastModified: Date;

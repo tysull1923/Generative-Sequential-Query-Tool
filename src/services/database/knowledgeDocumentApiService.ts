@@ -49,6 +49,7 @@ export class KnowledgeDocumentApiService {
 			throw this.handleError(error);
 		}
 	}
+	// 
 
 	// Get a specific document with its full content
 	async getDocument(documentId: string): Promise<KnowledgeDocument> {
@@ -194,6 +195,64 @@ export class KnowledgeDocumentApiService {
 
 			if (!response.data.success || !response.data.data) {
 				throw new Error(response.data.error || 'Failed to reindex document');
+			}
+
+			return response.data.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	async getChatDocuments(chatId: string, projectId?: string): Promise<KnowledgeDocument[]> {
+		try {
+			console.log("Trying to get chat documents");
+			// Build query string with optional projectId
+			const queryParams = new URLSearchParams();
+			if (projectId) {
+				queryParams.append('projectId', projectId);
+			}
+
+			const response = await axios.get<ApiResponse<KnowledgeDocument[]>>(
+				`${API_BASE_URL}/chat/${chatId}?${queryParams.toString()}`
+			);
+
+			if (!response.data.success || !response.data.data) {
+				throw new Error(response.data.error || 'Failed to fetch chat documents');
+			}
+
+			return response.data.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	// Create a document associated with a chat
+	async createChatDocument(
+		chatId: string,
+		document: Partial<KnowledgeDocument>,
+		projectId?: string
+	): Promise<KnowledgeDocument> {
+		try {
+			console.log("Trying to add chat document");
+			const docData = {
+				...document,
+				projectId,
+				chatId,
+				// Optional
+				source: `chat-${chatId}`,
+				includeInRAG: document.includeInRAG ?? true,
+
+			};
+
+
+
+			const response = await axios.post<ApiResponse<KnowledgeDocument>>(
+				`${API_BASE_URL}/chat/${chatId}`,
+				docData
+			);
+
+			if (!response.data.success || !response.data.data) {
+				throw new Error(response.data.error || 'Failed to create chat document');
 			}
 
 			return response.data.data;

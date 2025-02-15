@@ -222,6 +222,72 @@ router.post('/:id/reindex', async (req, res) => {
 	}
 });
 
+router.get('/chat/:chatId', async (req, res) => {
+	try {
+		// Build query based on whether projectId is provided
+		const query = { source: `chat-${req.params.chatId}` };
+		if (req.query.projectId) {
+			query.projectId = req.query.projectId;
+		}
+
+		const documents = await KnowledgeDocument.find(query)
+			.sort({ lastUpdated: -1 });
+
+		res.json({
+			success: true,
+			data: documents
+		});
+	} catch (error) {
+		console.error('Error fetching chat documents:', error);
+		res.status(500).json({
+			success: false,
+			error: 'Error fetching chat documents'
+		});
+	}
+});
+
+router.post('/chat/:chatId', async (req, res) => {
+	try {
+		const { projectId, ...documentData } = req.body;
+		console.log("is it here?");
+		// Only verify project if projectId is provided
+		if (projectId) {
+			const project = await Project.findById(projectId);
+			if (!project) {
+				return res.status(404).json({
+					success: false,
+					error: 'Project not found'
+				});
+			}
+		}
+
+		const document = new KnowledgeDocument({
+			...documentData,
+			projectId, // Will be undefined if not provided
+			source: `chat-${req.params.chatId}`,
+			metadata: {
+				...documentData.metadata,
+				chatId: req.params.chatId,
+				addedFromChat: true
+			}
+		});
+
+		await document.save();
+
+		res.status(201).json({
+			success: true,
+			data: document
+		});
+	} catch (error) {
+		console.error('Error creating chat document:', error);
+		res.status(500).json({
+			success: false,
+			error: 'Error creating chat document'
+		});
+	}
+});
+
+
 export default router;
 
 

@@ -4,7 +4,8 @@ import type { RAGSettings } from "@/utils/types/project.types"
 
 export interface KnowledgeDocument {
 	_id: string
-	projectId: string
+	projectId?: string
+	chatId?: string
 	title: string
 	content?: string
 	contentUrl?: string

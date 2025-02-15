@@ -10,10 +10,10 @@ import { Book, MessageSquare, Loader2 } from 'lucide-react';
 import {
 	Project,
 	ProjectStatus,
-	KnowledgeDocument,
 	RAGSettings,
 	ProjectChat
 } from '@/utils/types/project.types';
+import { KnowledgeDocument } from '@/utils/types/KnowledgeBase.types';
 import {
 	ChatType,
 	Role,

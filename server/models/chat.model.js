@@ -61,6 +61,7 @@ const chatSchema = new mongoose.Schema({
 		projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
 		projectTitle: String
 	},
+	knowledgeBaseId: String,
 	lastModified: { type: Date, default: Date.now },
 	createdAt: { type: Date, default: Date.now }
 });

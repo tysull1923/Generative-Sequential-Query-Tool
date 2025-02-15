@@ -17,12 +17,14 @@ import {
 	ChatCardState,
 	SequentialStepType
 } from '@/utils/types/chat.types';
+import { KnowledgeDocument } from '@/utils/types/KnowledgeBase.types';
 
 interface BaseChatProps {
 	requests: ChatRequest[];
 	setRequests: React.Dispatch<React.SetStateAction<ChatRequest[]>>;
 	systemContext: string;
 	setSystemContext: React.Dispatch<React.SetStateAction<string>>;
+	onAddDocument?: (doc: KnowledgeDocument) => Promise<void>;
 	onProcessRequests: (requestId: string) => Promise<void>;
 	isProcessing: boolean;
 	onSave: (chat: ChatDocument) => void;
@@ -33,13 +35,14 @@ const BaseChat: React.FC<BaseChatProps> = ({
 	setRequests,
 	systemContext,
 	setSystemContext,
+	onAddDocument,
 	onProcessRequests,
 	isProcessing,
 	onSave
 }) => {
 	const [error, setError] = useState<string | null>(null);
 	const [showSystemContext, setShowSystemContext] = useState(false);
-	const [attachments, setAttachments] = useState<Record<string, FileAttachment[]>>({});
+	const [attachments, setAttachments] = useState<KnowledgeDocument[]>([]);
 	const chatContainerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -81,20 +84,20 @@ const BaseChat: React.FC<BaseChatProps> = ({
 		setRequests(prev => [...prev, newRequest]);
 	};
 
-	const handleAttachment = (id: string, files: FileList) => {
-		const newAttachments = Array.from(files).map(file => ({
-			id: Date.now().toString(),
-			name: file.name,
-			type: file.type,
-			size: file.size,
-			content: file
-		}));
+	// const handleAttachment = (id: string, files: FileList) => {
+	// 	const newAttachments = Array.from(files).map(file => ({
+	// 		id: Date.now().toString(),
+	// 		name: file.name,
+	// 		type: file.type,
+	// 		size: file.size,
+	// 		content: file
+	// 	}));
 
-		setAttachments(prev => ({
-			...prev,
-			[id]: [...(prev[id] || []), ...newAttachments]
-		}));
-	};
+	// 	setAttachments(prev => ({
+	// 		...prev,
+	// 		[id]: [...(prev[id] || []), ...newAttachments]
+	// 	}));
+	// };
 
 	const handleRemoveAttachment = (requestId: string, attachmentId: string) => {
 		setAttachments(prev => ({
@@ -208,7 +211,7 @@ const BaseChat: React.FC<BaseChatProps> = ({
 									onDelete={deleteRequest}
 									onContentChange={updateRequestContent}
 									onSend={() => onProcessRequests(request.id)}
-									onAttach={handleAttachment}
+									onAddDocument={onAddDocument}
 									onRemoveAttachment={handleRemoveAttachment}
 								/>
 							</div>

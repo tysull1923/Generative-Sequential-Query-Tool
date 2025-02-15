@@ -1,6 +1,6 @@
 // src/components/ToolsMenu/ToolsMenu.tsx
-import React from 'react';
-import { Settings, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, ChevronDown, FileText } from 'lucide-react';
 import {
 	Popover,
 	PopoverContent,
@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ChatType, ChatSettings } from '@/utils/types/chat.types';
+import DocumentsModal from '@/components/features/DocumentModal/DocumentModal';
 
 interface ToolsMenuProps {
 	settings: ChatSettings;
@@ -15,6 +16,9 @@ interface ToolsMenuProps {
 	onChatTypeChange: (type: ChatType) => void;
 	onSystemContextClick: () => void;
 	hasSystemContext: boolean;
+	chatId?: string;
+	projectId?: string;
+	onOpenDocuments?: () => void;
 }
 
 const ToolsMenu: React.FC<ToolsMenuProps> = ({
@@ -23,8 +27,14 @@ const ToolsMenu: React.FC<ToolsMenuProps> = ({
 	onChatTypeChange,
 	onSystemContextClick,
 	hasSystemContext,
+	chatId,
+	projectId,
+	onOpenDocuments
 }) => {
+	//const [showDocumentModal, setDocumentModal] = useState(false);
+
 	return (
+
 		<Popover>
 			<PopoverTrigger asChild>
 				<button className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -75,9 +85,20 @@ const ToolsMenu: React.FC<ToolsMenuProps> = ({
 					>
 						{hasSystemContext ? "Show System Context" : "Add System Context"}
 					</Button>
+					<Button
+						onClick={onOpenDocuments}
+						className="w-full flex items-center justify-center gap-2"
+						variant="outline"
+					>
+						<FileText className="h-4 w-4" />
+						Manage Documents
+					</Button>
+
 				</div>
 			</PopoverContent>
 		</Popover>
+
+
 	);
 };
 

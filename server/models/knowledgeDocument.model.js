@@ -1,5 +1,6 @@
 // server/models/knowledgeDocument.model.js
 import mongoose from 'mongoose';
+import { type } from 'os';
 
 const knowledgeDocumentSchema = new mongoose.Schema({
 	title: {
@@ -18,7 +19,12 @@ const knowledgeDocumentSchema = new mongoose.Schema({
 	projectId: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'Project',
-		required: true
+		required: false
+	},
+	chatId: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Chat',
+		required: false
 	},
 	metadata: {
 		fileType: String,

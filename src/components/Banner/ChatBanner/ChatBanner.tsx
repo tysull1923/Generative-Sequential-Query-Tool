@@ -22,9 +22,12 @@ interface ChatBannerProps {
 	onSettingsChange: (settings: Partial<ChatSettings>) => void;
 	onTitleChange: (title: string) => void;
 	onSystemContextClick: () => void;
+	onDocumentsClick?: () => void;
 	hasSystemContext: boolean;
 	onAddStep?: (stepType: SequentialStepType.PAUSE | SequentialStepType.DELAY) => void;
 	className?: string;
+	chatId?: string;
+	projectId?: string;
 }
 
 const ChatBanner: React.FC<ChatBannerProps> = ({
@@ -34,7 +37,10 @@ const ChatBanner: React.FC<ChatBannerProps> = ({
 	onSettingsChange,
 	onTitleChange,
 	onSystemContextClick,
+	onDocumentsClick,
 	hasSystemContext,
+	chatId,
+	projectId,
 	//onAddStep,
 	className = ''
 }) => {
@@ -105,7 +111,10 @@ const ChatBanner: React.FC<ChatBannerProps> = ({
 					onTemperatureChange={handleTemperatureChange}
 					onChatTypeChange={handleChatTypeChange}
 					onSystemContextClick={onSystemContextClick}
+					onOpenDocuments={onDocumentsClick}
 					hasSystemContext={hasSystemContext}
+					chatId={chatId}          // Add this
+					projectId={projectId}
 				/>
 
 				{/* Only show ChatStepCardSettings for Sequential Chat
@@ -467,7 +476,7 @@ export default ChatBanner;
 //               {/* Temperature Setting */}
 //               <div>
 //                 <label className="block text-sm font-medium mb-1">Temperature</label>
-//                 <input 
+//                 <input
 //                   type="range"
 //                   min="0"
 //                   max="2"
@@ -482,7 +491,7 @@ export default ChatBanner;
 //               {/* Chat Type Selection */}
 //               <div>
 //                 <label className="block text-sm font-medium mb-1">Chat Type</label>
-//                 <select 
+//                 <select
 //                   value={settings.chatType}
 //                   onChange={(e) => handleChatTypeChange(e.target.value as ChatType)}
 //                   className="w-full p-2 border rounded-md"
@@ -514,7 +523,7 @@ export default ChatBanner;
 //                   placeholder="Enter system context..."
 //                 />
 //               </div> */}
-//             </div> 
+//             </div>
 //           </PopoverContent>
 //         </Popover>
 

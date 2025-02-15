@@ -10,7 +10,8 @@ import BaseChat from '@/components/Chat/BasicChat/BaseChatMainPage';
 import SequentialChat from '@/components/Chat/Sequential/SequentialChatMainPage';
 import RequirementsChat from '@/components/Chat/RequirementsChat/RequirementsChatMainPage';
 import SystemContextModal from '@/components/features/SystemsContext/SystemContextModal';
-
+import { KnowledgeDocument } from '@/utils/types/KnowledgeBase.types';
+import { KnowledgeDocumentApiService } from '@/services/database/knowledgeDocumentApiService';
 import {
   ChatType,
   ChatSettings,
@@ -21,9 +22,11 @@ import {
   ChatCardState,
   SequentialStepType
 } from '@/utils/types/chat.types';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import DocumentsModal from '@/components/features/DocumentModal/DocumentModal';
 import { ChatApiService } from '@/services/database/chatDatabaseApiService';
 import { ProjectApiService } from '@/services/database/projectDatabaseApiService';
+import { on } from 'events';
 
 const DEFAULT_SETTINGS: ChatSettings = {
   temperature: 0.7,
@@ -36,9 +39,14 @@ const DEFAULT_SETTINGS: ChatSettings = {
 };
 
 const ChatPage: React.FC = () => {
+	
   const navigate = useNavigate();
+  //const { chatId } = useParams();
+
   const location = useLocation();
-  
+  //const chatId = location.state?.chatId || null;
+  const [chatIder, setChatId] = useState<string | null>(null);
+  const documentService = KnowledgeDocumentApiService.getInstance();
   const [title, setTitle] = useState("New Chat");
   const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS);
   const [requests, setRequests] = useState<ChatRequest[]>([]);
@@ -50,8 +58,11 @@ const ChatPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { projectContext } = location.state || {};
   const projectService = ProjectApiService.getInstance();
+  const [documents, setDocuments] = useState([]);
 
   const chatService = ChatApiService.getInstance();
+
+  const [isDocumentsModalOpen, setIsDocumentsModalOpen] = useState(false);
   const { selectedAPI } = useAPI();
   const { 
     processRequests, 
@@ -218,8 +229,10 @@ const ChatPage: React.FC = () => {
 
       if (location.state?.chatId) {
         await chatService.updateChat(location.state.chatId, chatData);
+		setChatId(location.state.chatId);
       } else {
         const chatId = await chatService.createChat(chatData);
+		setChatId(chatId);
         navigate(location.pathname, { 
           state: { 
             chatId,
@@ -249,6 +262,7 @@ const ChatPage: React.FC = () => {
       setRequests,
       systemContext,
       setSystemContext,
+	  onAddDocument: handleAddDocument,
       onProcessRequests: handleProcessRequests,
       isProcessing,
       onSave: handleSave,
@@ -256,6 +270,7 @@ const ChatPage: React.FC = () => {
       executionStatus,
       error
     };
+
 
     switch (settings.chatType) {
       case ChatType.SEQUENTIAL:
@@ -271,7 +286,31 @@ const ChatPage: React.FC = () => {
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading chat...</div>;
   }
-
+  const handleAddDocument = async (document: KnowledgeDocument) => {
+  
+		try {
+			setError(null);
+			console.log("Uploading Document");
+			// Create the document first
+			const createdDoc = await documentService.createChatDocument(chatIder, {
+				title: document.title,
+				content: document.content,
+				projectId: "1",
+				source: document.source,
+				metadata: document.metadata
+			});
+  
+			// Update local state with the new document
+			//setDocuments((prevDocs) => [...prevDocs, createdDoc]);
+  
+			return createdDoc;
+		} catch (err) {
+			console.error('Error adding document:', err);
+			setError('Failed to add document');
+			throw err; // Re-throw to handle in the calling component
+		}
+	}
+	
   return (
     <> 
       {error && (
@@ -300,15 +339,22 @@ const ChatPage: React.FC = () => {
           setIsSystemContextModalOpen(false);
         }}
       />
+	  <DocumentsModal
+        isOpen={isDocumentsModalOpen}
+        onClose={() => setIsDocumentsModalOpen(false)}
+		chatId={chatIder}
+      />
       
       <ChatBanner
         chatType={settings.chatType}
         title={title}
         settings={settings}
         onSettingsChange={handleSettingsChange}
+		onDocumentsClick={() => setIsDocumentsModalOpen(true)}
         onTitleChange={setTitle}
         onSystemContextClick={() => setIsSystemContextModalOpen(true)}
         hasSystemContext={!!systemContext}
+		chatId={chatIder}
       />
       
       <main className="flex-1 flex overflow-hidden">
