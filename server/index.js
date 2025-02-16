@@ -6,6 +6,7 @@ import bodyParser from 'body-parser';
 import chatRoutes from './routes/chat.routes.js';
 import projectRoutes from './routes/project.routes.js';
 import knowledgeDocumentRoutes from './routes/knowledgeDocument.routes.js';
+import ragRoutes from './routes/rag.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -43,6 +44,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/gsqt_db', {
 app.use('/api/chats', chatRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/knowledge', knowledgeDocumentRoutes);
+app.use('/api/rag', ragRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

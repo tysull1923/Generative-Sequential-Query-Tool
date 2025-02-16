@@ -20,7 +20,8 @@ import {
   Role,
   ExecutionStatus,
   ChatCardState,
-  SequentialStepType
+  SequentialStepType,
+  ChatDocument
 } from '@/utils/types/chat.types';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import DocumentsModal from '@/components/features/DocumentModal/DocumentModal';
@@ -46,6 +47,7 @@ const ChatPage: React.FC = () => {
   const location = useLocation();
   //const chatId = location.state?.chatId || null;
   const [chatIder, setChatId] = useState<string | null>(null);
+  const [chat, setChat] = useState<ChatDocument | null>(null);
   const documentService = KnowledgeDocumentApiService.getInstance();
   const [title, setTitle] = useState("New Chat");
   const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS);
@@ -230,9 +232,11 @@ const ChatPage: React.FC = () => {
       if (location.state?.chatId) {
         await chatService.updateChat(location.state.chatId, chatData);
 		setChatId(location.state.chatId);
+		// setChat(chatData);
       } else {
         const chatId = await chatService.createChat(chatData);
 		setChatId(chatId);
+		// setChat(chatData);
         navigate(location.pathname, { 
           state: { 
             chatId,
@@ -340,6 +344,7 @@ const ChatPage: React.FC = () => {
         }}
       />
 	  <DocumentsModal
+	  	// documents={chat.knowledgeBase.documents}
         isOpen={isDocumentsModalOpen}
         onClose={() => setIsDocumentsModalOpen(false)}
 		chatId={chatIder}
