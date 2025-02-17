@@ -83,21 +83,36 @@ export interface Project {
 		[key: string]: any
 	}
 }
+export interface RAGSettings {
+	chunkSize: number;
+	chunkOverlap: number;
+	embedding: {
+		model: string;
+		dimensions: number;
+	};
+	similarity: {
+		threshold: number;
+		maxResults: number;
+	};
+}
 
-/**
- * RAG Query Result
- */
 export interface RAGQueryResult {
-	query: string
+	query: string;
 	results: {
-		content: string
-		score: number
+		content: string;
+		score: number;
 		metadata: {
-			source: string
-			documentId: string
-			chunkId?: string
-		}
-	}[]
+			documentId: string;
+			chunkId: string;
+			source: string;
+		};
+	}[];
+}
+
+export interface RAGMetadata {
+	embeddingProvider: string;
+	lastIndexed?: Date;
+	chunkCount?: number;
 }
 
 /**

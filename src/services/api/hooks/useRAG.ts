@@ -5,7 +5,7 @@ import { KnowledgeDocumentApiService } from '@/services/database/knowledgeDocume
 import { RAGSettings, RAGQueryResult } from '@/utils/types/project.types';
 import { KnowledgeDocument } from '@/utils/types/KnowledgeBase.types';
 
-export const useRAG = (containerId: string, containerType: 'chat' | 'project') => {
+export const useRAG = (containerId: string | null, containerType: 'chat' | 'project') => {
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [activeDocuments, setActiveDocuments] = useState<KnowledgeDocument[]>([]);
 
@@ -13,6 +13,8 @@ export const useRAG = (containerId: string, containerType: 'chat' | 'project') =
 	const documentService = KnowledgeDocumentApiService.getInstance();
 
 	const addDocument = async (document: KnowledgeDocument, settings: RAGSettings) => {
+		if (!containerId) return;
+
 		try {
 			setIsProcessing(true);
 			await ragService.addDocument(containerId, document, settings);
@@ -26,6 +28,8 @@ export const useRAG = (containerId: string, containerType: 'chat' | 'project') =
 	};
 
 	const removeDocument = async (documentId: string) => {
+		if (!containerId) return;
+
 		try {
 			setIsProcessing(true);
 			await ragService.removeDocument(containerId, documentId);
@@ -39,6 +43,10 @@ export const useRAG = (containerId: string, containerType: 'chat' | 'project') =
 	};
 
 	const queryDocuments = async (query: string, settings: RAGSettings): Promise<RAGQueryResult> => {
+		if (!containerId) {
+			throw new Error('No container ID provided for RAG query');
+		}
+
 		try {
 			setIsProcessing(true);
 			return await ragService.query(containerId, query, settings);
@@ -51,9 +59,11 @@ export const useRAG = (containerId: string, containerType: 'chat' | 'project') =
 	};
 
 	const loadDocuments = async () => {
+		if (!containerId) return [];
+
 		try {
 			setIsProcessing(true);
-			const documents = await documentService.getProjectDocuments(containerId, {
+			const documents = await documentService.getChatDocuments(containerId, {
 				includeInRAG: true
 			});
 			setActiveDocuments(documents);
@@ -67,6 +77,8 @@ export const useRAG = (containerId: string, containerType: 'chat' | 'project') =
 	};
 
 	const toggleDocument = async (documentId: string, include: boolean) => {
+		if (!containerId) return;
+
 		try {
 			setIsProcessing(true);
 			await ragService.toggleDocumentInclusion(containerId, documentId, include);
