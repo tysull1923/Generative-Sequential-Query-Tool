@@ -20,6 +20,19 @@ const chatSchema = new mongoose.Schema({
 			saveToFile: Boolean,
 			summary: String,
 			fileName: String
+		},
+		ragSettings: {
+			enabled: Boolean,
+			chunkSize: Number,
+			chunkOverlap: Number,
+			embedding: {
+				model: String,
+				dimensions: Number,
+			},
+			similarity: {
+				threshold: Number,
+				maxResults: Number,
+			}
 		}
 	},
 	messages: [{

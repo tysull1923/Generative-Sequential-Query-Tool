@@ -84,9 +84,10 @@ export interface Project {
 	}
 }
 export interface RAGSettings {
+	enabled: boolean;
 	chunkSize: number;
 	chunkOverlap: number;
-	embedding: {
+	embedding?: {
 		model: string;
 		dimensions: number;
 	};
@@ -94,6 +95,7 @@ export interface RAGSettings {
 		threshold: number;
 		maxResults: number;
 	};
+
 }
 
 export interface RAGQueryResult {

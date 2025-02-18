@@ -24,6 +24,7 @@ import {
 	SequentialStepType,
 	ChatDocument
 } from '@/utils/types/chat.types';
+import { RAGSettings } from '@/utils/types/project.types';
 
 const DEFAULT_SETTINGS: ChatSettings = {
 	temperature: 0.7,
@@ -34,9 +35,13 @@ const DEFAULT_SETTINGS: ChatSettings = {
 		summary: ''
 	},
 	ragSettings: {
-		enabled: true,
+		enabled: false,
 		chunkSize: 512,
 		chunkOverlap: 50,
+		embedding: {
+			model: 'text-embedding-ada-002',
+			dimensions: 1536
+		},
 		similarity: {
 			threshold: 0.7,
 			maxResults: 5
@@ -93,9 +98,10 @@ const ChatPage: React.FC = () => {
 					setRequests(chatData.messages || []);
 					setChatId(state.chatId);
 					initializeHistory(chatData.messages || [], chatData.settings.systemContext);
-
+					console.log(chatData.settings.ragSettings);
 					// Load RAG documents
 					if (chatData.settings.ragSettings?.enabled) {
+						console.log('Loading documents for RAG...');
 						const docs = await rag.loadDocuments();
 						setActiveDocuments(docs);
 					}
@@ -142,6 +148,7 @@ const ChatPage: React.FC = () => {
 			setError(null);
 
 			// Create document in MongoDB
+			console.log('Creating document:', document);
 			const createdDoc = await documentService.createChatDocument(chatIder, {
 				title: document.title,
 				content: document.content,
@@ -149,9 +156,10 @@ const ChatPage: React.FC = () => {
 				source: document.source,
 				metadata: document.metadata
 			});
-
+			console.log(settings.ragSettings?.enabled, chatIder);
 			// Add to RAG if enabled
 			if (settings.ragSettings?.enabled && chatIder) {
+				console.log('Adding document to RAG:', createdDoc);
 				await rag.addDocument(createdDoc, settings.ragSettings);
 			}
 

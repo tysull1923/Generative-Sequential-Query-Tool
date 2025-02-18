@@ -122,12 +122,14 @@ export interface ChatSettings {
   temperature: number;
   chatType: ChatType;
   systemContext?: string;
+  ragSettings?: RAGSettings;
   modelConfig?: {
     provider: ApiProvider;
     modelName?: string;
     maxTokens?: number;
     streaming?: boolean;
   };
+  
   savingParams?: ChatSavingParams;
 }
 
