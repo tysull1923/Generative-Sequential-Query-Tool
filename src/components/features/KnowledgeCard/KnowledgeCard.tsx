@@ -1,4 +1,3 @@
-// src/components/Project/KnowledgeBase/KnowledgeCard.tsx
 import type React from "react"
 import { useNavigate } from "react-router-dom"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -116,15 +115,13 @@ const KnowledgeCard: React.FC<ExtendedDocumentCardProps> = ({
 				<div className="flex flex-wrap gap-2">
 					<Badge variant="secondary">{document.chunks?.length || 0} chunks</Badge>
 					<Badge variant="secondary">{document.source}</Badge>
-					{ragEnabled && (
-						<Badge
-							variant={document.includeInRAG ? "default" : "secondary"}
-							className="flex items-center gap-1"
-						>
-							<Database className="h-3 w-3" />
-							{document.includeInRAG ? 'In RAG' : 'Not in RAG'}
-						</Badge>
-					)}
+					<Badge
+						variant={ragEnabled && document.includeInRAG ? "default" : "secondary"}
+						className={`flex items-center gap-1 ${!ragEnabled ? "opacity-50" : ""}`}
+					>
+						<Database className="h-3 w-3" />
+						{!ragEnabled ? 'RAG Disabled' : document.includeInRAG ? 'In RAG' : 'Not in RAG'}
+					</Badge>
 				</div>
 			</CardContent>
 			<CardFooter className="text-sm text-gray-500 mt-auto">

@@ -9,6 +9,8 @@ import {
 	DialogDescription,
 } from '@/components/shared/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { KnowledgeDocument } from '@/utils/types/KnowledgeBase.types';
 import { KnowledgeDocumentApiService } from '@/services/database/knowledgeDocumentApiService';
 import {
@@ -31,6 +33,7 @@ interface DocumentsModalProps {
 	documents: KnowledgeDocument[];
 	ragEnabled: boolean;
 	onToggleRAG: (documentId: string, include: boolean) => Promise<void>;
+	onUpdateChatRAG: (enabled: boolean) => Promise<void>;
 }
 
 const DocumentsModal = ({
@@ -39,7 +42,8 @@ const DocumentsModal = ({
 	chatId,
 	documents = [],
 	ragEnabled,
-	onToggleRAG
+	onToggleRAG,
+	onUpdateChatRAG
 }: DocumentsModalProps) => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -72,10 +76,28 @@ const DocumentsModal = ({
 				<DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
 					<DialogHeader>
 						<DialogTitle>Chat Documents</DialogTitle>
-						<DialogDescription>
-							Manage documents associated with this chat
-							{ragEnabled && " - RAG is enabled for this chat"}
-						</DialogDescription>
+						<div className="flex items-center justify-between mt-2">
+							<DialogDescription>
+								Manage documents associated with this chat
+							</DialogDescription>
+							<div className="flex items-center space-x-2">
+								<Label htmlFor="rag-mode" className="text-sm text-gray-500">
+									Enable RAG
+								</Label>
+								<Switch
+									id="rag-mode"
+									checked={ragEnabled}
+									onCheckedChange={async (checked) => {
+										try {
+											await onUpdateChatRAG(checked);
+										} catch (err) {
+											console.error('Error updating RAG settings:', err);
+											setError('Failed to update RAG settings');
+										}
+									}}
+								/>
+							</div>
+						</div>
 					</DialogHeader>
 
 					{error && (

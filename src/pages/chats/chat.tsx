@@ -294,6 +294,82 @@ const ChatPage: React.FC = () => {
 			setIsSaving(false);
 		}
 	};
+	const handleUpdateChatRAG = async (enabled: boolean) => {
+		try {
+			// Update the chat settings with the new RAG state
+			const updatedSettings = {
+				...settings,
+				ragSettings: {
+					...settings.ragSettings,
+					enabled
+				}
+			};
+
+			// Update the settings state
+			setSettings(updatedSettings);
+
+			// If you need to persist this to the database
+			if (chatIder) {
+				await chatService.updateChat(chatIder, {
+					settings: updatedSettings
+				});
+			}
+		} catch (error) {
+			console.error('Error updating RAG settings:', error);
+			throw error;
+		}
+	};
+	const handleToggleRAG = async (documentId: string, include: boolean) => {
+		// Find the document in our current state
+		const documentIndex = documents.findIndex(doc => doc._id === documentId);
+		if (documentIndex === -1) {
+			console.error('Document not found:', documentId);
+			return;
+		}
+
+		// Create a copy of the current documents array
+		const updatedDocuments = [...documents];
+
+		try {
+			// Optimistically update the UI
+			updatedDocuments[documentIndex] = {
+				...updatedDocuments[documentIndex],
+				includeInRAG: include
+			};
+			setActiveDocuments(updatedDocuments);
+
+			// Update the document in the database
+			await documentService.updateDocument(documentId, {
+				includeInRAG: include
+			});
+
+			if (include) {
+				// Add document to RAG system
+				await rag.addDocument(updatedDocuments[documentIndex], settings.ragSettings);
+			} else {
+				// Remove document from RAG system
+				await rag.removeDocument(documentId);
+			}
+
+			// Optionally, refresh the documents list to ensure we have the latest state
+			const refreshedDocs = await documentService.getChatDocuments(chatIder);
+			setActiveDocuments(refreshedDocs);
+
+		} catch (error) {
+			console.error('Error toggling RAG status:', error);
+
+			// Revert the optimistic update on error
+			const originalDocuments = [...documents];
+			setActiveDocuments(originalDocuments);
+
+			// Show error to user
+			setError('Failed to update document RAG status');
+
+			// Rethrow the error to be handled by the calling component if needed
+			throw error;
+		}
+	};
+
 
 	// Auto-save on request changes
 	useEffect(() => {
@@ -367,21 +443,8 @@ const ChatPage: React.FC = () => {
 				chatId={chatIder}
 				documents={activeDocuments}
 				ragEnabled={settings.ragSettings?.enabled ?? false}
-				onToggleRAG={async (documentId: string, include: boolean) => {
-					try {
-						await rag.toggleDocument(documentId, include);
-						setActiveDocuments(prev =>
-							prev.map(doc =>
-								doc._id === documentId
-									? { ...doc, includeInRAG: include }
-									: doc
-							)
-						);
-					} catch (error) {
-						console.error('Error toggling RAG:', error);
-						setError('Failed to toggle document RAG status');
-					}
-				}}
+				onToggleRAG={handleToggleRAG}
+				onUpdateChatRAG={handleUpdateChatRAG}
 			/>
 
 			<ChatBanner
@@ -395,6 +458,7 @@ const ChatPage: React.FC = () => {
 				hasSystemContext={!!systemContext}
 				chatId={chatIder}
 				documentCount={activeDocuments.length}
+
 			/>
 
 			<main className="flex-1 flex overflow-hidden">
@@ -405,3 +469,22 @@ const ChatPage: React.FC = () => {
 };
 
 export default ChatPage;
+
+
+
+// ragEnabled={settings.ragSettings?.enabled ?? false}
+// 				onToggleRAG={async (documentId: string, include: boolean) => {
+// 					try {
+// 						await rag.toggleDocument(documentId, include);
+// 						setActiveDocuments(prev =>
+// 							prev.map(doc =>
+// 								doc._id === documentId
+// 									? { ...doc, includeInRAG: include }
+// 									: doc
+// 							)
+// 						);
+// 					} catch (error) {
+// 						console.error('Error toggling RAG:', error);
+// 						setError('Failed to toggle document RAG status');
+// 					}
+// 				}}
