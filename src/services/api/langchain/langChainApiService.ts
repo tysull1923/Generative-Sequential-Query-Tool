@@ -255,6 +255,7 @@ export const useLangChainService = (
 						if (useRAG && containerId) {
 							// Query RAG system for relevant context
 							const ragResults = await ragService.query(containerId, request.content, {
+								enabled: true,
 								chunkSize: 512,
 								chunkOverlap: 50,
 								embedding: {
@@ -266,11 +267,12 @@ export const useLangChainService = (
 									maxResults: 5
 								}
 							});
-
+							console.log("RAG Results: ", ragResults.results);
 							// Format context from RAG results
 							const contextText = ragResults.results
 								.map(result => result.content)
 								.join('\n\n');
+							console.log("Context Text: ", contextText);
 
 							// Create RAG-aware prompt
 							const promptTemplate = PromptTemplate.fromTemplate(RAG_PROMPT_TEMPLATE);

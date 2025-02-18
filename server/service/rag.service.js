@@ -377,21 +377,42 @@ export class RAGService {
 
 			// Check if collection exists in Chroma
 			const collections = await this.chromaClient.listCollections();
-			const existingCollection = collections.find(c =>
-				c.name.startsWith(`${containerId}-`));
+			console.log("Available collections:", collections);
+			try {
+				const existingCollection = collections.find(c =>
+					c.name.startsWith(`${containerId}-`));
 
-			if (existingCollection) {
-				// Reconnect to existing collection
-				const collection = await Chroma.fromExistingCollection(
-					this.embeddings,
-					{
-						collectionName: existingCollection.name,
-						url: process.env.CHROMA_URL || "http://localhost:8000",
-					}
-				);
-				this.collections.set(containerId, collection);
-				return collection;
+				if (existingCollection) {
+					// Reconnect to existing collection
+					const collection = await Chroma.fromExistingCollection(
+						this.embeddings,
+						{
+							collectionName: existingCollection.name,
+							url: process.env.CHROMA_URL || "http://localhost:8000",
+						}
+					);
+					this.collections.set(containerId, collection);
+					return collection;
+				}
+			} catch (error) {
+				console.error('Error checking existing collections:', error);
 			}
+
+			// const existingCollection = collections.find(c =>
+			// 	c.name.startsWith(`${containerId}-`));
+
+			// if (existingCollection) {
+			// 	// Reconnect to existing collection
+			// 	const collection = await Chroma.fromExistingCollection(
+			// 		this.embeddings,
+			// 		{
+			// 			collectionName: existingCollection.name,
+			// 			url: process.env.CHROMA_URL || "http://localhost:8000",
+			// 		}
+			// 	);
+			// 	this.collections.set(containerId, collection);
+			// 	return collection;
+			// }
 
 			// Create a new collection
 			const collectionName = `${containerId}-${uuidv4()}`;
