@@ -39,8 +39,8 @@ const DEFAULT_SETTINGS: ChatSettings = {
 		chunkSize: 512,
 		chunkOverlap: 50,
 		embedding: {
-			model: 'text-embedding-ada-002',
-			dimensions: 1536
+			model: 'nomic-embed-text',
+			dimensions: 768
 		},
 		similarity: {
 			threshold: 0.7,

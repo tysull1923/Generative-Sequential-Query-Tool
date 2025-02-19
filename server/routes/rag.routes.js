@@ -23,7 +23,7 @@ router.post('/:containerId/query', async (req, res) => {
 		}
 
 		const results = await ragService.query(containerId, query, settings);
-
+		console.log('RAG query results:', results);
 		res.json({
 			success: true,
 			data: results
@@ -42,7 +42,7 @@ router.post('/:containerId/documents', async (req, res) => {
 	try {
 		const { document, settings } = req.body;
 		const containerId = req.params.containerId;
-
+		console.log('Adding document to RAG in server:', document);
 		if (!document || !document.content) {
 			return res.status(400).json({
 				success: false,

@@ -211,6 +211,7 @@ export class RAGApiService {
 					settings
 				}
 			);
+			console.log(`RAG system response: ${JSON.stringify(response.data)}`);
 
 			if (!response.data.success || !response.data.data) {
 				throw new Error(response.data.error || 'Failed to query RAG system');

@@ -259,7 +259,7 @@ export const useLangChainService = (
 								chunkSize: 512,
 								chunkOverlap: 50,
 								embedding: {
-									model: 'llama3.1',
+									model: 'nomic-embed-text',
 									dimensions: 4096
 								},
 								similarity: {
