@@ -53,20 +53,20 @@ export class RAGService {
 			// Don't throw the error, but log it for debugging
 		}
 	}
-	async initializeConnections() {
-		try {
-			// Test Chroma connection
-			const heartbeat = await this.chromaClient.heartbeat();
-			console.log("Chroma connection established:", heartbeat);
+	// async initializeConnections() {
+	// 	try {
+	// 		// Test Chroma connection
+	// 		const heartbeat = await this.chromaClient.heartbeat();
+	// 		console.log("Chroma connection established:", heartbeat);
 
-			// Test Ollama connection
-			await this.embeddings.embedQuery("test");
-			console.log("Ollama embedding connection established");
-		} catch (error) {
-			console.error("Error initializing connections:", error);
-			throw error;
-		}
-	}
+	// 		// Test Ollama connection
+	// 		await this.embeddings.embedQuery("test");
+	// 		console.log("Ollama embedding connection established");
+	// 	} catch (error) {
+	// 		console.error("Error initializing connections:", error);
+	// 		throw error;
+	// 	}
+	// }
 
 	static getInstance() {
 		if (!RAGService.instance) {
@@ -256,8 +256,8 @@ export class RAGService {
 						dimensions: testEmbedding.length
 					},
 					similarity: {
-						threshold: 0.7,
-						maxResults: 5
+						threshold: 0.1,
+						maxResults: 50
 					}
 				}
 			});
@@ -305,6 +305,7 @@ export class RAGService {
 			// Add metadata to chunks
 			const documentsWithMetadata = chunks.map((chunk, index) => {
 				const doc = new Document({
+					id: chunkIds[index],
 					pageContent: chunk.pageContent,
 					metadata: {
 						...chunk.metadata,
@@ -417,8 +418,13 @@ export class RAGService {
 	// }
 	async query(containerId, query, settings) {
 		try {
+
 			const collection = await this.getOrCreateCollection(containerId, settings);
 			console.log("Collection retrieved for querying:", collection);
+
+			console.log("Collection retrieved embeddings:", collection.embeddings);
+			const allDocs = await collection.similaritySearch("", 1000);
+			console.log("Documents in collection:", allDocs);
 
 			// Log the embeddings configuration
 			console.log("Using embeddings:", {
@@ -428,6 +434,9 @@ export class RAGService {
 
 			// Generate embeddings for the query to verify embedding process
 			const queryEmbedding = await this.embeddings.embedQuery(query);
+			if (!queryEmbedding || queryEmbedding.length === 0) {
+				throw new Error("Query embedding failed: No embeddings generated.");
+			}
 			console.log("Query embedding generated, dimensions:", queryEmbedding.length);
 
 			// Perform similarity search with detailed logging
@@ -458,7 +467,7 @@ export class RAGService {
 				query,
 				results: formattedResults,
 				embeddingModel: "nomic-embed-text",
-				dimensions: 4096
+				dimensions: 768
 			};
 		} catch (error) {
 			console.error('Error querying RAG system:', error);

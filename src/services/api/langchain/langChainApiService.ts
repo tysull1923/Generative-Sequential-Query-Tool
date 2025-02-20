@@ -260,11 +260,11 @@ export const useLangChainService = (
 								chunkOverlap: 50,
 								embedding: {
 									model: 'nomic-embed-text',
-									dimensions: 4096
+									dimensions: 768
 								},
 								similarity: {
-									threshold: 0.7,
-									maxResults: 5
+									threshold: 0.1,
+									maxResults: 50
 								}
 							});
 							console.log("RAG Results: ", ragResults.results);
