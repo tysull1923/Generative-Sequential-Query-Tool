@@ -21,7 +21,7 @@ router.post('/', async (req, res) => {
 						dimensions: 1536
 					},
 					similarity: {
-						threshold: 0.7,
+						threshold: 500,
 						maxResults: 5
 					}
 				}

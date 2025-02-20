@@ -110,7 +110,7 @@ import chatRoutes from './routes/chat.routes.js';
 import projectRoutes from './routes/project.routes.js';
 import knowledgeDocumentRoutes from './routes/knowledgeDocument.routes.js';
 import ragRoutes from './routes/rag.routes.js';
-import { RAGService } from './service/rag.service.js';
+import RAGService from './service/rag.service.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;

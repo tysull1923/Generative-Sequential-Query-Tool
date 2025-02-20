@@ -1,7 +1,7 @@
 // server/routes/rag.routes.js
 // server/routes/rag.routes.js
 import express from 'express';
-import { RAGService } from '../service/rag.service.js';
+import RAGService from '../service/rag.service.js';
 import { KnowledgeDocument } from '../models/knowledgeDocument.model.js';
 import { Project } from '../models/project.model.js';
 import { Chat } from '../models/chat.model.js';
@@ -23,7 +23,7 @@ router.post('/:containerId/query', async (req, res) => {
 		}
 
 		const results = await ragService.query(containerId, query, settings);
-		console.log('RAG query results:', results);
+		console.log('RAG query results in Routes:', results);
 		res.json({
 			success: true,
 			data: results

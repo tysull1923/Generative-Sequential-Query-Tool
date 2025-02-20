@@ -29,7 +29,7 @@ const projectSchema = new mongoose.Schema({
 				dimensions: { type: Number, default: 1536 }
 			},
 			similarity: {
-				threshold: { type: Number, default: 0.7 },
+				threshold: { type: Number, default: .7 },
 				maxResults: { type: Number, default: 5 }
 			}
 		}

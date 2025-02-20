@@ -43,7 +43,7 @@ const DEFAULT_SETTINGS: ChatSettings = {
 			dimensions: 768
 		},
 		similarity: {
-			threshold: 0.1,
+			threshold: 500,
 			maxResults: 50
 		}
 	}
