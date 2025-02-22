@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import RequirementsPromptArea from '@/components/Chat/RequirementsChat/RequirementsPromptArea';
 import RequirementsSidePanel from '@/components/Chat/RequirementsChat/RequirementsSidePanel';
 import RequirementsResponseCard from '@/components/Chat/RequirementsChat/RequirementsResponseCard';
+import { KnowledgeDocument } from '@/utils/types/KnowledgeBase.types';
 
 interface PromptItem {
 	id: string;
@@ -32,6 +33,7 @@ interface RequirementsChatProps {
 	setRequests: React.Dispatch<React.SetStateAction<ChatRequest[]>>;
 	systemContext: string;
 	setSystemContext: React.Dispatch<React.SetStateAction<string>>;
+	onAddDocument?: (doc: KnowledgeDocument) => Promise<void>;
 	onProcessRequests: (requestId: string) => Promise<void>;
 	isProcessing: boolean;
 	onSave: (chat: ChatDocument) => void;
@@ -42,6 +44,7 @@ const RequirementsChat: React.FC<RequirementsChatProps> = ({
 	setRequests,
 	systemContext,
 	setSystemContext,
+	onAddDocument,
 	onProcessRequests,
 	isProcessing,
 	onSave,
@@ -222,7 +225,7 @@ const RequirementsChat: React.FC<RequirementsChatProps> = ({
 								onDelete={deleteRequest}
 								onContentChange={updateRequestContent}
 								onSend={() => onProcessRequests(requests[requests.length - 1].id)}
-								onAttach={handleAttachment}
+								onAddDocument={onAddDocument}
 								onRemoveAttachment={handleRemoveAttachment}
 							/>
 						)}

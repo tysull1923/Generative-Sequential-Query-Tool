@@ -54,11 +54,39 @@ class RAGService {
 		return this.embeddings.get(modelName);
 	}
 
+	// async processDocument(document, settings = {}) {
+	// 	try {
+	// 		// Configure text splitter based on settings
+	// 		this.textSplitter.chunkSize = settings?.chunkSize || 512;
+	// 		this.textSplitter.chunkOverlap = settings?.chunkOverlap || 50;
+
+	// 		// Split the document into chunks
+	// 		const docs = await this.textSplitter.createDocuments(
+	// 			[document.content],
+	// 			[{
+	// 				documentId: document._id,
+	// 				source: document.source,
+	// 				metadata: document.metadata
+	// 			}]
+	// 		);
+
+	// 		return docs;
+	// 	} catch (error) {
+	// 		console.error('Error processing document:', error);
+	// 		throw new Error('Failed to process document');
+	// 	}
+	// }
+
 	async processDocument(document, settings = {}) {
 		try {
 			// Configure text splitter based on settings
 			this.textSplitter.chunkSize = settings?.chunkSize || 512;
 			this.textSplitter.chunkOverlap = settings?.chunkOverlap || 50;
+
+			console.log('Processing document with settings:', {
+				chunkSize: this.textSplitter.chunkSize,
+				chunkOverlap: this.textSplitter.chunkOverlap
+			});
 
 			// Split the document into chunks
 			const docs = await this.textSplitter.createDocuments(
@@ -70,7 +98,24 @@ class RAGService {
 				}]
 			);
 
-			return docs;
+			// Create formatted chunks with embeddings
+			const embedder = await this.getEmbeddingModel(settings);
+			const formattedChunks = await Promise.all(docs.map(async (doc, index) => {
+				const embedding = await embedder.embedDocuments([doc.pageContent]);
+				return {
+					id: `${document._id}_${index}`,
+					content: doc.pageContent,
+					embedding: embedding[0],
+					metadata: {
+						...doc.metadata,
+						start: index * this.textSplitter.chunkSize,
+						end: (index + 1) * this.textSplitter.chunkSize,
+						source: document.source
+					}
+				};
+			}));
+
+			return formattedChunks;
 		} catch (error) {
 			console.error('Error processing document:', error);
 			throw new Error('Failed to process document');

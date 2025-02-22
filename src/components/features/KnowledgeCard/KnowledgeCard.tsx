@@ -112,7 +112,7 @@ const KnowledgeCard: React.FC<ExtendedDocumentCardProps> = ({
 				</div>
 			</CardHeader>
 			<CardContent>
-				<div className="flex flex-wrap gap-2">
+				{/* <div className="flex flex-wrap gap-2">
 					<Badge variant="secondary">{document.chunks?.length || 0} chunks</Badge>
 					<Badge variant="secondary">{document.source}</Badge>
 					<Badge
@@ -122,7 +122,28 @@ const KnowledgeCard: React.FC<ExtendedDocumentCardProps> = ({
 						<Database className="h-3 w-3" />
 						{!ragEnabled ? 'RAG Disabled' : document.includeInRAG ? 'In RAG' : 'Not in RAG'}
 					</Badge>
+				</div> */}
+				<div className="flex flex-wrap gap-2">
+					{/* Chunks badge - more detailed info */}
+					<Badge variant="secondary" className="flex items-center gap-1">
+						<FileText className="h-3 w-3" />
+						{document.chunks?.length || 0} chunks
+					</Badge>
+
+					{/* Source badge */}
+					<Badge variant="secondary">{document.source}</Badge>
+
+					{/* Enhanced RAG status badge */}
+					<Badge
+						variant={ragEnabled && document.includeInRAG ? "default" : "secondary"}
+						className={`flex items-center gap-1 ${!ragEnabled ? "opacity-50" : ""}`}
+					>
+						<Database className="h-3 w-3" />
+						{!ragEnabled ? 'RAG Disabled' :
+							document.includeInRAG ? `In RAG (${document.chunks?.length || 0} chunks)` : 'Not in RAG'}
+					</Badge>
 				</div>
+
 			</CardContent>
 			<CardFooter className="text-sm text-gray-500 mt-auto">
 				Last updated {format(new Date(document.lastUpdated), "MMM d, yyyy")}

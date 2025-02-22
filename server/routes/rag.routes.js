@@ -38,11 +38,48 @@ router.post('/:containerId/query', async (req, res) => {
 });
 
 // Add document to RAG
+// router.post('/:containerId/documents', async (req, res) => {
+// 	try {
+// 		const { document, settings } = req.body;
+// 		const containerId = req.params.containerId;
+// 		console.log('Adding document to RAG in server:', document);
+// 		if (!document || !document.content) {
+// 			return res.status(400).json({
+// 				success: false,
+// 				error: 'Document with content is required'
+// 			});
+// 		}
+
+// 		// Add to RAG system
+// 		await ragService.addDocument(containerId, document, settings);
+
+// 		// Update MongoDB document with RAG status
+// 		if (document._id) {
+// 			const mongoDoc = await KnowledgeDocument.findById(document._id);
+// 			if (mongoDoc) {
+// 				mongoDoc.includeInRAG = true;
+// 				await mongoDoc.save();
+// 			}
+// 		}
+
+// 		res.json({
+// 			success: true,
+// 			data: { message: 'Document added to RAG system' }
+// 		});
+// 	} catch (error) {
+// 		console.error('Error adding document to RAG:', error);
+// 		res.status(500).json({
+// 			success: false,
+// 			error: error.message || 'Error adding document to RAG'
+// 		});
+// 	}
+// });
+// Add document to RAG
 router.post('/:containerId/documents', async (req, res) => {
 	try {
 		const { document, settings } = req.body;
 		const containerId = req.params.containerId;
-		console.log('Adding document to RAG in server:', document);
+
 		if (!document || !document.content) {
 			return res.status(400).json({
 				success: false,
@@ -50,21 +87,40 @@ router.post('/:containerId/documents', async (req, res) => {
 			});
 		}
 
+		// Process document to get chunks before adding to RAG
+		const processedDocs = await ragService.processDocument(document, settings);
+
 		// Add to RAG system
 		await ragService.addDocument(containerId, document, settings);
 
-		// Update MongoDB document with RAG status
+		// Format chunks for MongoDB storage
+		const chunks = processedDocs.map((doc, index) => ({
+			id: `${document._id}_${index}`,
+			content: doc.pageContent,
+			metadata: {
+				...doc.metadata,
+				start: index * (settings?.chunkSize || 512),
+				end: (index + 1) * (settings?.chunkSize || 512),
+				source: document.source
+			}
+		}));
+
+		// Update MongoDB document with chunks and RAG status
 		if (document._id) {
 			const mongoDoc = await KnowledgeDocument.findById(document._id);
 			if (mongoDoc) {
 				mongoDoc.includeInRAG = true;
+				mongoDoc.chunks = chunks;
 				await mongoDoc.save();
 			}
 		}
 
 		res.json({
 			success: true,
-			data: { message: 'Document added to RAG system' }
+			data: {
+				message: 'Document added to RAG system',
+				chunks: chunks.length
+			}
 		});
 	} catch (error) {
 		console.error('Error adding document to RAG:', error);
@@ -74,6 +130,8 @@ router.post('/:containerId/documents', async (req, res) => {
 		});
 	}
 });
+
+
 
 // Remove document from RAG
 router.delete('/:containerId/documents/:documentId', async (req, res) => {
@@ -104,12 +162,52 @@ router.delete('/:containerId/documents/:documentId', async (req, res) => {
 });
 
 // Toggle document inclusion
+// router.patch('/:containerId/documents/:documentId/toggle', async (req, res) => {
+// 	try {
+// 		const { containerId, documentId } = req.params;
+// 		const { include } = req.body;
+
+// 		// Get document and settings
+// 		const document = await KnowledgeDocument.findById(documentId);
+// 		if (!document) {
+// 			return res.status(404).json({
+// 				success: false,
+// 				error: 'Document not found'
+// 			});
+// 		}
+
+// 		let settings;
+// 		if (document.projectId) {
+// 			const project = await Project.findById(document.projectId);
+// 			settings = project?.knowledgeBase?.settings;
+// 		}
+
+// 		// Toggle in RAG
+// 		await ragService.toggleDocumentInclusion(containerId, documentId, include, document, settings);
+
+// 		// Update MongoDB
+// 		document.includeInRAG = include;
+// 		await document.save();
+
+// 		res.json({
+// 			success: true,
+// 			data: { message: `Document ${include ? 'added to' : 'removed from'} RAG system` }
+// 		});
+// 	} catch (error) {
+// 		console.error('Error toggling document inclusion:', error);
+// 		res.status(500).json({
+// 			success: false,
+// 			error: error.message || 'Error toggling document inclusion'
+// 		});
+// 	}
+// });
+
+// Toggle document inclusion
 router.patch('/:containerId/documents/:documentId/toggle', async (req, res) => {
 	try {
 		const { containerId, documentId } = req.params;
 		const { include } = req.body;
 
-		// Get document and settings
 		const document = await KnowledgeDocument.findById(documentId);
 		if (!document) {
 			return res.status(404).json({
@@ -124,8 +222,30 @@ router.patch('/:containerId/documents/:documentId/toggle', async (req, res) => {
 			settings = project?.knowledgeBase?.settings;
 		}
 
-		// Toggle in RAG
-		await ragService.toggleDocumentInclusion(containerId, documentId, include, document, settings);
+		if (include) {
+			// Process document to get chunks
+			const processedDocs = await ragService.processDocument(document, settings);
+
+			// Format chunks for storage
+			const chunks = processedDocs.map((doc, index) => ({
+				id: `${document._id}_${index}`,
+				content: doc.pageContent,
+				metadata: {
+					...doc.metadata,
+					start: index * (settings?.chunkSize || 512),
+					end: (index + 1) * (settings?.chunkSize || 512),
+					source: document.source
+				}
+			}));
+
+			// Add to RAG and update document
+			await ragService.toggleDocumentInclusion(containerId, documentId, include, document, settings);
+			document.chunks = chunks;
+		} else {
+			// Remove from RAG and clear chunks
+			await ragService.toggleDocumentInclusion(containerId, documentId, include);
+			document.chunks = [];
+		}
 
 		// Update MongoDB
 		document.includeInRAG = include;
@@ -133,7 +253,10 @@ router.patch('/:containerId/documents/:documentId/toggle', async (req, res) => {
 
 		res.json({
 			success: true,
-			data: { message: `Document ${include ? 'added to' : 'removed from'} RAG system` }
+			data: {
+				message: `Document ${include ? 'added to' : 'removed from'} RAG system`,
+				chunks: document.chunks.length
+			}
 		});
 	} catch (error) {
 		console.error('Error toggling document inclusion:', error);

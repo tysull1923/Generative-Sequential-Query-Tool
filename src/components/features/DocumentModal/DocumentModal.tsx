@@ -123,7 +123,7 @@ const DocumentsModal = ({
 									</div>
 								) : (
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-										{documents.map((doc) => (
+										{/* {documents.map((doc) => (
 											<KnowledgeCard
 												key={doc._id}
 												document={doc}
@@ -131,6 +131,17 @@ const DocumentsModal = ({
 												onReindex={() => handleReindex(doc._id)}
 												ragEnabled={ragEnabled}
 												onToggleRAG={onToggleRAG}
+											/>
+										))} */}
+										{documents.map((doc) => (
+											<KnowledgeCard
+												key={doc._id}
+												document={doc}
+												onDelete={() => setDocumentToDelete(doc._id)}
+												onReindex={() => handleReindex(doc._id)}
+												ragEnabled={ragEnabled}
+												onToggleRAG={async (include) => await onToggleRAG(doc._id, include)}
+												className="w-full"
 											/>
 										))}
 									</div>

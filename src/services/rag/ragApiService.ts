@@ -226,6 +226,27 @@ export class RAGApiService {
 	/**
 	 * Add a document to the RAG system
 	 */
+	// async addDocument(
+	// 	containerId: string,
+	// 	document: KnowledgeDocument,
+	// 	settings: RAGSettings
+	// ): Promise<void> {
+	// 	try {
+	// 		const response = await axios.post<ApiResponse<void>>(
+	// 			`${API_BASE_URL}/${containerId}/documents`,
+	// 			{
+	// 				document,
+	// 				settings
+	// 			}
+	// 		);
+
+	// 		if (!response.data.success) {
+	// 			throw new Error(response.data.error || 'Failed to add document to RAG system');
+	// 		}
+	// 	} catch (error) {
+	// 		throw this.handleError(error);
+	// 	}
+	// }
 	async addDocument(
 		containerId: string,
 		document: KnowledgeDocument,
@@ -243,10 +264,17 @@ export class RAGApiService {
 			if (!response.data.success) {
 				throw new Error(response.data.error || 'Failed to add document to RAG system');
 			}
+
+			// Update local document with chunks and RAG status if response includes it
+			if (response.data.data?.chunks) {
+				document.chunks = response.data.data.chunks;
+				document.includeInRAG = true;
+			}
 		} catch (error) {
 			throw this.handleError(error);
 		}
 	}
+
 
 	/**
 	 * Remove a document from the RAG system
@@ -271,6 +299,24 @@ export class RAGApiService {
 	/**
 	 * Toggle document inclusion in RAG
 	 */
+	// async toggleDocumentInclusion(
+	// 	containerId: string,
+	// 	documentId: string,
+	// 	include: boolean
+	// ): Promise<void> {
+	// 	try {
+	// 		const response = await axios.patch<ApiResponse<void>>(
+	// 			`${API_BASE_URL}/${containerId}/documents/${documentId}/toggle`,
+	// 			{ include }
+	// 		);
+
+	// 		if (!response.data.success) {
+	// 			throw new Error(response.data.error || 'Failed to toggle document inclusion');
+	// 		}
+	// 	} catch (error) {
+	// 		throw this.handleError(error);
+	// 	}
+	// }
 	async toggleDocumentInclusion(
 		containerId: string,
 		documentId: string,
