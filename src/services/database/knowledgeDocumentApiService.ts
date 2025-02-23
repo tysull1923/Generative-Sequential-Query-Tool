@@ -52,21 +52,6 @@ export class KnowledgeDocumentApiService {
 	// 
 
 	// Get a specific document with its full content
-	// async getDocument(documentId: string): Promise<KnowledgeDocument> {
-	// 	try {
-	// 		const response = await axios.get<ApiResponse<KnowledgeDocument>>(
-	// 			`${API_BASE_URL}/${documentId}`
-	// 		);
-
-	// 		if (!response.data.success || !response.data.data) {
-	// 			throw new Error(response.data.error || 'Failed to fetch document');
-	// 		}
-
-	// 		return response.data.data;
-	// 	} catch (error) {
-	// 		throw this.handleError(error);
-	// 	}
-	// }
 	async getDocument(documentId: string): Promise<KnowledgeDocument> {
 		try {
 			const response = await axios.get<ApiResponse<KnowledgeDocument>>(
@@ -77,13 +62,7 @@ export class KnowledgeDocumentApiService {
 				throw new Error(response.data.error || 'Failed to fetch document');
 			}
 
-			// Ensure chunks and RAG status are included
-			const doc = response.data.data;
-			return {
-				...doc,
-				chunks: doc.chunks || [],
-				includeInRAG: doc.includeInRAG || false
-			};
+			return response.data.data;
 		} catch (error) {
 			throw this.handleError(error);
 		}
@@ -224,32 +203,10 @@ export class KnowledgeDocumentApiService {
 		}
 	}
 
-	// async getChatDocuments(chatId: string, projectId?: string): Promise<KnowledgeDocument[]> {
-	// 	try {
-	// 		console.log("Trying to get chat documents");
-	// 		// Build query string with optional projectId
-	// 		const queryParams = new URLSearchParams();
-	// 		if (projectId) {
-	// 			queryParams.append('projectId', projectId);
-	// 		}
-
-	// 		const response = await axios.get<ApiResponse<KnowledgeDocument[]>>(
-	// 			`${API_BASE_URL}/chat/${chatId}?${queryParams.toString()}`
-	// 		);
-
-	// 		if (!response.data.success || !response.data.data) {
-	// 			throw new Error(response.data.error || 'Failed to fetch chat documents');
-	// 		}
-
-	// 		return response.data.data;
-	// 	} catch (error) {
-	// 		throw this.handleError(error);
-	// 	}
-	// }
-
 	async getChatDocuments(chatId: string, projectId?: string): Promise<KnowledgeDocument[]> {
 		try {
 			console.log("Trying to get chat documents");
+			// Build query string with optional projectId
 			const queryParams = new URLSearchParams();
 			if (projectId) {
 				queryParams.append('projectId', projectId);
@@ -263,16 +220,13 @@ export class KnowledgeDocumentApiService {
 				throw new Error(response.data.error || 'Failed to fetch chat documents');
 			}
 
-			// Ensure chunks and RAG status are included for each document
-			return response.data.data.map(doc => ({
-				...doc,
-				chunks: doc.chunks || [],
-				includeInRAG: doc.includeInRAG || false
-			}));
+			return response.data.data;
 		} catch (error) {
 			throw this.handleError(error);
 		}
 	}
+
+
 
 	// Create a document associated with a chat
 	async createChatDocument(

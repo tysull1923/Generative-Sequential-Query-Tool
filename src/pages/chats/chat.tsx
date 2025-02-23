@@ -196,63 +196,8 @@ const ChatPage: React.FC = () => {
 	// 	}
 	// };
 
-	// In chat.tsx, modify the handleAddDocument function:
+	//In chat.tsx, modify the handleAddDocument function:
 
-	// const handleAddDocument = async (document: KnowledgeDocument) => {
-	// 	try {
-	// 		setError(null);
-
-	// 		// Enable RAG settings if not already enabled
-	// 		if (!settings.ragSettings?.enabled) {
-	// 			const updatedSettings = {
-	// 				...settings,
-	// 				ragSettings: {
-	// 					...settings.ragSettings,
-	// 					enabled: true,
-	// 					chunkSize: 512,  // default chunk size
-	// 					chunkOverlap: 50,  // default overlap
-	// 					embedding: {
-	// 						model: 'nomic-embed-text',
-	// 						dimensions: 768
-	// 					},
-	// 					similarity: {
-	// 						threshold: 500,
-	// 						maxResults: 50
-	// 					}
-	// 				}
-	// 			};
-	// 			setSettings(updatedSettings);
-
-	// 			// If we have a chatId, update the settings in the database
-	// 			if (chatIder) {
-	// 				await chatService.updateChat(chatIder, {
-	// 					settings: updatedSettings
-	// 				});
-	// 			}
-	// 		}
-
-	// 		// Create document in MongoDB
-	// 		console.log('Creating document:', document);
-	// 		const createdDoc = await documentService.createChatDocument(chatIder, {
-	// 			title: document.title,
-	// 			content: document.content,
-	// 			projectId: location.state?.projectContext?.projectId,
-	// 			source: document.source,
-	// 			metadata: document.metadata
-	// 		});
-
-	// 		// Add to RAG
-	// 		console.log('Adding document to RAG:', createdDoc);
-	// 		await rag.addDocument(createdDoc, settings.ragSettings);
-
-	// 		setActiveDocuments(prev => [...prev, createdDoc]);
-	// 		return createdDoc;
-	// 	} catch (err) {
-	// 		console.error('Error adding document:', err);
-	// 		setError('Failed to add document');
-	// 		throw err;
-	// 	}
-	// };
 	const handleAddDocument = async (document: KnowledgeDocument) => {
 		try {
 			setError(null);
@@ -264,8 +209,8 @@ const ChatPage: React.FC = () => {
 					ragSettings: {
 						...settings.ragSettings,
 						enabled: true,
-						chunkSize: 512,
-						chunkOverlap: 50,
+						chunkSize: 512,  // default chunk size
+						chunkOverlap: 50,  // default overlap
 						embedding: {
 							model: 'nomic-embed-text',
 							dimensions: 768
@@ -278,6 +223,7 @@ const ChatPage: React.FC = () => {
 				};
 				setSettings(updatedSettings);
 
+				// If we have a chatId, update the settings in the database
 				if (chatIder) {
 					await chatService.updateChat(chatIder, {
 						settings: updatedSettings
@@ -285,6 +231,7 @@ const ChatPage: React.FC = () => {
 				}
 			}
 
+			// Create document in MongoDB
 			console.log('Creating document:', document);
 			const createdDoc = await documentService.createChatDocument(chatIder, {
 				title: document.title,
@@ -294,15 +241,12 @@ const ChatPage: React.FC = () => {
 				metadata: document.metadata
 			});
 
-			// Add to RAG and update document with chunks
+			// Add to RAG
 			console.log('Adding document to RAG:', createdDoc);
 			await rag.addDocument(createdDoc, settings.ragSettings);
 
-			// Fetch the updated document to get chunks and RAG status
-			const updatedDoc = await documentService.getDocument(createdDoc._id);
-			setActiveDocuments(prev => [...prev, updatedDoc]);
-
-			return updatedDoc;
+			setActiveDocuments(prev => [...prev, createdDoc]);
+			return createdDoc;
 		} catch (err) {
 			console.error('Error adding document:', err);
 			setError('Failed to add document');
