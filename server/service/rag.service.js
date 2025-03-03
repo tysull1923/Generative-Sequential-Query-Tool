@@ -150,11 +150,12 @@ class RAGService {
 
 			// Process document into chunks
 			const docs = await this.processDocument(document, settings);
-
+			const chunks = [];
 			// Generate embeddings and add to collection
 			for (const doc of docs) {
 				const embedding = await embedder.embedDocuments([doc.pageContent]);
-
+				//const chunkIndex = docs.indexOf(doc);
+				//const chunkId = `${document._id}_${chunkIndex}`;
 				await collection.add({
 					ids: [`${document._id}_${docs.indexOf(doc)}`],
 					embeddings: embedding,
@@ -166,7 +167,24 @@ class RAGService {
 						...doc.metadata
 					}]
 				});
+
+				// chunks.push({
+				// 	id: chunkId,
+				// 	content: doc.pageContent,
+				// 	embedding: embedding[0], // Include embedding if needed
+				// 	metadata: {
+				// 		start: doc.metadata?.start || 0,
+				// 		end: doc.metadata?.end || doc.pageContent.length,
+				// 		source: document.title || document.source
+				// 	}
+				// });
+
+
 			}
+			// return {
+			// 	...document,
+			// 	chunks: chunks
+			// };
 		} catch (error) {
 			console.error('Error adding document to RAG:', error);
 			throw new Error('Failed to add document to RAG system');
