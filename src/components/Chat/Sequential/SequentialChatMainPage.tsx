@@ -18,12 +18,15 @@ import {
   FileAttachment,
   ChatCardState
 } from '@/utils/types/chat.types';
+import { KnowledgeDocument } from '@/utils/types/KnowledgeBase.types';
 
 interface SequentialChatProps {
   requests: ChatRequest[];
   setRequests: React.Dispatch<React.SetStateAction<ChatRequest[]>>;
   systemContext: string;
   setSystemContext: React.Dispatch<React.SetStateAction<string>>;
+  onAddDocument?: (doc: KnowledgeDocument) => Promise<void>;
+  
   //onProcessRequests: (requestId: string, allRequests: ChatRequest[]) => Promise<void>;
   onProcessRequests: (requestId: string | ChatRequest[]) => Promise<void>;
   isProcessing: boolean;
@@ -40,6 +43,7 @@ const SequentialChat: React.FC<SequentialChatProps> = ({
   setRequests,
   systemContext,
   setSystemContext,
+  onAddDocument,
   onProcessRequests,
   isProcessing,
   onSave,
@@ -568,8 +572,8 @@ const SequentialChat: React.FC<SequentialChatProps> = ({
                       onMove={moveRequest}
                       onDelete={deleteRequest}
                       onContentChange={updateRequestContent}
-                      onAttach={handleAttachment}
-                      onRemoveAttachment={handleRemoveAttachment}
+					  onAddDocument={onAddDocument}
+					  onRemoveAttachment={handleRemoveAttachment}
                       onClick={() => setSelectedRequestId(request.id)}
                       response={request.response}
                       isEditable={executionStatus !== ExecutionStatus.RUNNING}

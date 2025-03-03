@@ -10,6 +10,8 @@ import {
   MessageContent
 } from "@langchain/core/messages";
 import { ApiProvider, ApiConfig } from '@/services/api/interfaces/api.types';
+import { RAGSettings } from "./project.types";
+import { KnowledgeDocument } from "./KnowledgeBase.types";
 
 /**
  * Chat Type Enums
@@ -62,6 +64,11 @@ export interface ChatResponse {
   langChainMessage?: AIMessage;
 }
 
+export interface ChatProjectInfo {
+	projectId: string;
+	projectTitle: string;
+  }
+
 /**
  * Chat Document with LangChain message history
  */
@@ -73,10 +80,15 @@ export interface ChatDocument {
   settings: ChatSettings;
   messages: ChatRequest[];
   messageHistory: BaseMessage[];
+  knowledgeBase: {
+		documents: KnowledgeDocument["_id"][]
+		settings: RAGSettings
+	}
   executionStatus: ExecutionStatus;
   steps?: ChatStep[];
   lastModified: Date;
   createdAt: Date;
+  projectInfo?: ChatProjectInfo; // Add this field
 }
 
 /**
@@ -110,12 +122,14 @@ export interface ChatSettings {
   temperature: number;
   chatType: ChatType;
   systemContext?: string;
+  ragSettings?: RAGSettings;
   modelConfig?: {
     provider: ApiProvider;
     modelName?: string;
     maxTokens?: number;
     streaming?: boolean;
   };
+  
   savingParams?: ChatSavingParams;
 }
 

@@ -5,106 +5,106 @@ import { ChatRequest, ExecutionStatus, SequentialStepType, ChatCardState } from 
 import { ExecutionState } from '@/components/Chat/Sequential/SequentialComponents/sequentialChat.types';
 
 export const useSequentialExecution = (
-  requests: ChatRequest[],
-  onProcessRequests: (requestId: string) => Promise<void>
+	requests: ChatRequest[],
+	onProcessRequests: (requestId: string) => Promise<void>
 ) => {
-  const [executionState, setExecutionState] = useState<ExecutionState>({
-    status: ExecutionStatus.IDLE,
-    currentIndex: 0,
-    isExecuting: false,
-    error: null
-  });
+	const [executionState, setExecutionState] = useState<ExecutionState>({
+		status: ExecutionStatus.IDLE,
+		currentIndex: 0,
+		isExecuting: false,
+		error: null
+	});
 
-  const executionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const executionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const processSequentialRequests = async () => {
-    if (executionState.status === ExecutionStatus.RUNNING) return;
-    
-    try {
-      setExecutionState(prev => ({
-        ...prev,
-        status: ExecutionStatus.RUNNING,
-        isExecuting: true,
-        error: null
-      }));
-      
-      const sortedRequests = [...requests].sort((a, b) => a.position - b.position);
-      
-      for (let i = executionState.currentIndex; i < sortedRequests.length; i++) {
-        if (executionState.status === ExecutionStatus.PAUSED) break;
-        
-        const request = sortedRequests[i];
-        setExecutionState(prev => ({ ...prev, currentIndex: i }));
+	const processSequentialRequests = async () => {
+		if (executionState.status === ExecutionStatus.RUNNING) return;
 
-        if (request.step === SequentialStepType.PAUSE && request.isPaused) {
-          setExecutionState(prev => ({ ...prev, status: ExecutionStatus.PAUSED }));
-          break;
-        }
+		try {
+			setExecutionState(prev => ({
+				...prev,
+				status: ExecutionStatus.RUNNING,
+				isExecuting: true,
+				error: null
+			}));
 
-        if (request.step === SequentialStepType.DELAY && request.duration) {
-          await new Promise(resolve => {
-            executionTimeoutRef.current = setTimeout(resolve, request.duration * 1000);
-          });
-        }
+			const sortedRequests = [...requests].sort((a, b) => a.position - b.position);
 
-        if (request.step === SequentialStepType.MESSAGE) {
-          try {
-            await onProcessRequests(request.id);
-            request.status = ChatCardState.COMPLETE;
-          } catch (error) {
-            request.status = ChatCardState.ERROR;
-            throw error;
-          }
-        }
-      }
+			for (let i = executionState.currentIndex; i < sortedRequests.length; i++) {
+				if (executionState.status === ExecutionStatus.PAUSED) break;
 
-      if (executionState.currentIndex === sortedRequests.length - 1) {
-        setExecutionState(prev => ({
-          ...prev,
-          status: ExecutionStatus.COMPLETED,
-          currentIndex: 0
-        }));
-      }
+				const request = sortedRequests[i];
+				setExecutionState(prev => ({ ...prev, currentIndex: i }));
 
-    } catch (error) {
-      setExecutionState(prev => ({
-        ...prev,
-        status: ExecutionStatus.ERROR,
-        error: error.message || 'Failed to process requests'
-      }));
-    } finally {
-      setExecutionState(prev => ({ ...prev, isExecuting: false }));
-    }
-  };
+				if (request.step === SequentialStepType.PAUSE && request.isPaused) {
+					setExecutionState(prev => ({ ...prev, status: ExecutionStatus.PAUSED }));
+					break;
+				}
 
-  const pauseExecution = () => {
-    if (executionTimeoutRef.current) {
-      clearTimeout(executionTimeoutRef.current);
-    }
-    setExecutionState(prev => ({
-      ...prev,
-      status: ExecutionStatus.PAUSED,
-      isExecuting: false
-    }));
-  };
+				if (request.step === SequentialStepType.DELAY && request.duration) {
+					await new Promise(resolve => {
+						executionTimeoutRef.current = setTimeout(resolve, request.duration * 1000);
+					});
+				}
 
-  const resumeExecution = () => {
-    setExecutionState(prev => ({ ...prev, status: ExecutionStatus.RUNNING }));
-    processSequentialRequests();
-  };
+				if (request.step === SequentialStepType.MESSAGE) {
+					try {
+						await onProcessRequests(request.id);
+						request.status = ChatCardState.COMPLETE;
+					} catch (error) {
+						request.status = ChatCardState.ERROR;
+						throw error;
+					}
+				}
+			}
 
-  useEffect(() => {
-    return () => {
-      if (executionTimeoutRef.current) {
-        clearTimeout(executionTimeoutRef.current);
-      }
-    };
-  }, []);
+			if (executionState.currentIndex === sortedRequests.length - 1) {
+				setExecutionState(prev => ({
+					...prev,
+					status: ExecutionStatus.COMPLETED,
+					currentIndex: 0
+				}));
+			}
 
-  return {
-    executionState,
-    processSequentialRequests,
-    pauseExecution,
-    resumeExecution
-  };
+		} catch (error) {
+			setExecutionState(prev => ({
+				...prev,
+				status: ExecutionStatus.ERROR,
+				error: error.message || 'Failed to process requests'
+			}));
+		} finally {
+			setExecutionState(prev => ({ ...prev, isExecuting: false }));
+		}
+	};
+
+	const pauseExecution = () => {
+		if (executionTimeoutRef.current) {
+			clearTimeout(executionTimeoutRef.current);
+		}
+		setExecutionState(prev => ({
+			...prev,
+			status: ExecutionStatus.PAUSED,
+			isExecuting: false
+		}));
+	};
+
+	const resumeExecution = () => {
+		setExecutionState(prev => ({ ...prev, status: ExecutionStatus.RUNNING }));
+		processSequentialRequests();
+	};
+
+	useEffect(() => {
+		return () => {
+			if (executionTimeoutRef.current) {
+				clearTimeout(executionTimeoutRef.current);
+			}
+		};
+	}, []);
+
+	return {
+		executionState,
+		processSequentialRequests,
+		pauseExecution,
+		resumeExecution
+	};
 };

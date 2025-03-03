@@ -5,10 +5,10 @@
 // src/components/Banner/ChatBanner/ChatBanner.tsx
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
-  ChatType,
-  ChatSettings,
-  ChatSavingParams,
-  SequentialStepType,
+	ChatType,
+	ChatSettings,
+	ChatSavingParams,
+	SequentialStepType,
 } from '@/utils/types/chat.types';
 import ToolsMenu from '@/components/features/Tools/ToolsMenu';
 import ChatStepCardSettings from '@/components/features/ChatStepCards/ChatStepCardsSettings';
@@ -16,146 +16,155 @@ import SaveSettings from '@/components/features/ChatSaveSettings/ChatSaveSetting
 import { AlertCircle } from 'lucide-react';
 
 interface ChatBannerProps {
-  chatType: ChatType;
-  title: string;
-  settings: ChatSettings;
-  onSettingsChange: (settings: Partial<ChatSettings>) => void;
-  onTitleChange: (title: string) => void;
-  onSystemContextClick: () => void;
-  hasSystemContext: boolean;
-  onAddStep?: (stepType: SequentialStepType.PAUSE | SequentialStepType.DELAY) => void;
-  className?: string;
+	chatType: ChatType;
+	title: string;
+	settings: ChatSettings;
+	onSettingsChange: (settings: Partial<ChatSettings>) => void;
+	onTitleChange: (title: string) => void;
+	onSystemContextClick: () => void;
+	onDocumentsClick?: () => void;
+	hasSystemContext: boolean;
+	onAddStep?: (stepType: SequentialStepType.PAUSE | SequentialStepType.DELAY) => void;
+	className?: string;
+	chatId?: string;
+	projectId?: string;
 }
 
 const ChatBanner: React.FC<ChatBannerProps> = ({
-  chatType,
-  title,
-  settings,
-  onSettingsChange,
-  onTitleChange,
-  onSystemContextClick,
-  hasSystemContext,
-  //onAddStep,
-  className = ''
+	chatType,
+	title,
+	settings,
+	onSettingsChange,
+	onTitleChange,
+	onSystemContextClick,
+	onDocumentsClick,
+	hasSystemContext,
+	chatId,
+	projectId,
+	//onAddStep,
+	className = ''
 }) => {
-  // State
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [titleInput, setTitleInput] = useState(title);
-  const [error, setError] = useState<string | null>(null);
-  const titleInputRef = useRef<HTMLInputElement>(null);
+	// State
+	const [isEditingTitle, setIsEditingTitle] = useState(false);
+	const [titleInput, setTitleInput] = useState(title);
+	const [error, setError] = useState<string | null>(null);
+	const titleInputRef = useRef<HTMLInputElement>(null);
 
-  // Update local title when prop changes
-  useEffect(() => {
-    setTitleInput(title);
-  }, [title]);
+	// Update local title when prop changes
+	useEffect(() => {
+		setTitleInput(title);
+	}, [title]);
 
-  // Focus input when editing starts
-  useEffect(() => {
-    if (isEditingTitle && titleInputRef.current) {
-      titleInputRef.current.focus();
-    }
-  }, [isEditingTitle]);
+	// Focus input when editing starts
+	useEffect(() => {
+		if (isEditingTitle && titleInputRef.current) {
+			titleInputRef.current.focus();
+		}
+	}, [isEditingTitle]);
 
-  // Tools menu handlers
-  const handleTemperatureChange = useCallback((value: string) => {
-    const temp = parseFloat(value);
-    if (!isNaN(temp) && temp >= 0 && temp <= 2) {
-      onSettingsChange({ temperature: temp });
-    }
-  }, [onSettingsChange]);
+	// Tools menu handlers
+	const handleTemperatureChange = useCallback((value: string) => {
+		const temp = parseFloat(value);
+		if (!isNaN(temp) && temp >= 0 && temp <= 2) {
+			onSettingsChange({ temperature: temp });
+		}
+	}, [onSettingsChange]);
 
-  const handleChatTypeChange = useCallback((type: ChatType) => {
-    onSettingsChange({ chatType: type });
-  }, [onSettingsChange]);
+	const handleChatTypeChange = useCallback((type: ChatType) => {
+		onSettingsChange({ chatType: type });
+	}, [onSettingsChange]);
 
-  // Saving params handlers
-  const handleSavingParamsChange = useCallback((params: Partial<ChatSavingParams>) => {
-    const currentParams = settings.savingParams || {
-      saveToApplication: false,
-      saveToFile: false
-    };
-    onSettingsChange({
-      savingParams: { ...currentParams, ...params }
-    });
-  }, [settings.savingParams, onSettingsChange]);
+	// Saving params handlers
+	const handleSavingParamsChange = useCallback((params: Partial<ChatSavingParams>) => {
+		const currentParams = settings.savingParams || {
+			saveToApplication: false,
+			saveToFile: false
+		};
+		onSettingsChange({
+			savingParams: { ...currentParams, ...params }
+		});
+	}, [settings.savingParams, onSettingsChange]);
 
-  // Title handlers
-  const handleTitleSubmit = useCallback(() => {
-    if (titleInput.trim() !== title) {
-      onTitleChange(titleInput.trim());
-    }
-    setIsEditingTitle(false);
-  }, [titleInput, title, onTitleChange]);
+	// Title handlers
+	const handleTitleSubmit = useCallback(() => {
+		if (titleInput.trim() !== title) {
+			onTitleChange(titleInput.trim());
+		}
+		setIsEditingTitle(false);
+	}, [titleInput, title, onTitleChange]);
 
-  const handleTitleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleTitleSubmit();
-    } else if (e.key === 'Escape') {
-      setTitleInput(title);
-      setIsEditingTitle(false);
-    }
-  }, [handleTitleSubmit, title]);
+	const handleTitleKeyDown = useCallback((e: React.KeyboardEvent) => {
+		if (e.key === 'Enter') {
+			handleTitleSubmit();
+		} else if (e.key === 'Escape') {
+			setTitleInput(title);
+			setIsEditingTitle(false);
+		}
+	}, [handleTitleSubmit, title]);
 
-  return (
-    <div className={`w-full bg-white shadow-sm border-b border-gray-200 px-4 py-2 flex items-center justify-between ${className}`}>
-      {/* Left section - Tools Menu and Sequential Step Settings */}
-      <div className="flex items-center space-x-4">
-        <ToolsMenu
-          settings={settings}
-          onTemperatureChange={handleTemperatureChange}
-          onChatTypeChange={handleChatTypeChange}
-          onSystemContextClick={onSystemContextClick}
-          hasSystemContext={hasSystemContext}
-        />
+	return (
+		<div className={`w-full bg-white shadow-sm border-b border-gray-200 px-4 py-2 flex items-center justify-between ${className}`}>
+			{/* Left section - Tools Menu and Sequential Step Settings */}
+			<div className="flex items-center space-x-4">
+				<ToolsMenu
+					settings={settings}
+					onTemperatureChange={handleTemperatureChange}
+					onChatTypeChange={handleChatTypeChange}
+					onSystemContextClick={onSystemContextClick}
+					onOpenDocuments={onDocumentsClick}
+					hasSystemContext={hasSystemContext}
+					chatId={chatId}          // Add this
+					projectId={projectId}
+				/>
 
-        {/* Only show ChatStepCardSettings for Sequential Chat
+				{/* Only show ChatStepCardSettings for Sequential Chat
         {chatType === ChatType.SEQUENTIAL && onAddStep && (
           <ChatStepCardSettings
             onAddStep={onAddStep}
             className="ml-2"
           />
         )} */}
-      </div>
+			</div>
 
-      {/* Middle section - Title */}
-      <div
-        className="flex-1 mx-4 text-center"
-        onDoubleClick={() => setIsEditingTitle(true)}
-      >
-        {isEditingTitle ? (
-          <input
-            ref={titleInputRef}
-            type="text"
-            value={titleInput}
-            onChange={(e) => setTitleInput(e.target.value)}
-            onBlur={handleTitleSubmit}
-            onKeyDown={handleTitleKeyDown}
-            className="w-full text-center bg-white border-b border-blue-500 focus:outline-none px-2 py-1"
-          />
-        ) : (
-          <h1 className="text-lg font-medium truncate cursor-pointer">
-            {title || 'Untitled Chat'}
-          </h1>
-        )}
-      </div>
+			{/* Middle section - Title */}
+			<div
+				className="flex-1 mx-4 text-center"
+				onDoubleClick={() => setIsEditingTitle(true)}
+			>
+				{isEditingTitle ? (
+					<input
+						ref={titleInputRef}
+						type="text"
+						value={titleInput}
+						onChange={(e) => setTitleInput(e.target.value)}
+						onBlur={handleTitleSubmit}
+						onKeyDown={handleTitleKeyDown}
+						className="w-full text-center bg-white border-b border-blue-500 focus:outline-none px-2 py-1"
+					/>
+				) : (
+					<h1 className="text-lg font-medium truncate cursor-pointer">
+						{title || 'Untitled Chat'}
+					</h1>
+				)}
+			</div>
 
-      {/* Right section - Save Settings */}
-      <div className="flex items-center space-x-4">
-        <SaveSettings
-          settings={settings}
-          onSavingParamsChange={handleSavingParamsChange}
-        />
+			{/* Right section - Save Settings */}
+			<div className="flex items-center space-x-4">
+				<SaveSettings
+					settings={settings}
+					onSavingParamsChange={handleSavingParamsChange}
+				/>
 
-        {/* Error Indicator */}
-        {error && (
-          <div className="text-red-500 flex items-center space-x-1">
-            <AlertCircle size={16} />
-            <span className="text-sm">{error}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+				{/* Error Indicator */}
+				{error && (
+					<div className="text-red-500 flex items-center space-x-1">
+						<AlertCircle size={16} />
+						<span className="text-sm">{error}</span>
+					</div>
+				)}
+			</div>
+		</div>
+	);
 };
 
 export default ChatBanner;
@@ -467,7 +476,7 @@ export default ChatBanner;
 //               {/* Temperature Setting */}
 //               <div>
 //                 <label className="block text-sm font-medium mb-1">Temperature</label>
-//                 <input 
+//                 <input
 //                   type="range"
 //                   min="0"
 //                   max="2"
@@ -482,7 +491,7 @@ export default ChatBanner;
 //               {/* Chat Type Selection */}
 //               <div>
 //                 <label className="block text-sm font-medium mb-1">Chat Type</label>
-//                 <select 
+//                 <select
 //                   value={settings.chatType}
 //                   onChange={(e) => handleChatTypeChange(e.target.value as ChatType)}
 //                   className="w-full p-2 border rounded-md"
@@ -514,7 +523,7 @@ export default ChatBanner;
 //                   placeholder="Enter system context..."
 //                 />
 //               </div> */}
-//             </div> 
+//             </div>
 //           </PopoverContent>
 //         </Popover>
 

@@ -1,4 +1,4 @@
-import React, { useState,useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Settings, MessageSquarePlus, History } from 'lucide-react';
@@ -8,99 +8,109 @@ import NewChatDropdown from './NewChatDropDown';
 import { MainHeaderProps, APIType } from './MainHeader.types';
 import { ChatType } from '@/utils/types/chat.types';
 import { useAPI } from '@/context/APIContext';
+import NewProjectDropdown from '@/components/Banner/MainBanner/NewProjectDropdown';
 
 const MainHeader: React.FC<MainHeaderProps> = ({ className = '' }) => {
-  // const isHomePage = location.pathname === '/';
-  // const isSettingPage = location.pathname === "/settings";
-  // const isNewChatPage = location.pathname === "/new-chat";
-  const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
-  const [ newChatType, onNewChat] = useState<ChatType>(ChatType.BASE);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const selectedAPI = useAPI();
+	// const isHomePage = location.pathname === '/';
+	// const isSettingPage = location.pathname === "/settings";
+	// const isNewChatPage = location.pathname === "/new-chat";
+	const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
+	const [newChatType, onNewChat] = useState<ChatType>(ChatType.BASE);
+	const navigate = useNavigate();
+	const location = useLocation();
+	const selectedAPI = useAPI();
 
-  const handleNewChat = useCallback((type: ChatType) => {
-    switch (type) {
-      case ChatType.BASE:
-        navigate('/chat');
-        break;
-      case ChatType.SEQUENTIAL:
-        navigate('/chat');
-        break;
-      case ChatType.REQUIREMENTS:
-        navigate('/chat');
-        break;
-      // case ChatType.WORKFLOW:
-      //   navigate('/workflow/new');
-      //   break;
-      // case ChatType.SCHEDULER:
-      //   navigate('/scheduler/new');
-      //   break;
-    }
-  }, [navigate]);
+	const handleNewChat = useCallback((type: ChatType) => {
+		switch (type) {
+			case ChatType.BASE:
+				navigate('/chat');
+				break;
+			case ChatType.SEQUENTIAL:
+				navigate('/chat');
+				break;
+			case ChatType.REQUIREMENTS:
+				navigate('/chat');
+				break;
+			// case ChatType.WORKFLOW:
+			//   navigate('/workflow/new');
+			//   break;
+			// case ChatType.SCHEDULER:
+			//   navigate('/scheduler/new');
+			//   break;
+		}
+	}, [navigate]);
 
-  const handleManageChats = useCallback((type: ChatType) => {
-    switch (type) {
-      case ChatType.BASE:
-        navigate('/manage/base');
-        break;
-      case ChatType.SEQUENTIAL:
-        navigate('/manage/sequential');
-        break;
-      case ChatType.REQUIREMENTS:
-        navigate('/manage/requirements');
-        break;
-      // case ChatType.WORKFLOW:
-      //   navigate('/manage/workflow');
-      //   break;
-      // case ChatType.SCHEDULER:
-      //   navigate('/manage/scheduler');
-      //   break;
-    }
-  }, [navigate]);
+	const handleNewProject = useCallback((type: string) => {
+		navigate('/projects/new', {
+			state: {
+				projectType: type
+			}
+		});
+	}, [navigate]);
 
-  const handleOpenSettings = useCallback(() => {
-    navigate('/settings');
-  }, [navigate]);
+	const handleManageChats = useCallback((type: ChatType) => {
+		switch (type) {
+			case ChatType.BASE:
+				navigate('/manage/base');
+				break;
+			case ChatType.SEQUENTIAL:
+				navigate('/manage/sequential');
+				break;
+			case ChatType.REQUIREMENTS:
+				navigate('/manage/requirements');
+				break;
+			// case ChatType.WORKFLOW:
+			//   navigate('/manage/workflow');
+			//   break;
+			// case ChatType.SCHEDULER:
+			//   navigate('/manage/scheduler');
+			//   break;
+		}
+	}, [navigate]);
+
+	const handleOpenSettings = useCallback(() => {
+		navigate('/settings');
+	}, [navigate]);
 
 
-  return (
-    <header className={`bg-gray-800 text-white py-4 px-6 shadow-lg ${className}`}>
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link 
-            to="/" 
-            className="text-2xl font-bold hover:text-primary/90 transition-colors"
-          >
-            GSQT
-          </Link>
+	return (
+		<header className={`bg-gray-800 text-white py-4 px-6 shadow-lg ${className}`}>
+			<div className="container mx-auto px-4">
+				<div className="flex items-center justify-between h-16">
+					{/* Logo */}
+					<Link
+						to="/"
+						className="text-2xl font-bold hover:text-primary/90 transition-colors"
+					>
+						MoPa
+					</Link>
 
-          {/* Main Banner */}
-          <MainBanner
-            onNewChat={handleNewChat}
-            onManageChats={handleManageChats}
-            onOpenSettings={handleOpenSettings}
-          />
+					{/* Main Banner */}
+					<MainBanner
+						onNewChat={handleNewChat}
+						onManageChats={handleManageChats}
+						onOpenSettings={handleOpenSettings}
+					/>
 
-          <div className="flex items-center gap-4">
-            {/* Settings Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-gray-700 rounded-full"
-              onClick={handleOpenSettings}
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
+					{/* Right section with buttons */}
+					<div className="flex items-center gap-4">
+						{/* Settings Button */}
+						<Button
+							variant="ghost"
+							size="icon"
+							className="hover:bg-gray-700 rounded-full"
+							onClick={handleOpenSettings}
+						>
+							<Settings className="h-5 w-5" />
+						</Button>
 
-            {/* API Status */}
-            <APIStatus />
-          </div>
-        </div>
-      </div>
-    </header>
-  );
+						{/* API Status */}
+						<APIStatus />
+					</div>
+				</div>
+			</div>
+		</header>
+	);
 };
 
 export default MainHeader;
