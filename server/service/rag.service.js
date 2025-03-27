@@ -26,16 +26,24 @@ class RAGService {
 			let collection = this.collections.get(containerId);
 
 			if (!collection) {
-				collection = await this.client.getOrCreateCollection({
-					name: `collection_${containerId}`,
-					metadata: { containerId }
-				});
-				this.collections.set(containerId, collection);
+				try {
+					collection = await this.client.getOrCreateCollection({
+						name: `collection_${containerId}`,
+						metadata: { containerId }
+					});
+					this.collections.set(containerId, collection);
+				} catch (error) {
+					console.error('Unable to connect to ChromaDB:', error);
+					throw new Error('RAG_CONNECTION_ERROR: Unable to connect to the knowledge base service');
+				}
 			}
 
 			return collection;
 		} catch (error) {
 			console.error('Error initializing collection:', error);
+			if (error.message.includes('RAG_CONNECTION_ERROR')) {
+				throw error; // Pass along our specific error
+			}
 			throw new Error('Failed to initialize ChromaDB collection');
 		}
 	}

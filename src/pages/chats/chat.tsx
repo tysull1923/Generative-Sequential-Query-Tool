@@ -241,9 +241,24 @@ const ChatPage: React.FC = () => {
 				metadata: document.metadata
 			});
 
-			// Add to RAG
-			console.log('Adding document to RAG:', createdDoc);
-			await rag.addDocument(createdDoc, settings.ragSettings);
+			try {
+				// Add to RAG
+				console.log('Adding document to RAG:', createdDoc);
+				await rag.addDocument(createdDoc, settings.ragSettings);
+			} catch (ragError) {
+				console.error('Error adding document to RAG:', ragError);
+
+				// Check if this is a connection error
+				if (ragError.message && ragError.message.includes('RAG_CONNECTION_ERROR')) {
+					setError('Unable to connect to the knowledge base service. Document saved but not available for RAG queries.');
+				} else {
+					setError('Document saved, but could not be added to knowledge base for retrieval during chat.');
+				}
+
+				// Still update UI to show document was created
+				setActiveDocuments(prev => [...prev, createdDoc]);
+				return createdDoc;
+			}
 
 			setActiveDocuments(prev => [...prev, createdDoc]);
 			return createdDoc;
