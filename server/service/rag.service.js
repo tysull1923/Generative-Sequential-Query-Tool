@@ -29,19 +29,26 @@ class RAGService {
 			let collection = this.collections.get(collectionKey);
 
 			if (!collection) {
-				// Create unique collection name using UUID to avoid invalid ChromaDB names
-				const collectionName = documentId 
-					? `collection-${containerId.replace(/[_\.]/g, '-')}-doc-${uuidv4()}` 
-					: `collection-${containerId.replace(/[_\.]/g, '-')}-${uuidv4()}`;
-					
-				collection = await this.client.getOrCreateCollection({
-					name: collectionName,
-					metadata: { 
-						containerId,
-						documentId: documentId || null,
-						createdAt: new Date().toISOString()
-					}
-				});
+				// Use the containerId directly as the collection name
+				const collectionName = containerId;
+				
+				// First check if collection exists
+				try {
+					collection = await this.client.getCollection({
+						name: collectionName
+					});
+				} catch (error) {
+					// Collection doesn't exist, create it
+					collection = await this.client.createCollection({
+						name: collectionName,
+						metadata: { 
+							containerId,
+							documentId: documentId || null,
+							createdAt: new Date().toISOString()
+						}
+					});
+				}
+				
 				this.collections.set(collectionKey, collection);
 			}
 
@@ -103,65 +110,51 @@ class RAGService {
 			const threshold = settings?.similarity?.threshold || 500.0;
 			console.log('Querying with maxResults:', maxResults);
 
-			// Get all collections for this container
-			const allCollections = await this.client.listCollections();
-			const containerCollections = allCollections.filter(c => 
-				c.name.startsWith(`collection-${containerId.replace(/[_\.]/g, '-')}-doc-`) || 
-				c.name.startsWith(`collection-${containerId.replace(/[_\.]/g, '-')}-`)
-			);
+			// Try to directly get the collection for this container
+			let collection;
+			try {
+				collection = await this.client.getCollection({
+					name: containerId
+				});
+			} catch (error) {
+				console.log(`No collection found for container ${containerId}`);
+				return { results: [] };
+			}
 			
-			console.log(`Found ${containerCollections.length} collections for container ${containerId}`);
-			
-			if (containerCollections.length === 0) {
-				console.log('No collections found for container');
+			if (!collection) {
+				console.log('No collection found for container');
 				return { results: [] };
 			}
 
-			// Perform query against each collection and combine results
+			// Query this collection
+			const results = await collection.query({
+				queryEmbeddings: [queryEmbedding],
+				nResults: maxResults,
+				where: { includeInRAG: true }
+			});
+			
 			const allResults = [];
 			
-			for (const collectionInfo of containerCollections) {
-				try {
-					const collection = await this.client.getCollection({
-						name: collectionInfo.name
-					});
-					
-					// Skip if collection doesn't exist anymore
-					if (!collection) continue;
-					
-					// Query this collection
-					const results = await collection.query({
-						queryEmbeddings: [queryEmbedding],
-						nResults: maxResults,
-						where: { includeInRAG: true }
-					});
-					
-					// Process results from this collection
-					if (results.documents?.[0]?.length) {
-						const processedCollectionResults = results.documents[0]
-							.map((doc, index) => ({
-								content: doc,
-								score: results.distances[0][index],
-								metadata: results.metadatas[0][index],
-								collectionName: collectionInfo.name // Track which collection this came from
-							}));
-						
-						allResults.push(...processedCollectionResults);
-					}
-				} catch (error) {
-					console.error(`Error querying collection ${collectionInfo.name}:`, error);
-					// Continue with other collections
-					continue;
-				}
+			// Process results from this collection
+			if (results.documents?.[0]?.length) {
+				const processedCollectionResults = results.documents[0]
+					.map((doc, index) => ({
+						content: doc,
+						score: results.distances[0][index],
+						metadata: results.metadatas[0][index],
+						collectionName: containerId // Track which collection this came from
+					}));
+				
+				allResults.push(...processedCollectionResults);
 			}
 			
 			if (allResults.length === 0) {
-				console.log('No results found across all collections');
+				console.log('No results found in collection');
 				return { results: [] };
 			}
 
-			// Process combined results
-			console.log(`Combined results from all collections: ${allResults.length}`);
+			// Process results
+			console.log(`Results from collection: ${allResults.length}`);
 			
 			// Sort by score (lower is better) and take top results
 			const processedResults = allResults
@@ -187,8 +180,8 @@ class RAGService {
 
 	async addDocument(containerId, document, settings = {}) {
 		try {
-			// Initialize a collection specifically for this document within this container
-			const collection = await this.initializeCollection(containerId, document._id);
+			// Initialize collection using the container ID as the collection name
+			const collection = await this.initializeCollection(containerId);
 			const embedder = await this.getEmbeddingModel(settings);
 
 			// Process document into chunks
@@ -207,6 +200,7 @@ class RAGService {
 					documents: [doc.pageContent],
 					metadatas: [{
 						documentId: document._id,
+						name: document.title || document.source,
 						containerId: containerId,
 						chunkIndex: chunkIndex,
 						includeInRAG: true,
@@ -225,9 +219,8 @@ class RAGService {
 				});
 			}
 			
-			// Generate a proper collection ID for the document reference
-			const safeContainerId = containerId.replace(/[_\.]/g, '-');
-			document.ragCollectionId = `collection-${safeContainerId}-doc-${document._id}`;
+			// Set collection ID to match the container ID
+			document.ragCollectionId = containerId;
 			document.includeInRAG = true;
 			document.chunks = chunks;
 			
@@ -247,55 +240,51 @@ class RAGService {
 
 	async removeDocument(containerId, documentId) {
 		try {
-			// Get the document-specific collection
-			const collectionKey = `${containerId}_${documentId}`;
-			const safeContainerId = containerId.replace(/[_\.]/g, '-');
+			// Try to get the collection for this container
+			let collection;
+			try {
+				collection = await this.client.getCollection({
+					name: containerId
+				});
+			} catch (error) {
+				console.log(`Collection not found for container ${containerId}`);
+				return true; // Nothing to remove
+			}
 			
-			// Find all collections related to this document
-			const allCollections = await this.client.listCollections();
-			const collectionPattern = `collection-${safeContainerId}-doc-`;
-			const matchingCollections = allCollections.filter(c => 
-				c.name.includes(collectionPattern) && 
-				c.metadata?.documentId === documentId
-			);
+			if (!collection) {
+				console.log(`Collection not found for container ${containerId}`);
+				return true; // Nothing to remove
+			}
 			
 			try {
-				// Delete matching collections if found
-				if (matchingCollections.length > 0) {
-					for (const coll of matchingCollections) {
-						await this.client.deleteCollection({ name: coll.name });
-						console.log(`Deleted collection ${coll.name} for document ${documentId}`);
-					}
-					// Remove from the collections cache
-					this.collections.delete(collectionKey);
-				} else {
-					console.log(`No collections found for document ${documentId}`);
-				}
+				// Delete document chunks from the collection
+				const results = await collection.delete({
+					where: {"documentId": {"$eq": documentId}}
+				});
 				
-				// Also try to delete from the container's main collection as a fallback
-				// (In case documents were added to a shared collection in earlier versions)
-				try {
-					const containerCollection = await this.initializeCollection(containerId);
-					
-					// Find all chunks for this document in the main container collection
-					const chunks = await containerCollection.get({
-						where: { documentId: documentId }
-					});
-					
-					// Remove chunks if found
-					if (chunks.ids.length > 0) {
-						await containerCollection.delete({
-							ids: chunks.ids
+				console.log(`Deleted chunks for document ${documentId} from collection ${containerId}`);
+				
+				// Check if the collection has any documents left
+				const remainingDocs = await collection.count();
+				
+				// If no documents left and it's a document-specific collection, delete the entire collection
+				if (remainingDocs === 0) {
+					// Only delete if it's specifically a document collection, not a project collection
+					// This check prevents deleting project collections that might be reused
+					if (containerId.includes(documentId)) {
+						await this.client.deleteCollection({
+							name: containerId
 						});
-						console.log(`Deleted ${chunks.ids.length} chunks from main collection`);
+						console.log(`Deleted empty collection ${containerId}`);
+						
+						// Remove from the collections cache
+						this.collections.delete(containerId);
 					}
-				} catch (err) {
-					console.log('No chunks found in main collection:', err.message);
 				}
 				
 				return true;
 			} catch (error) {
-				console.error(`Error deleting collection: ${error.message}`);
+				console.error(`Error deleting document: ${error.message}`);
 				return false;
 			}
 		} catch (error) {
