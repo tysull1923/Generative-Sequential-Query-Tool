@@ -121,6 +121,7 @@ router.patch('/:containerId/documents/:documentId/toggle', async (req, res) => {
 			});
 		}
 
+		// Get settings from project if available
 		let settings;
 		if (document.projectId) {
 			const project = await Project.findById(document.projectId);
@@ -128,15 +129,30 @@ router.patch('/:containerId/documents/:documentId/toggle', async (req, res) => {
 		}
 
 		// Toggle in RAG
-		await ragService.toggleDocumentInclusion(containerId, documentId, include, document, settings);
+		const result = await ragService.toggleDocumentInclusion(
+			containerId, 
+			documentId, 
+			include, 
+			document, 
+			settings
+		);
 
-		// Update MongoDB
+		// Update MongoDB document with RAG status and collection ID
 		document.includeInRAG = include;
+		if (include && result.ragCollectionId) {
+			document.ragCollectionId = result.ragCollectionId;
+		} else {
+			document.ragCollectionId = null;
+		}
 		await document.save();
 
 		res.json({
 			success: true,
-			data: { message: `Document ${include ? 'added to' : 'removed from'} RAG system` }
+			data: { 
+				message: `Document ${include ? 'added to' : 'removed from'} RAG system`,
+				includeInRAG: document.includeInRAG,
+				ragCollectionId: document.ragCollectionId
+			}
 		});
 	} catch (error) {
 		console.error('Error toggling document inclusion:', error);

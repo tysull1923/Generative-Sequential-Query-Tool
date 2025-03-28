@@ -176,13 +176,36 @@ router.put('/:id', async (req, res) => {
 // Delete a document
 router.delete('/:id', async (req, res) => {
 	try {
-		const document = await KnowledgeDocument.findByIdAndDelete(req.params.id);
+		// Find the document first
+		const document = await KnowledgeDocument.findById(req.params.id);
 		if (!document) {
 			return res.status(404).json({
 				success: false,
 				error: 'Document not found'
 			});
 		}
+
+		// Get the containerId (either projectId or chatId)
+		const containerId = document.projectId || document.chatId || document._id;
+
+		// If document was in RAG, remove from RAG first
+		if (document.includeInRAG) {
+			try {
+				// Import the rag service
+				const RAGService = (await import('../service/rag.service.js')).default;
+				const ragService = RAGService.getInstance();
+				
+				// Remove document from RAG
+				await ragService.removeDocument(containerId.toString(), document._id.toString());
+				console.log(`Document ${document._id} removed from RAG`);
+			} catch (ragError) {
+				console.error('Error removing document from RAG:', ragError);
+				// Continue with deletion even if RAG removal fails
+			}
+		}
+
+		// Now delete the document
+		await KnowledgeDocument.findByIdAndDelete(req.params.id);
 
 		res.status(204).send();
 	} catch (error) {

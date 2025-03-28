@@ -2,6 +2,19 @@
 import mongoose from 'mongoose';
 import { type } from 'os';
 
+const chunkSchema = new mongoose.Schema({
+	content: { 
+		type: String, 
+		required: true 
+	},
+	embedding: [Number],
+	metadata: {
+		start: Number,
+		end: Number,
+		source: String,
+	},
+});
+
 const knowledgeDocumentSchema = new mongoose.Schema({
 	title: {
 		type: String,
@@ -31,6 +44,18 @@ const knowledgeDocumentSchema = new mongoose.Schema({
 		fileSize: Number,
 		extension: String
 	},
+	// Track if document is included in RAG
+	includeInRAG: {
+		type: Boolean,
+		default: false
+	},
+	// Store collection ID this document belongs to
+	ragCollectionId: {
+		type: String,
+		default: null
+	},
+	// Store chunked content
+	chunks: [chunkSchema],
 	addedAt: {
 		type: Date,
 		default: Date.now

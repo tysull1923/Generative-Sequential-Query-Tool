@@ -21,16 +21,27 @@ class RAGService {
 		return RAGService.instance;
 	}
 
-	async initializeCollection(containerId) {
+	async initializeCollection(containerId, documentId = null) {
 		try {
-			let collection = this.collections.get(containerId);
+			// If documentId is provided, we'll use a separate collection for each document
+			const collectionKey = documentId ? `${containerId}_${documentId}` : containerId;
+			let collection = this.collections.get(collectionKey);
 
 			if (!collection) {
+				// Create unique collection name for each container+document combination
+				const collectionName = documentId 
+					? `collection_${containerId}_doc_${documentId}` 
+					: `collection_${containerId}`;
+					
 				collection = await this.client.getOrCreateCollection({
-					name: `collection_${containerId}`,
-					metadata: { containerId }
+					name: collectionName,
+					metadata: { 
+						containerId,
+						documentId: documentId || null,
+						createdAt: new Date().toISOString()
+					}
 				});
-				this.collections.set(containerId, collection);
+				this.collections.set(collectionKey, collection);
 			}
 
 			return collection;
@@ -82,54 +93,84 @@ class RAGService {
 
 	async query(containerId, query, settings = {}) {
 		try {
-			const collection = await this.initializeCollection(containerId);
 			const embedder = await this.getEmbeddingModel(settings);
-
 			console.log('Generating query embedding for:', query);
 			const queryEmbedding = await embedder.embedQuery(query);
 
 			// Get maximum number of results (default 50)
 			const maxResults = settings?.similarity?.maxResults || 50;
+			const threshold = settings?.similarity?.threshold || 500.0;
 			console.log('Querying with maxResults:', maxResults);
 
-			// Perform similarity search with more lenient filtering
-			const results = await collection.query({
-				queryEmbeddings: [queryEmbedding],
-				nResults: maxResults,
-				where: { includeInRAG: true }
-			});
-
-			console.log('Raw ChromaDB results:', {
-				documentsLength: results.documents?.[0]?.length || 0,
-				distancesLength: results.distances?.[0]?.length || 0,
-				metadataLength: results.metadatas?.[0]?.length || 0
-			});
-
-			if (!results.documents?.[0]?.length) {
-				console.log('No documents found in results');
+			// Get all collections for this container
+			const allCollections = await this.client.listCollections();
+			const containerCollections = allCollections.filter(c => 
+				c.name.startsWith(`collection_${containerId}_doc_`) || 
+				c.name === `collection_${containerId}`
+			);
+			
+			console.log(`Found ${containerCollections.length} collections for container ${containerId}`);
+			
+			if (containerCollections.length === 0) {
+				console.log('No collections found for container');
 				return { results: [] };
 			}
 
-			// Process results with adjusted similarity handling
-			// ChromaDB uses L2 distance by default, so higher scores mean less similar
-			// Setting a higher threshold based on observed scores
-			const threshold = settings?.similarity?.threshold || 500.0; // Adjusted threshold based on actual scores
-			console.log('Using similarity threshold:', threshold);
+			// Perform query against each collection and combine results
+			const allResults = [];
+			
+			for (const collectionInfo of containerCollections) {
+				try {
+					const collection = await this.client.getCollection({
+						name: collectionInfo.name
+					});
+					
+					// Skip if collection doesn't exist anymore
+					if (!collection) continue;
+					
+					// Query this collection
+					const results = await collection.query({
+						queryEmbeddings: [queryEmbedding],
+						nResults: maxResults,
+						where: { includeInRAG: true }
+					});
+					
+					// Process results from this collection
+					if (results.documents?.[0]?.length) {
+						const processedCollectionResults = results.documents[0]
+							.map((doc, index) => ({
+								content: doc,
+								score: results.distances[0][index],
+								metadata: results.metadatas[0][index],
+								collectionName: collectionInfo.name // Track which collection this came from
+							}));
+						
+						allResults.push(...processedCollectionResults);
+					}
+				} catch (error) {
+					console.error(`Error querying collection ${collectionInfo.name}:`, error);
+					// Continue with other collections
+					continue;
+				}
+			}
+			
+			if (allResults.length === 0) {
+				console.log('No results found across all collections');
+				return { results: [] };
+			}
 
+			// Process combined results
+			console.log(`Combined results from all collections: ${allResults.length}`);
+			
 			// Sort by score (lower is better) and take top results
-			const processedResults = results.documents[0]
-				.map((doc, index) => ({
-					content: doc,
-					score: results.distances[0][index],
-					metadata: results.metadatas[0][index]
-				}))
+			const processedResults = allResults
 				.sort((a, b) => a.score - b.score) // Sort by similarity score
 				.filter(result => {
 					console.log(`Document score: ${result.score} - ${result.score <= threshold ? 'Accepted' : 'Filtered'}`);
 					return result.score <= threshold;
 				})
 				.slice(0, maxResults); // Limit to maxResults
-
+			
 			console.log(`Processed ${processedResults.length} results after filtering`);
 			return { results: processedResults };
 		} catch (error) {
@@ -145,46 +186,56 @@ class RAGService {
 
 	async addDocument(containerId, document, settings = {}) {
 		try {
-			const collection = await this.initializeCollection(containerId);
+			// Initialize a collection specifically for this document within this container
+			const collection = await this.initializeCollection(containerId, document._id);
 			const embedder = await this.getEmbeddingModel(settings);
 
 			// Process document into chunks
 			const docs = await this.processDocument(document, settings);
 			const chunks = [];
+			
 			// Generate embeddings and add to collection
 			for (const doc of docs) {
 				const embedding = await embedder.embedDocuments([doc.pageContent]);
-				//const chunkIndex = docs.indexOf(doc);
-				//const chunkId = `${document._id}_${chunkIndex}`;
+				const chunkIndex = docs.indexOf(doc);
+				const chunkId = `${document._id}_${chunkIndex}`;
+				
 				await collection.add({
-					ids: [`${document._id}_${docs.indexOf(doc)}`],
+					ids: [chunkId],
 					embeddings: embedding,
 					documents: [doc.pageContent],
 					metadatas: [{
 						documentId: document._id,
-						chunkIndex: docs.indexOf(doc),
+						containerId: containerId,
+						chunkIndex: chunkIndex,
 						includeInRAG: true,
 						...doc.metadata
 					}]
 				});
 
-				// chunks.push({
-				// 	id: chunkId,
-				// 	content: doc.pageContent,
-				// 	embedding: embedding[0], // Include embedding if needed
-				// 	metadata: {
-				// 		start: doc.metadata?.start || 0,
-				// 		end: doc.metadata?.end || doc.pageContent.length,
-				// 		source: document.title || document.source
-				// 	}
-				// });
-
-
+				chunks.push({
+					id: chunkId,
+					content: doc.pageContent,
+					metadata: {
+						start: doc.metadata?.start || 0,
+						end: doc.metadata?.end || doc.pageContent.length,
+						source: document.title || document.source
+					}
+				});
 			}
-			// return {
-			// 	...document,
-			// 	chunks: chunks
-			// };
+			
+			// Store the collection ID in the document for future reference
+			document.ragCollectionId = `collection_${containerId}_doc_${document._id}`;
+			document.includeInRAG = true;
+			document.chunks = chunks;
+			
+			// Return the updated document data
+			return {
+				...document,
+				ragCollectionId: document.ragCollectionId,
+				includeInRAG: true,
+				chunks: chunks
+			};
 		} catch (error) {
 			console.error('Error adding document to RAG:', error);
 			throw new Error('Failed to add document to RAG system');
@@ -194,18 +245,45 @@ class RAGService {
 
 	async removeDocument(containerId, documentId) {
 		try {
-			const collection = await this.initializeCollection(containerId);
-
-			// Find all chunks for this document
-			const chunks = await collection.get({
-				where: { documentId }
-			});
-
-			// Remove chunks
-			if (chunks.ids.length > 0) {
-				await collection.delete({
-					ids: chunks.ids
+			// Get the document-specific collection
+			const collectionKey = `${containerId}_${documentId}`;
+			const collectionName = `collection_${containerId}_doc_${documentId}`;
+			
+			try {
+				// Delete the entire collection if it exists
+				const exists = await this.client.listCollections();
+				const collectionExists = exists.some(c => c.name === collectionName);
+				
+				if (collectionExists) {
+					await this.client.deleteCollection({ name: collectionName });
+					// Remove from the collections cache
+					this.collections.delete(collectionKey);
+					console.log(`Deleted collection ${collectionName} for document ${documentId}`);
+				} else {
+					console.log(`Collection ${collectionName} not found for document ${documentId}`);
+				}
+				
+				// Also try to delete from the container's main collection as a fallback
+				// (In case documents were added to a shared collection in earlier versions)
+				const containerCollection = await this.initializeCollection(containerId);
+				
+				// Find all chunks for this document in the main container collection
+				const chunks = await containerCollection.get({
+					where: { documentId: documentId }
 				});
+				
+				// Remove chunks if found
+				if (chunks.ids.length > 0) {
+					await containerCollection.delete({
+						ids: chunks.ids
+					});
+					console.log(`Deleted ${chunks.ids.length} chunks from main collection`);
+				}
+				
+				return true;
+			} catch (error) {
+				console.error(`Error deleting collection: ${error.message}`);
+				return false;
 			}
 		} catch (error) {
 			console.error('Error removing document from RAG:', error);
@@ -217,10 +295,23 @@ class RAGService {
 		try {
 			if (include && document) {
 				// Add document to RAG
-				await this.addDocument(containerId, document, settings);
+				const result = await this.addDocument(containerId, document, settings);
+				
+				// Update document with RAG inclusion info
+				return {
+					success: true,
+					ragCollectionId: result.ragCollectionId,
+					includeInRAG: true
+				};
 			} else {
 				// Remove document from RAG
-				await this.removeDocument(containerId, documentId);
+				const removed = await this.removeDocument(containerId, documentId);
+				
+				return {
+					success: removed,
+					includeInRAG: false,
+					ragCollectionId: null
+				};
 			}
 		} catch (error) {
 			console.error('Error toggling document inclusion:', error);

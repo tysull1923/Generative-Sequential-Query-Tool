@@ -268,6 +268,8 @@ const KnowledgeBasePanel: React.FC<KnowledgeBasePanelProps> = ({
 						document={doc}
 						onDelete={onRemoveDocument ? () => onRemoveDocument(doc._id) : undefined}
 						onReindex={onReindexDocument ? () => onReindexDocument(doc._id) : undefined}
+						ragEnabled={settings?.enabled || false}
+						onToggleRAG={settings?.toggleDocumentInRAG}
 					/>
 				))}
 				{filteredDocuments.length === 0 && !uploadState.isUploading && (

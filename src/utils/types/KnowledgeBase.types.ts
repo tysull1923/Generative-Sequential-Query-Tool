@@ -11,6 +11,10 @@ export interface KnowledgeDocument {
 	contentUrl?: string
 	source: string
 	embedding?: number[]
+	// Document collection ID for RAG 
+	ragCollectionId?: string
+	// Flag to indicate if document is included in RAG
+	includeInRAG?: boolean
 	chunks?: {
 		id: string
 		content: string
@@ -25,8 +29,8 @@ export interface KnowledgeDocument {
 		fileType?: string;
 		fileSize?: number;
 		extension?: string;
+		docType?: string;
 	};
-	includeInRAG?: boolean
 	addedAt: Date
 	lastUpdated: Date
 }

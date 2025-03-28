@@ -95,7 +95,8 @@ export interface RAGSettings {
 		threshold: number;
 		maxResults: number;
 	};
-
+	// Function to toggle document inclusion in RAG
+	toggleDocumentInRAG?: (documentId: string, include: boolean) => Promise<void>;
 }
 
 export interface RAGQueryResult {
