@@ -40,9 +40,8 @@ const knowledgeDocumentSchema = new mongoose.Schema({
 		required: false
 	},
 	metadata: {
-		fileType: String,
-		fileSize: Number,
-		extension: String
+		type: mongoose.Schema.Types.Mixed,
+		default: {}
 	},
 	// Track if document is included in RAG
 	includeInRAG: {

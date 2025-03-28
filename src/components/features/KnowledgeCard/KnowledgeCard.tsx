@@ -138,7 +138,7 @@ const KnowledgeCard: React.FC<ExtendedDocumentCardProps> = ({
 					{document.ragCollectionId && document.includeInRAG && (
 						<Badge variant="outline" className="flex items-center gap-1 text-xs border-dashed">
 							<Database className="h-3 w-3" />
-							{document.ragCollectionId.split('_').pop()?.substring(0, 7)}
+							{document.metadata?.containerName || document.ragCollectionId}
 						</Badge>
 					)}
 				</div>

@@ -70,12 +70,25 @@ router.post('/project/:projectId', async (req, res) => {
 			});
 		}
 
+		// Use project title for better metadata
+		const projectTitle = project.title || `Project ${req.params.projectId}`;
+
 		const document = new KnowledgeDocument({
 			...req.body,
 			projectId: req.params.projectId,
+			metadata: {
+				...(req.body.metadata || {}),
+				projectId: req.params.projectId,
+				projectTitle: projectTitle,
+				addedFromProject: true,
+				containerType: 'project',
+				containerId: req.params.projectId,
+				containerName: projectTitle
+			}
 		});
 
 		await document.save();
+		console.log(`Created document '${document.title}' for project '${projectTitle}' (${req.params.projectId})`);
 
 		res.status(201).json({
 			success: true,
@@ -272,7 +285,8 @@ router.get('/chat/:chatId', async (req, res) => {
 router.post('/chat/:chatId', async (req, res) => {
 	try {
 		const { projectId, ...documentData } = req.body;
-		console.log("is it here?");
+		console.log(`Creating document for chat ${req.params.chatId}`);
+		
 		// Only verify project if projectId is provided
 		if (projectId) {
 			const project = await Project.findById(projectId);
@@ -284,18 +298,35 @@ router.post('/chat/:chatId', async (req, res) => {
 			}
 		}
 
+		// Get chat document to include chat title in metadata
+		let chatTitle = `Chat ${req.params.chatId}`;
+		try {
+			const chat = await (await import('../models/chat.model.js')).Chat.findById(req.params.chatId);
+			if (chat) {
+				chatTitle = chat.title || chatTitle;
+			}
+		} catch (chatError) {
+			console.warn(`Could not retrieve chat title: ${chatError.message}`);
+		}
+
 		const document = new KnowledgeDocument({
 			...documentData,
 			projectId, // Will be undefined if not provided
+			chatId: req.params.chatId, // Store chatId directly on the document
 			source: `chat-${req.params.chatId}`,
 			metadata: {
 				...documentData.metadata,
 				chatId: req.params.chatId,
-				addedFromChat: true
+				chatTitle: chatTitle,
+				addedFromChat: true,
+				containerType: 'chat',
+				containerId: req.params.chatId,
+				containerName: chatTitle
 			}
 		});
 
 		await document.save();
+		console.log(`Created document '${document.title}' for chat '${chatTitle}' (${req.params.chatId})`);
 
 		res.status(201).json({
 			success: true,

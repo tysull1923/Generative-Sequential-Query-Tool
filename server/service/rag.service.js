@@ -30,6 +30,7 @@ class RAGService {
 
 			if (!collection) {
 				// Use the containerId directly as the collection name
+				// This ensures RAG collections are named after the chat or project they belong to
 				const collectionName = containerId;
 				
 				// First check if collection exists
@@ -47,6 +48,7 @@ class RAGService {
 							createdAt: new Date().toISOString()
 						}
 					});
+					console.log(`Created new RAG collection "${collectionName}" for containerId ${containerId}`);
 				}
 				
 				this.collections.set(collectionKey, collection);
@@ -188,6 +190,11 @@ class RAGService {
 			const docs = await this.processDocument(document, settings);
 			const chunks = [];
 			
+			// Determine container information for better metadata
+			const containerType = document.chatId ? 'chat' : document.projectId ? 'project' : 'unknown';
+			const containerName = document.chatId ? `chat-${document.chatId}` : 
+								  document.projectId ? `project-${document.projectId}` : containerId;
+			
 			// Generate embeddings and add to collection
 			for (const doc of docs) {
 				const embedding = await embedder.embedDocuments([doc.pageContent]);
@@ -202,6 +209,8 @@ class RAGService {
 						documentId: document._id,
 						name: document.title || document.source,
 						containerId: containerId,
+						containerType: containerType,
+						containerName: containerName,
 						chunkIndex: chunkIndex,
 						includeInRAG: true,
 						...doc.metadata
@@ -214,7 +223,9 @@ class RAGService {
 					metadata: {
 						start: doc.metadata?.start || 0,
 						end: doc.metadata?.end || doc.pageContent.length,
-						source: document.title || document.source
+						source: document.title || document.source,
+						containerId: containerId,
+						containerName: containerName
 					}
 				});
 			}
@@ -223,6 +234,8 @@ class RAGService {
 			document.ragCollectionId = containerId;
 			document.includeInRAG = true;
 			document.chunks = chunks;
+			
+			console.log(`Added document '${document.title}' to RAG collection '${containerId}' (${containerType})`);
 			
 			// Return the updated document data
 			return {
