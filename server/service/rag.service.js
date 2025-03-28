@@ -2,6 +2,7 @@
 import { ChromaClient } from 'chromadb';
 import { OllamaEmbeddings } from '@langchain/community/embeddings/ollama';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { v4 as uuidv4 } from 'uuid';
 
 class RAGService {
 	constructor() {
@@ -28,10 +29,10 @@ class RAGService {
 			let collection = this.collections.get(collectionKey);
 
 			if (!collection) {
-				// Create unique collection name for each container+document combination
+				// Create unique collection name using UUID to avoid invalid ChromaDB names
 				const collectionName = documentId 
-					? `collection_${containerId}_doc_${documentId}` 
-					: `collection_${containerId}`;
+					? `collection-${containerId.replace(/[_\.]/g, '-')}-doc-${uuidv4()}` 
+					: `collection-${containerId.replace(/[_\.]/g, '-')}-${uuidv4()}`;
 					
 				collection = await this.client.getOrCreateCollection({
 					name: collectionName,
@@ -105,8 +106,8 @@ class RAGService {
 			// Get all collections for this container
 			const allCollections = await this.client.listCollections();
 			const containerCollections = allCollections.filter(c => 
-				c.name.startsWith(`collection_${containerId}_doc_`) || 
-				c.name === `collection_${containerId}`
+				c.name.startsWith(`collection-${containerId.replace(/[_\.]/g, '-')}-doc-`) || 
+				c.name.startsWith(`collection-${containerId.replace(/[_\.]/g, '-')}-`)
 			);
 			
 			console.log(`Found ${containerCollections.length} collections for container ${containerId}`);
@@ -224,8 +225,9 @@ class RAGService {
 				});
 			}
 			
-			// Store the collection ID in the document for future reference
-			document.ragCollectionId = `collection_${containerId}_doc_${document._id}`;
+			// Generate a proper collection ID for the document reference
+			const safeContainerId = containerId.replace(/[_\.]/g, '-');
+			document.ragCollectionId = `collection-${safeContainerId}-doc-${document._id}`;
 			document.includeInRAG = true;
 			document.chunks = chunks;
 			
@@ -247,37 +249,48 @@ class RAGService {
 		try {
 			// Get the document-specific collection
 			const collectionKey = `${containerId}_${documentId}`;
-			const collectionName = `collection_${containerId}_doc_${documentId}`;
+			const safeContainerId = containerId.replace(/[_\.]/g, '-');
+			
+			// Find all collections related to this document
+			const allCollections = await this.client.listCollections();
+			const collectionPattern = `collection-${safeContainerId}-doc-`;
+			const matchingCollections = allCollections.filter(c => 
+				c.name.includes(collectionPattern) && 
+				c.metadata?.documentId === documentId
+			);
 			
 			try {
-				// Delete the entire collection if it exists
-				const exists = await this.client.listCollections();
-				const collectionExists = exists.some(c => c.name === collectionName);
-				
-				if (collectionExists) {
-					await this.client.deleteCollection({ name: collectionName });
+				// Delete matching collections if found
+				if (matchingCollections.length > 0) {
+					for (const coll of matchingCollections) {
+						await this.client.deleteCollection({ name: coll.name });
+						console.log(`Deleted collection ${coll.name} for document ${documentId}`);
+					}
 					// Remove from the collections cache
 					this.collections.delete(collectionKey);
-					console.log(`Deleted collection ${collectionName} for document ${documentId}`);
 				} else {
-					console.log(`Collection ${collectionName} not found for document ${documentId}`);
+					console.log(`No collections found for document ${documentId}`);
 				}
 				
 				// Also try to delete from the container's main collection as a fallback
 				// (In case documents were added to a shared collection in earlier versions)
-				const containerCollection = await this.initializeCollection(containerId);
-				
-				// Find all chunks for this document in the main container collection
-				const chunks = await containerCollection.get({
-					where: { documentId: documentId }
-				});
-				
-				// Remove chunks if found
-				if (chunks.ids.length > 0) {
-					await containerCollection.delete({
-						ids: chunks.ids
+				try {
+					const containerCollection = await this.initializeCollection(containerId);
+					
+					// Find all chunks for this document in the main container collection
+					const chunks = await containerCollection.get({
+						where: { documentId: documentId }
 					});
-					console.log(`Deleted ${chunks.ids.length} chunks from main collection`);
+					
+					// Remove chunks if found
+					if (chunks.ids.length > 0) {
+						await containerCollection.delete({
+							ids: chunks.ids
+						});
+						console.log(`Deleted ${chunks.ids.length} chunks from main collection`);
+					}
+				} catch (err) {
+					console.log('No chunks found in main collection:', err.message);
 				}
 				
 				return true;
